@@ -1,5 +1,139 @@
 # Changelog
 
+## 2026-07-20 (6) — UI polish for a 13-tab app, and closing the Reference Library loop
+
+**Why:** The app has grown from 11 tabs to 13, and the Business tab alone
+now has 9 cards — asked to make the UI "fit the site better" without
+touching the color scheme, and to finish the one deliberately-deferred
+item from the CRM spreadsheet (Follow-Up Standards + Maintenance
+Checklist).
+
+**UI changes (no new colors — every value below reuses the existing
+`--navy`/`--sand`/`--sage`/`--white`/`--accent` palette):**
+
+- **Nav tabs** — every tab now has a distinct icon (🏡 Home, 🗓️ Dashboard,
+  🏋️ Workouts, 🥗 Nutrition, 🔁 Habits, ✅ Tasks, 🧹 Chores, 💳 Finances,
+  📌 Appointments, 📝 Notes, 📊 Reviews, 🏢 Business, 💡 Tips), and the
+  buttons got slightly tighter padding/font-size so 13 tabs sit more
+  comfortably before wrapping. Business's icon changed from 🏠 to 🏢 to
+  stop clashing visually with Home's 🏡.
+- **Home tab nav-grid** — added the missing Habits shortcut (it had no
+  card before, an oversight from before this changelog existed), and
+  matched the Business card's icon to the nav tab.
+- **New `.section-divider` style** — small uppercase sage-colored labels
+  (reusing `.label`'s exact typography, just standalone) that group the
+  Business tab's now-9 cards into five clear sections: Overview,
+  Relationships & Pipeline, Content, Local Data & Public Tools, Reference
+  Library, and Operating Rhythm & Roadmap. Same treatment could be reused
+  for any tab that grows a lot of cards in the future.
+- **Contacts add-form** — the 13-field form is now split into three
+  labeled groups (Basic Information / Real Estate Information /
+  Follow-Up Information), mirroring the four-block structure the source
+  CRM spreadsheet itself uses. No fields removed or renamed, no id
+  changed — purely a visual regrouping, so nothing else needed updating.
+
+**Closing the loop — Reference Library:**
+
+- Added a sixth category, **`reference`** (labeled "CRM Reference" in the
+  UI), alongside the existing voice/cta/script/prompt/template — this
+  needed a small, additive schema change (widening a check constraint,
+  not touching any data) since "Follow-Up Standards" and "Maintenance
+  Checklist" don't fit any of the original five categories.
+- Added the CRM spreadsheet's **Follow-Up Standards & Category
+  Reference** (contact categories, timeline categories, follow-up
+  standards, relationship movement) and **CRM Maintenance Checklist**
+  (weekly/monthly/quarterly review tasks) as two new Reference Library
+  entries — content taken directly from the spreadsheet you uploaded,
+  the same source the Contacts CRM itself was built from.
+- These insert automatically via `seedAdditionalReferenceContentIfMissing()`,
+  checked by title so it's safe to run regardless of whether you're a
+  brand-new user or already have a full library — no manual data entry
+  needed on your end beyond running the migration below.
+
+**Action required from you:** run `reference_library_category_migration.sql`
+in the Supabase SQL Editor. The two new entries will then appear
+automatically the next time you open the Business tab (no separate step).
+
+---
+
+## 2026-07-20 (5) — Everything else: localStorage cleanup, Notes, Reviews, Content Calendar, Public Tools
+
+**Why:** Asked to complete as much of the remaining roadmap as possible in
+one pass, so the app wouldn't need another editing session soon. This
+closes out every item that was still open in `TODO.md`.
+
+**What changed:**
+
+- **Finished the localStorage migration** — Today's Priorities, Quick
+  Capture inbox, Routine (AM/PM), and Chores (daily/weekly/monthly) all
+  now read and write through Supabase instead of the browser. Routine and
+  Chores share one generalized `checklist_items`/`checklist_logs` table
+  pair (parameterized by `list_key`) instead of five near-identical
+  localStorage copies — same items+logs+period-marker shape already used
+  by Habits and the Content Checklist, just applied consistently instead
+  of copy-pasted. Today's Priorities now naturally resets each day
+  (scoped by `priority_date`) instead of never resetting, which the old
+  localStorage version never actually did despite being called "Today's."
+  The now-fully-unused `storageGet`/`storageSet` localStorage helpers
+  were removed as dead code.
+- **New: Notes tab** — quick freeform capture, newest first. Table
+  already existed in `schema.sql` (`notes`) with nothing reading from it
+  until now.
+- **New: Weekly Reviews tab** — one entry per week (wins, challenges,
+  lessons, nutrition/workout consistency, business wins, next week's
+  priorities), auto-scoped to the current Monday-start week, with a
+  browsable history of past weeks below it. Table already existed
+  (`weekly_reviews`) with nothing reading from it until now.
+- **New: Content Calendar** (Business tab) — a genuinely separate feature
+  from the existing Content Checklist: forward-looking (title, platform,
+  scheduled date, status: Idea/Drafted/Scheduled/Posted) rather than a
+  daily repeating todo. New `content_calendar_items` table.
+- **New: Public Tools** — the app's first no-login surface, reached via a
+  link on the sign-in screen (URL hash `#public`, so no page reload is
+  needed to move between signed-in and public views). Five tools: Home
+  Match Quiz, Future Home Planner, Neighborhood Explorer, Relocation
+  Planner, and a Buyer Stage Check-in. Every tool ends with an optional
+  name/email capture that writes to a new `public_submissions` table.
+  - **Home Match Quiz** and **Future Home Planner** compute a real,
+    rule-based result from the visitor's answers (the planner does actual
+    down-payment/timeline math; the quiz maps answers to a recommended
+    city + guidance using the same brand-voice principles already
+    documented in the Reference Library).
+  - **Neighborhood Explorer** deliberately does NOT show Claude-generated
+    facts about Cooper City/Pembroke Pines/Plantation — real estate
+    specifics need to be true, and I don't have your actual local market
+    knowledge. Instead it reads from a new `neighborhood_profiles` table
+    that you fill in yourself from a new "Neighborhood Profiles" card in
+    the Business tab. Starts with three blank rows (one per city) rather
+    than invented placeholder facts.
+  - **Public Tool Submissions** (Business tab) — review anonymous
+    submissions and click "Add as contact" to create a real Contacts row
+    from one (reuses `addContactRow()` rather than duplicating logic), or
+    dismiss it.
+
+**Architecture notes:**
+- `public_submissions` and `neighborhood_profiles` are the only two
+  tables in the app without a `user_id` column — see `DATABASE.md` for
+  why, and the note in `ARCHITECTURE.md` about not copying this pattern
+  for anything that isn't genuinely public-facing.
+- Added one small CSS rule (`.form-grid textarea`) so textareas can sit
+  inside the existing `.form-grid` layout consistently — the only new CSS
+  in this whole session's work, everything else reuses existing classes.
+
+**What did NOT change:** no visual redesign anywhere. The public tools
+pages reuse the exact same `.topbar`/`.wrap`/`.card`/`.nav-grid`/
+`.form-grid`/`.pill-btn` classes as the authenticated app, so signed-in
+and public users see the same design language.
+
+**Action required from you:** run `remaining_features_migration.sql` in
+the Supabase SQL Editor. If you haven't yet run the three from earlier
+today (`contacts_migration.sql`, `grocery_migration.sql`,
+`finance_migration.sql`), run all four. Then, whenever you have a few
+minutes: fill in the three Neighborhood Profiles (Business tab) so the
+public Neighborhood Explorer has real content instead of blank fields.
+
+---
+
 ## 2026-07-20 (4) — Expand Budget tab into a full Finances tab
 
 **Why:** Asked for a "more extensive financial tab." Clarifying questions

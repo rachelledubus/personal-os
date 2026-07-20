@@ -1,42 +1,46 @@
 # Database Reference
 
-Backed by Supabase (Postgres). Every table has Row Level Security enabled,
-scoped to `auth.uid()`, so each signed-in user only ever sees their own rows.
-Full definitions live in `schema.sql` — this file is a plain-English index
-of what each table is for and whether the UI is actually connected to it yet.
+Backed by Supabase (Postgres). Every table has Row Level Security enabled.
+Almost all are scoped to `auth.uid()` (each signed-in user only sees their
+own rows) — the two exceptions are `public_submissions` and
+`neighborhood_profiles`, which power the Public Tools and are documented
+separately below. Full definitions live in `schema.sql` plus the
+migration files listed in `CHANGELOG.md` — this file is a plain-English
+index of what each table is for.
 
-| Table | Purpose | UI connected? |
-|---|---|---|
-| `profiles` | One row per user, auto-created on signup | ✅ (auth only, no dedicated UI) |
-| `settings` | Per-user nutrition/habit/dashboard defaults | ✅ Nutrition goals |
-| `foods` | Reusable food database | ✅ Nutrition tab |
-| `meal_logs` | Daily meal entries | ✅ Nutrition tab |
-| `workouts` | Logged lifting sessions (one row per session) | ✅ Workouts tab *(migrated — see Changelog)* |
-| `habits` / `habit_logs` | Habit definitions + daily completion | ✅ Habits tab |
-| `tasks` | General task manager | ✅ Tasks tab |
-| `weekly_reviews` | Weekly reflection entries | ❌ Table exists, no UI yet |
-| `notes` | Quick freeform notes | ❌ Table exists, no UI yet |
-| `appointments` | Upcoming appointments | ✅ Appointments tab *(migrated — see Changelog)* |
-| `bills` | Recurring monthly bills | ✅ Finances tab *(migrated + `account` column added — see Changelog)* |
-| `transactions` | Income & expense ledger | ✅ Finances tab *(added — see Changelog)* |
-| `debts` | Debt payoff tracker | ✅ Finances tab *(added — see Changelog)* |
-| `savings_goals` | Savings goals with progress | ✅ Finances tab *(added — see Changelog)* |
-| `leads` | Old simple lead tracker | ⚠️ **Deprecated.** Data preserved, UI no longer uses it — see `contacts` below |
-| `contacts` | Full relationship/CRM tracker (replaces `leads`) | ✅ Business tab *(added — see Changelog)* |
-| `pipeline_deals` | Deal stage tracker | ✅ Business tab |
-| `content_items` / `content_logs` | Daily content checklist | ✅ Business tab |
-| `reference_library` | Voice/CTA/Script/Prompt/Template library | ✅ Business tab |
-| `grocery_items` | Grocery list (checkable, categorized) | ✅ Nutrition tab *(added — see Changelog)* |
+| Table | Purpose |
+|---|---|
+| `profiles` | One row per user, auto-created on signup |
+| `settings` | Per-user nutrition/habit/dashboard defaults |
+| `foods` | Reusable food database |
+| `meal_logs` | Daily meal entries |
+| `workouts` | Logged lifting sessions (one row per session) |
+| `habits` / `habit_logs` | Habit definitions + daily completion |
+| `tasks` | General task manager |
+| `weekly_reviews` | One entry per week (wins/challenges/lessons/etc) |
+| `notes` | Quick freeform notes |
+| `checklist_items` / `checklist_logs` | Routine (AM/PM) + Chores (daily/weekly/monthly) — generalized, parameterized by `list_key` |
+| `daily_priorities` | Today's top-3 priorities, scoped by date |
+| `inbox_items` | Quick Capture inbox |
+| `appointments` | Upcoming appointments |
+| `bills` | Recurring monthly bills (has a Personal/Business `account` field) |
+| `transactions` | Income & expense ledger |
+| `debts` | Debt payoff tracker |
+| `savings_goals` | Savings goals with progress |
+| `leads` | Old simple lead tracker — **deprecated**, data preserved but UI no longer uses it (see `contacts`) |
+| `contacts` | Full relationship/CRM tracker (replaces `leads`) |
+| `pipeline_deals` | Deal stage tracker |
+| `content_items` / `content_logs` | Daily content checklist (repeating) |
+| `content_calendar_items` | Forward-looking content calendar (date/platform/status) |
+| `reference_library` | Voice/CTA/Script/Prompt/Template library |
+| `grocery_items` | Grocery list (checkable, categorized) |
+| `public_submissions` | Public Tools visitor capture (see below) |
+| `neighborhood_profiles` | Owner-edited, publicly-displayed neighborhood facts (see below) |
 
-## Not yet backed by any table (still `localStorage`)
-
-These currently persist only in the browser and are **not** synced across
-devices or backed up. See `TODO.md` for the plan.
-
-- Today's Priorities (Dashboard, capped at 3)
-- Quick Capture inbox (Dashboard)
-- Routine — Morning / Evening checklists (Dashboard)
-- Chores — Daily / Weekly / Monthly checklists
+Every table above is built and has a working UI as of 2026-07-20. The one
+deliberately-unbuilt piece is noted in `TODO.md` (Reference Library
+additions for the CRM spreadsheet's Follow-Up Standards / Maintenance
+Checklist tabs — optional, low priority).
 
 ## Notes on specific tables
 
@@ -72,6 +76,17 @@ Expenses ledger and the Debt Payoff tracker never drift apart. Savings
 contributions do NOT create a transaction (treated as a transfer, not
 income/spending, to avoid double-counting net cash flow).
 
+**`reference_library`** — as of 2026-07-20, has a sixth category,
+`reference` ("CRM Reference" in the UI), holding the CRM spreadsheet's
+Follow-Up Standards and Maintenance Checklist content. Added via
+`reference_library_category_migration.sql`, which widens the category
+check constraint — additive, no existing rows touched. Unlike every other
+piece of seed content (which only inserts for brand-new users on first
+load), these two entries insert for *every* user on next login if
+missing, checked by title — see `seedAdditionalReferenceContentIfMissing()`
+in `ARCHITECTURE.md` for why that's a different pattern from
+`seedReferenceLibraryIfEmpty()`.
+
 **`grocery_items`** — seeded once per user (same pattern as
 `reference_library`/`habits`) from the staples that used to be a static,
 uneditable list. "Build Your Own Meal" writes into this table too, via
@@ -93,6 +108,37 @@ doesn't match the current month gets flipped back to unpaid automatically.
 
 **`appointments`** — column names are `appt_date` / `appt_time` (not
 `date`/`time`) to avoid reserved-word ambiguity in Postgres/PostgREST.
+
+**`checklist_items` / `checklist_logs`** — one generalized pair of tables
+replacing what used to be five separate localStorage checklists (Routine
+AM, Routine PM, Chores Daily/Weekly/Monthly). `list_key` picks which list
+a row belongs to; `period_marker` works exactly like `habit_logs` —
+today's date for daily lists, the Monday of the current week for weekly,
+`YYYY-MM` for monthly. Follow this same items+logs+marker shape for any
+future recurring checklist rather than inventing a new one.
+
+**`daily_priorities`** — scoped by `priority_date`, so unlike the old
+localStorage version (which had no reset mechanism at all), a fresh set
+of priorities naturally starts each day. History isn't deleted, just not
+shown — querying past dates would surface it if that's ever wanted.
+
+**`public_submissions` / `neighborhood_profiles`** — the two exceptions to
+"every table is scoped to `auth.uid()`." Both intentionally have **no**
+`user_id` column:
+- `public_submissions` needs anonymous visitors to be able to insert
+  without being signed in at all, so there's no `auth.uid()` to scope to.
+  Its RLS instead splits by operation: `insert` is open to everyone,
+  everything else (`select`/`update`/`delete`) requires
+  `auth.role() = 'authenticated'`.
+- `neighborhood_profiles` needs anonymous visitors to be able to *read*
+  it (it's rendered on the public Neighborhood Explorer), so `select` is
+  open to everyone; only `authenticated` can write.
+
+Both rely on this being a single-owner app — "any authenticated user"
+and "the owner" are the same thing in practice. If this app ever supports
+multiple independent owners, these two policies are the first thing that
+would need to change (to scope by an owner id instead of just checking
+"signed in or not").
 
 ## Making schema changes
 

@@ -23,11 +23,11 @@ h1,h2,h3,h4{ font-family:'DM Sans', sans-serif; margin:0; }
 .topbar .account-bar{ display:flex; justify-content:center; align-items:center; gap:10px; margin-top:8px; font-size:11px; opacity:0.75; }
 .topbar .account-bar button{ background:none; border:1px solid rgba(255,255,255,0.35); color:var(--white); border-radius:999px; padding:4px 10px; font-size:11px; cursor:pointer; font-family:'DM Sans',sans-serif; }
 
-nav.tabs{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; padding:16px; position:sticky; top:0; background:var(--sand); z-index:10; }
+nav.tabs{ display:flex; gap:5px; flex-wrap:wrap; justify-content:center; padding:14px 16px; position:sticky; top:0; background:var(--sand); z-index:10; }
 nav.tabs button{
-  font-family:'DM Sans', sans-serif; font-weight:700; font-size:12px; letter-spacing:0.03em; text-transform:uppercase;
-  background:var(--white); color:var(--navy); border:none; border-radius:999px; padding:9px 14px;
-  cursor:pointer; box-shadow:var(--shadow);
+  font-family:'DM Sans', sans-serif; font-weight:700; font-size:11.5px; letter-spacing:0.02em; text-transform:uppercase;
+  background:var(--white); color:var(--navy); border:none; border-radius:999px; padding:8px 12px;
+  cursor:pointer; box-shadow:var(--shadow); white-space:nowrap;
 }
 nav.tabs button.active{ background:var(--navy); color:var(--white); }
 
@@ -36,6 +36,8 @@ section.panel.active{ display:block; }
 
 .card{ background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 20px; margin-bottom:16px; }
 .label{ text-transform:uppercase; letter-spacing:0.08em; font-size:11px; font-weight:700; color:var(--sage); font-family:'DM Sans', sans-serif; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
+.section-divider{ text-transform:uppercase; letter-spacing:0.1em; font-size:11px; font-weight:800; color:var(--sage); font-family:'DM Sans', sans-serif; margin:28px 4px 8px; padding-top:14px; border-top:1px solid rgba(22,50,79,0.08); }
+.section-divider:first-child{ margin-top:0; padding-top:0; border-top:none; }
 .count-hint{ opacity:0.6; text-transform:none; letter-spacing:0; font-weight:500; font-size:11px; }
 .muted{ opacity:0.65; font-size:13px; }
 .empty-note{ font-size:13px; opacity:0.5; padding:6px 0; }
@@ -75,6 +77,7 @@ section.panel.active{ display:block; }
 
 .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
 .form-grid input{ border:1px solid #e2ded4; border-radius:10px; padding:9px 12px; font-size:14px; font-family:'Source Sans 3',sans-serif; }
+.form-grid textarea{ border:1px solid #e2ded4; border-radius:10px; padding:9px 12px; font-size:14px; font-family:'Source Sans 3',sans-serif; width:100%; min-height:70px; resize:vertical; }
 .form-grid .full{ grid-column:1 / -1; }
 
 /* Reference Library (Business tab: Script/Prompt/CTA/Template + Voice Guide) */
@@ -201,6 +204,7 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
     </form>
     <button id="auth-toggle-btn">New here? Create an account</button>
     <div id="auth-error"></div>
+    <p style="text-align:center; margin-top:14px;"><a href="#public" id="auth-public-link" style="color:var(--navy); opacity:0.6; font-size:12px;">Or explore our free public tools</a></p>
   </div>
 </div>
 
@@ -217,17 +221,19 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
 </div>
 
 <nav class="tabs">
-  <button class="tab-btn active" data-tab="home">Home</button>
-  <button class="tab-btn" data-tab="dashboard">Dashboard</button>
-  <button class="tab-btn" data-tab="workouts">Workouts</button>
-  <button class="tab-btn" data-tab="nutrition">Nutrition</button>
-  <button class="tab-btn" data-tab="habits">Habits</button>
-  <button class="tab-btn" data-tab="tasks">Tasks</button>
-  <button class="tab-btn" data-tab="chores">Chores</button>
-  <button class="tab-btn" data-tab="budget">Finances</button>
-  <button class="tab-btn" data-tab="appointments">Appointments</button>
-  <button class="tab-btn" data-tab="business">Business</button>
-  <button class="tab-btn" data-tab="tips">Tips</button>
+  <button class="tab-btn active" data-tab="home">🏡 Home</button>
+  <button class="tab-btn" data-tab="dashboard">🗓️ Dashboard</button>
+  <button class="tab-btn" data-tab="workouts">🏋️ Workouts</button>
+  <button class="tab-btn" data-tab="nutrition">🥗 Nutrition</button>
+  <button class="tab-btn" data-tab="habits">🔁 Habits</button>
+  <button class="tab-btn" data-tab="tasks">✅ Tasks</button>
+  <button class="tab-btn" data-tab="chores">🧹 Chores</button>
+  <button class="tab-btn" data-tab="budget">💳 Finances</button>
+  <button class="tab-btn" data-tab="appointments">📌 Appointments</button>
+  <button class="tab-btn" data-tab="notes">📝 Notes</button>
+  <button class="tab-btn" data-tab="reviews">📊 Reviews</button>
+  <button class="tab-btn" data-tab="business">🏢 Business</button>
+  <button class="tab-btn" data-tab="tips">💡 Tips</button>
 </nav>
 
 <div class="wrap">
@@ -240,7 +246,7 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
       <div class="today-item"><span class="today-emoji">🏋️</span><div><b id="today-workout-name">—</b><span id="today-workout-sub"></span></div></div>
       <div class="today-item"><span class="today-emoji">🥗</span><div><b id="today-nutrition-cals">—</b><span id="today-nutrition-protein"></span></div></div>
       <div class="today-item"><span class="today-emoji">✅</span><div><b id="today-habits">—</b><span>Habits</span></div></div>
-      <div class="today-item"><span class="today-emoji">🏠</span><div><b id="today-business">—</b><span>Business</span></div></div>
+      <div class="today-item"><span class="today-emoji">🏢</span><div><b id="today-business">—</b><span>Business</span></div></div>
     </div>
   </div>
   <div class="card" id="quote-card">
@@ -265,11 +271,14 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
       <button class="nav-card" data-goto="dashboard"><span class="emoji">🗓️</span><span class="title">Full Dashboard</span><span class="sub">Priorities, inbox, routine</span></button>
       <button class="nav-card" data-goto="workouts"><span class="emoji">🏋️</span><span class="title">Workouts</span><span class="sub">Log sets & reps</span></button>
       <button class="nav-card" data-goto="nutrition"><span class="emoji">🥗</span><span class="title">Nutrition</span><span class="sub">Targets & grocery list</span></button>
+      <button class="nav-card" data-goto="habits"><span class="emoji">🔁</span><span class="title">Habits</span><span class="sub">Daily checklist</span></button>
       <button class="nav-card" data-goto="tasks"><span class="emoji">✅</span><span class="title">Tasks</span><span class="sub">Personal, Real Estate & more</span></button>
       <button class="nav-card" data-goto="chores"><span class="emoji">🧹</span><span class="title">Chores</span><span class="sub">Daily / weekly / monthly</span></button>
       <button class="nav-card" data-goto="budget"><span class="emoji">💳</span><span class="title">Finances</span><span class="sub">Bills, income, debt & savings</span></button>
       <button class="nav-card" data-goto="appointments"><span class="emoji">📌</span><span class="title">Appointments</span><span class="sub">Add & view upcoming</span></button>
-      <button class="nav-card" data-goto="business"><span class="emoji">🏠</span><span class="title">Business</span><span class="sub">SW Broward BOS reference</span></button>
+      <button class="nav-card" data-goto="notes"><span class="emoji">📝</span><span class="title">Notes</span><span class="sub">Quick freeform capture</span></button>
+      <button class="nav-card" data-goto="reviews"><span class="emoji">📊</span><span class="title">Weekly Reviews</span><span class="sub">Reflect & plan ahead</span></button>
+      <button class="nav-card" data-goto="business"><span class="emoji">🏢</span><span class="title">Business</span><span class="sub">SW Broward BOS reference</span></button>
       <button class="nav-card" data-goto="tips"><span class="emoji">💡</span><span class="title">Tips</span><span class="sub">ADHD & autism strategies</span></button>
     </div>
   </div>
@@ -598,8 +607,47 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
   </div>
 </section>
 
+<!-- ============ NOTES ============ -->
+<section class="panel" id="panel-notes">
+  <div class="card">
+    <div class="label">Quick Note</div>
+    <div class="form-grid">
+      <textarea id="note-input" class="full" placeholder="Jot something down..."></textarea>
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="note-add-btn">Save note</button></div>
+  </div>
+  <div class="card">
+    <div class="label">All Notes <span class="count-hint" id="notes-count-hint"></span></div>
+    <div id="notes-list"></div>
+    <div class="empty-note" id="notes-empty">No notes yet.</div>
+  </div>
+</section>
+
+<!-- ============ WEEKLY REVIEWS ============ -->
+<section class="panel" id="panel-reviews">
+  <div class="card">
+    <div class="label">This Week's Review <span class="count-hint" id="review-week-hint"></span></div>
+    <div class="form-grid">
+      <textarea id="review-wins" class="full" placeholder="Wins this week..."></textarea>
+      <textarea id="review-challenges" class="full" placeholder="Challenges..."></textarea>
+      <textarea id="review-lessons" class="full" placeholder="Lessons learned..."></textarea>
+      <textarea id="review-nutrition" class="full" placeholder="Nutrition consistency..."></textarea>
+      <textarea id="review-workout" class="full" placeholder="Workout consistency..."></textarea>
+      <textarea id="review-business" class="full" placeholder="Business wins..."></textarea>
+      <textarea id="review-next-priorities" class="full" placeholder="Next week's priorities..."></textarea>
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="review-save-btn">Save this week's review</button></div>
+  </div>
+  <div class="card">
+    <div class="label">Past Reviews</div>
+    <div id="reviews-list"></div>
+    <div class="empty-note" id="reviews-empty">No past reviews yet.</div>
+  </div>
+</section>
+
 <!-- ============ BUSINESS ============ -->
 <section class="panel" id="panel-business">
+  <div class="section-divider">Overview</div>
   <div class="card">
     <div class="label">Business KPIs</div>
     <div class="stat-grid">
@@ -609,6 +657,14 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
       <div class="stat"><div class="num" id="kpi-pipeline-value">$0</div><div class="unit">active pipeline value</div></div>
       <div class="stat"><div class="num" id="kpi-closed-month">0</div><div class="unit">deals closed this month</div></div>
     </div>
+  </div>
+
+  <div class="section-divider">Relationships &amp; Pipeline</div>
+  <div class="card">
+    <div class="label">Public Tool Submissions <span class="count-hint" id="submissions-count-hint"></span></div>
+    <p class="muted" style="margin-top:-4px;">Anyone who used a public tool (linked from the sign-in screen) without an account. Review and add the ones worth following up on.</p>
+    <div id="submissions-list"></div>
+    <div class="empty-note" id="submissions-empty">No new submissions.</div>
   </div>
 
   <div class="card">
@@ -628,21 +684,32 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
 
     <div class="ref-add-form">
       <div class="label" style="margin-bottom:8px;">Add a contact</div>
+
+      <p style="font-family:'DM Sans',sans-serif; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--sage); margin:0 0 6px;">Basic Information</p>
       <div class="form-grid">
         <input type="text" id="contact-name" class="full" placeholder="Name">
         <input type="text" id="contact-phone" placeholder="Phone">
         <input type="email" id="contact-email" placeholder="Email">
         <select id="contact-category"></select>
         <select id="contact-source"></select>
+      </div>
+
+      <p style="font-family:'DM Sans',sans-serif; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--sage); margin:16px 0 6px;">Real Estate Information</p>
+      <div class="form-grid">
         <select id="contact-buyer-seller"></select>
         <select id="contact-timeline"></select>
         <select id="contact-persona"></select>
         <select id="contact-location"></select>
+      </div>
+
+      <p style="font-family:'DM Sans',sans-serif; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--sage); margin:16px 0 6px;">Follow-Up Information</p>
+      <div class="form-grid">
         <input type="text" id="contact-next-action" class="full" placeholder="Next action (e.g. Send school-zone map)">
         <input type="date" id="contact-followup" title="Next follow-up date">
         <input type="date" id="contact-last-contact" title="Last contact date">
         <input type="text" id="contact-last-conversation" class="full" placeholder="Last conversation summary">
       </div>
+
       <textarea id="contact-notes" placeholder="Relationship notes — how you connected, personal details, goals, concerns..."></textarea>
       <div class="save-bar"><button class="pill-btn" id="contact-add-btn">Add contact</button></div>
     </div>
@@ -661,12 +728,43 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
     <div class="save-bar"><button class="pill-btn" id="deal-add-btn">Add deal</button></div>
   </div>
 
+  <div class="section-divider">Content</div>
   <div class="card">
     <div class="label">Content Checklist <span class="count-hint">resets each day</span></div>
     <div id="content-checklist-list"></div>
     <div class="add-row"><input type="text" id="content-input" placeholder="Add a content task..."><button id="content-add-btn">Add</button></div>
   </div>
 
+  <div class="card">
+    <div class="label">Content Calendar <span class="count-hint" id="calendar-count-hint"></span></div>
+    <p class="muted" style="margin-top:-4px;">What to post and when — separate from the daily Content Checklist above, which is "did I post today," not "what's coming up."</p>
+    <div class="ref-filters" id="calendar-status-filter">
+      <button class="ref-filter-btn active" data-status="All">All</button>
+      <button class="ref-filter-btn" data-status="Idea">Idea</button>
+      <button class="ref-filter-btn" data-status="Drafted">Drafted</button>
+      <button class="ref-filter-btn" data-status="Scheduled">Scheduled</button>
+      <button class="ref-filter-btn" data-status="Posted">Posted</button>
+    </div>
+    <div id="calendar-list" style="margin-top:12px;"></div>
+    <div class="empty-note" id="calendar-empty">Nothing on the calendar yet.</div>
+    <div class="form-grid">
+      <input type="text" id="calendar-title" class="full" placeholder="Content title / idea">
+      <select id="calendar-platform"></select>
+      <input type="date" id="calendar-date" title="Scheduled date">
+      <select id="calendar-status"></select>
+      <input type="text" id="calendar-notes" class="full" placeholder="Notes (optional)">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="calendar-add-btn">Add to calendar</button></div>
+  </div>
+
+  <div class="section-divider">Local Data &amp; Public Tools</div>
+  <div class="card">
+    <div class="label">Neighborhood Profiles <span class="count-hint">shown on your public Neighborhood Explorer</span></div>
+    <p class="muted" style="margin-top:-4px;">Fill these in with your own local knowledge — this is exactly what visitors see on the public Neighborhood Explorer tool, so leave a field blank rather than guess.</p>
+    <div id="neighborhood-admin-list"></div>
+  </div>
+
+  <div class="section-divider">Reference Library</div>
   <div class="card">
     <div class="label">SW Broward Business Operating System</div>
     <p>Your finalized 16-system reference manual for the solo-agent business, now live and searchable below — Voice Guide &amp; Audience Profiles (01), CTA Library (13), Script Library (14), Prompt Library (15), and Template Library (16). Every entry is editable: add your own scripts, prompts, and CTAs as you write them, and they'll search alongside the originals.</p>
@@ -684,6 +782,7 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
       <button class="ref-filter-btn" data-cat="script">Script Library</button>
       <button class="ref-filter-btn" data-cat="prompt">Prompt Library</button>
       <button class="ref-filter-btn" data-cat="template">Template Library</button>
+      <button class="ref-filter-btn" data-cat="reference">CRM Reference</button>
     </div>
     <div class="ref-count" id="ref-results-count"></div>
     <div id="ref-list"></div>
@@ -697,6 +796,7 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
           <option value="script" selected>Script Library</option>
           <option value="prompt">Prompt Library</option>
           <option value="template">Template Library</option>
+          <option value="reference">CRM Reference</option>
         </select>
         <input type="text" id="ref-add-section" placeholder="Section (e.g. Referral Scripts)">
         <input type="text" id="ref-add-title" class="full" placeholder="Title">
@@ -707,6 +807,7 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
     </div>
   </div>
 
+  <div class="section-divider">Operating Rhythm &amp; Roadmap</div>
   <div class="card">
     <div class="label">Weekly &amp; Monthly Operating Rhythm</div>
     <p><b>Daily —</b> follow up on due/overdue leads, respond to inquiries, complete the day's top business priority.</p>
@@ -762,6 +863,135 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
 </div>
 <!-- /app-shell -->
 
+<!-- ============ PUBLIC TOOLS (no login required) ============ -->
+<div id="public-shell" style="display:none;">
+  <div class="topbar">
+    <h1>Rachelle's System</h1>
+    <p>Free tools for Southwest Broward home buyers &amp; relocators</p>
+  </div>
+  <div class="wrap">
+
+    <div class="card" id="public-landing">
+      <div class="label">Free Tools</div>
+      <div class="nav-grid">
+        <button class="nav-card" data-public-tool="quiz"><span class="emoji">🏡</span><span class="title">Home Match Quiz</span><span class="sub">Find your best-fit neighborhood</span></button>
+        <button class="nav-card" data-public-tool="planner"><span class="emoji">🗓️</span><span class="title">Future Home Planner</span><span class="sub">See when you could be ready to buy</span></button>
+        <button class="nav-card" data-public-tool="explorer"><span class="emoji">🗺️</span><span class="title">Neighborhood Explorer</span><span class="sub">Compare Cooper City, Pembroke Pines &amp; Plantation</span></button>
+        <button class="nav-card" data-public-tool="relocation"><span class="emoji">📦</span><span class="title">Relocation Planner</span><span class="sub">Get a moving-to-Florida checklist</span></button>
+        <button class="nav-card" data-public-tool="buyerstage"><span class="emoji">📍</span><span class="title">Where Am I in the Process?</span><span class="sub">A quick buyer-stage check-in</span></button>
+      </div>
+    </div>
+
+    <!-- ---- Home Match Quiz ---- -->
+    <div class="card public-tool-panel" id="public-tool-quiz" style="display:none;">
+      <div class="label">Home Match Quiz</div>
+      <div id="quiz-step-questions">
+        <div class="form-grid">
+          <select id="quiz-timeline"></select>
+          <select id="quiz-buyer-type"></select>
+          <select id="quiz-priority"></select>
+          <select id="quiz-location-pref"></select>
+        </div>
+        <div class="save-bar"><button class="pill-btn" id="quiz-see-results-btn">See my match</button></div>
+      </div>
+      <div id="quiz-step-results" style="display:none;">
+        <p id="quiz-result-text" style="font-size:15px; line-height:1.5;"></p>
+        <div class="form-grid" style="margin-top:12px;">
+          <input type="text" id="quiz-name" placeholder="Your name">
+          <input type="email" id="quiz-email" class="full" placeholder="Your email">
+        </div>
+        <div class="save-bar"><button class="pill-btn" id="quiz-submit-btn">Email me the full details</button></div>
+        <p class="muted" id="quiz-thanks" style="display:none; margin-top:10px;">Thanks! Rachelle will follow up soon.</p>
+      </div>
+      <button class="row-remove public-back-btn" style="margin-top:14px; opacity:0.6;">&larr; Back to all tools</button>
+    </div>
+
+    <!-- ---- Future Home Planner ---- -->
+    <div class="card public-tool-panel" id="public-tool-planner" style="display:none;">
+      <div class="label">Future Home Planner</div>
+      <p class="muted" style="margin-top:-4px;">A rough estimate of your timeline to a 20% down payment — not financial advice, just a starting point for a conversation.</p>
+      <div id="planner-step-questions">
+        <div class="form-grid">
+          <input type="number" id="planner-target-price" placeholder="Target home price ($)">
+          <input type="number" id="planner-current-savings" placeholder="Current savings ($)">
+          <input type="number" id="planner-monthly-savings" placeholder="Monthly savings capacity ($)">
+        </div>
+        <div class="save-bar"><button class="pill-btn" id="planner-see-results-btn">See my estimate</button></div>
+      </div>
+      <div id="planner-step-results" style="display:none;">
+        <p id="planner-result-text" style="font-size:15px; line-height:1.5;"></p>
+        <div class="form-grid" style="margin-top:12px;">
+          <input type="text" id="planner-name" placeholder="Your name">
+          <input type="email" id="planner-email" class="full" placeholder="Your email">
+        </div>
+        <div class="save-bar"><button class="pill-btn" id="planner-submit-btn">Get a personalized plan</button></div>
+        <p class="muted" id="planner-thanks" style="display:none; margin-top:10px;">Thanks! Rachelle will follow up soon.</p>
+      </div>
+      <button class="row-remove public-back-btn" style="margin-top:14px; opacity:0.6;">&larr; Back to all tools</button>
+    </div>
+
+    <!-- ---- Neighborhood Explorer ---- -->
+    <div class="card public-tool-panel" id="public-tool-explorer" style="display:none;">
+      <div class="label">Neighborhood Explorer</div>
+      <div id="explorer-list"></div>
+      <div class="form-grid" style="margin-top:16px;">
+        <input type="text" id="explorer-name" placeholder="Your name">
+        <input type="email" id="explorer-email" class="full" placeholder="Want a personalized comparison? Leave your email">
+      </div>
+      <div class="save-bar"><button class="pill-btn" id="explorer-submit-btn">Send me a comparison</button></div>
+      <p class="muted" id="explorer-thanks" style="display:none; margin-top:10px;">Thanks! Rachelle will follow up soon.</p>
+      <button class="row-remove public-back-btn" style="margin-top:14px; opacity:0.6;">&larr; Back to all tools</button>
+    </div>
+
+    <!-- ---- Relocation Planner ---- -->
+    <div class="card public-tool-panel" id="public-tool-relocation" style="display:none;">
+      <div class="label">Relocation Planner</div>
+      <div id="relocation-step-questions">
+        <div class="form-grid">
+          <input type="text" id="relocation-origin" placeholder="Moving from (city/state)">
+          <select id="relocation-timeline"></select>
+          <select id="relocation-family"></select>
+          <input type="text" id="relocation-musthaves" class="full" placeholder="Must-haves (e.g. good schools, short commute)">
+        </div>
+        <div class="save-bar"><button class="pill-btn" id="relocation-see-results-btn">Get my checklist</button></div>
+      </div>
+      <div id="relocation-step-results" style="display:none;">
+        <p id="relocation-result-text" style="font-size:15px; line-height:1.6; white-space:pre-line;"></p>
+        <div class="form-grid" style="margin-top:12px;">
+          <input type="text" id="relocation-name" placeholder="Your name">
+          <input type="email" id="relocation-email" class="full" placeholder="Your email">
+        </div>
+        <div class="save-bar"><button class="pill-btn" id="relocation-submit-btn">Email me this checklist</button></div>
+        <p class="muted" id="relocation-thanks" style="display:none; margin-top:10px;">Thanks! Rachelle will follow up soon.</p>
+      </div>
+      <button class="row-remove public-back-btn" style="margin-top:14px; opacity:0.6;">&larr; Back to all tools</button>
+    </div>
+
+    <!-- ---- Buyer Stage Check-in ---- -->
+    <div class="card public-tool-panel" id="public-tool-buyerstage" style="display:none;">
+      <div class="label">Where Am I in the Process?</div>
+      <div id="buyerstage-step-questions">
+        <div class="form-grid">
+          <select id="buyerstage-select" class="full"></select>
+        </div>
+        <div class="save-bar"><button class="pill-btn" id="buyerstage-see-results-btn">Show me what's next</button></div>
+      </div>
+      <div id="buyerstage-step-results" style="display:none;">
+        <p id="buyerstage-result-text" style="font-size:15px; line-height:1.5;"></p>
+        <div class="form-grid" style="margin-top:12px;">
+          <input type="text" id="buyerstage-name" placeholder="Your name">
+          <input type="email" id="buyerstage-email" class="full" placeholder="Your email (optional)">
+        </div>
+        <div class="save-bar"><button class="pill-btn" id="buyerstage-submit-btn">Keep me posted</button></div>
+        <p class="muted" id="buyerstage-thanks" style="display:none; margin-top:10px;">Thanks! Rachelle will follow up soon.</p>
+      </div>
+      <button class="row-remove public-back-btn" style="margin-top:14px; opacity:0.6;">&larr; Back to all tools</button>
+    </div>
+
+    <p style="text-align:center; margin-top:8px;"><a href="#" id="public-signin-link" style="color:var(--navy); opacity:0.6; font-size:13px;">Sign in to Rachelle's System</a></p>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 
@@ -801,11 +1031,24 @@ function getCurrentUser(){ return currentUser; }
 function showAuthScreen(){
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('public-shell').style.display = 'none';
 }
 
 function showAppShell(){
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app-shell').style.display = 'block';
+  document.getElementById('public-shell').style.display = 'none';
+}
+
+function isPublicRoute(){
+  return window.location.hash.indexOf('#public') === 0;
+}
+
+function showPublicShell(){
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('public-shell').style.display = 'block';
+  if(window.initPublicTools) window.initPublicTools();
 }
 
 function setAuthError(msg){
@@ -867,9 +1110,28 @@ async function initAuth(){
   });
   document.getElementById('signout-btn').addEventListener('click', handleSignOut);
 
+  document.getElementById('auth-public-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.hash = '#public';
+    showPublicShell();
+  });
+  document.getElementById('public-signin-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.hash = '';
+    checkSessionAndRoute();
+  });
+  window.addEventListener('hashchange', () => {
+    if(isPublicRoute()){
+      showPublicShell();
+    } else {
+      checkSessionAndRoute();
+    }
+  });
+
   // React to sign-in / sign-out / token refresh, including in other tabs.
   supabaseClient.auth.onAuthStateChange((_event, session) => {
     currentUser = session ? session.user : null;
+    if(isPublicRoute()) return; // don't hijack the public tools view
     if(currentUser){
       showAppShell();
       if(window.initApp) window.initApp(currentUser);
@@ -878,6 +1140,14 @@ async function initAuth(){
     }
   });
 
+  if(isPublicRoute()){
+    showPublicShell();
+    return;
+  }
+  await checkSessionAndRoute();
+}
+
+async function checkSessionAndRoute(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   currentUser = session ? session.user : null;
   if(currentUser){
@@ -1845,6 +2115,106 @@ async function initContentModule(){
 }
 
 
+/* ---- js/content-calendar.js ---- */
+/* ---------------------------------------------------------------
+   Content Calendar: forward-looking "what to post and when," distinct
+   from the Content Checklist above (a repeating daily todo list).
+   Table: content_calendar_items.
+--------------------------------------------------------------- */
+const CALENDAR_PLATFORMS = ['Instagram','Facebook','TikTok','Newsletter','Blog/Website','Other'];
+const CALENDAR_STATUSES = ['Idea','Drafted','Scheduled','Posted'];
+
+let calendarCache = [];
+let calendarActiveStatus = 'All';
+
+async function loadCalendarItems(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('content_calendar_items').select('*').eq('user_id', user.id)
+    .order('scheduled_date', { ascending: true, nullsFirst: false });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addCalendarItemRow(item){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('content_calendar_items').insert({ ...item, user_id: user.id });
+  if(error) console.error(error);
+}
+async function updateCalendarItemStatus(id, status){
+  const { error } = await supabaseClient.from('content_calendar_items').update({ status }).eq('id', id);
+  if(error) console.error(error);
+}
+async function deleteCalendarItemRow(id){
+  const { error } = await supabaseClient.from('content_calendar_items').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderCalendar(){
+  const list = document.getElementById('calendar-list');
+  const empty = document.getElementById('calendar-empty');
+  const countEl = document.getElementById('calendar-count-hint');
+  if(!list) return;
+  calendarCache = await loadCalendarItems();
+  if(countEl) countEl.textContent = calendarCache.length + ' total';
+
+  const filtered = calendarActiveStatus === 'All' ? calendarCache : calendarCache.filter(c => c.status === calendarActiveStatus);
+  list.innerHTML = '';
+  empty.style.display = filtered.length === 0 ? 'block' : 'none';
+  filtered.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'lead-item';
+    const statusOptions = CALENDAR_STATUSES.map(s => '<option value="' + s + '"' + (s === item.status ? ' selected' : '') + '>' + s + '</option>').join('');
+    row.innerHTML =
+      '<div class="lead-main">' +
+        '<b>' + escapeHtml(item.title) + '</b>' +
+        '<span class="lead-badge">' + escapeHtml(item.platform || 'Other') + '</span>' +
+        '<div class="lead-sub">' + (item.scheduled_date ? item.scheduled_date : 'No date set') + (item.notes ? ' · ' + escapeHtml(item.notes) : '') + '</div>' +
+      '</div>' +
+      '<div class="lead-actions">' +
+        '<select class="calendar-status-select">' + statusOptions + '</select>' +
+        '<button class="row-remove" aria-label="Remove">×</button>' +
+      '</div>';
+    row.querySelector('.calendar-status-select').addEventListener('change', async e => {
+      await updateCalendarItemStatus(item.id, e.target.value);
+      renderCalendar();
+    });
+    row.querySelector('.row-remove').addEventListener('click', async () => {
+      await deleteCalendarItemRow(item.id);
+      renderCalendar();
+    });
+    list.appendChild(row);
+  });
+}
+
+async function initCalendarModule(){
+  document.getElementById('calendar-platform').innerHTML = CALENDAR_PLATFORMS.map(p => '<option value="' + p + '">' + p + '</option>').join('');
+  document.getElementById('calendar-status').innerHTML = CALENDAR_STATUSES.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+
+  document.getElementById('calendar-status-filter').addEventListener('click', (e) => {
+    const btn = e.target.closest('.ref-filter-btn');
+    if(!btn) return;
+    document.querySelectorAll('#calendar-status-filter .ref-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    calendarActiveStatus = btn.dataset.status;
+    renderCalendar();
+  });
+
+  document.getElementById('calendar-add-btn').addEventListener('click', async () => {
+    const title = document.getElementById('calendar-title').value.trim();
+    const platform = document.getElementById('calendar-platform').value;
+    const scheduled_date = document.getElementById('calendar-date').value || null;
+    const status = document.getElementById('calendar-status').value;
+    const notes = document.getElementById('calendar-notes').value.trim();
+    if(!title) return;
+    await addCalendarItemRow({ title, platform, scheduled_date, status, notes });
+    ['calendar-title','calendar-date','calendar-notes'].forEach(id => document.getElementById(id).value = '');
+    renderCalendar();
+  });
+
+  await renderCalendar();
+}
+
+
 /* ---- js/reference-library.js ---- */
 /* ---------------------------------------------------------------
    Reference Library: searchable Script/Prompt/CTA/Template Library
@@ -1853,7 +2223,7 @@ async function initContentModule(){
    Seeded once per user on first load from SEED_LIBRARY below, then
    fully editable/searchable like every other table in this app.
 --------------------------------------------------------------- */
-const REF_CATEGORY_LABEL = { voice:'Voice & Audience', cta:'CTA Library', script:'Script Library', prompt:'Prompt Library', template:'Template Library' };
+const REF_CATEGORY_LABEL = { voice:'Voice & Audience', cta:'CTA Library', script:'Script Library', prompt:'Prompt Library', template:'Template Library', reference:'CRM Reference' };
 
 const SEED_LIBRARY = [
 
@@ -2317,6 +2687,76 @@ async function seedReferenceLibraryIfEmpty(){
   if(insErr) console.error(insErr);
 }
 
+/* Additional CRM reference content, added after the initial library seed
+   already shipped — pulled directly from the uploaded CRM spreadsheet's
+   "Follow-Up Standards" and "Maintenance Checklist" tabs (System 07).
+   Checked and inserted individually by title so this correctly reaches
+   accounts that were seeded before this content existed, without
+   duplicating for anyone who already has it. */
+const ADDITIONAL_REFERENCE_ITEMS = [
+  { category:'reference', section:'CRM Reference', title:'Follow-Up Standards & Category Reference', body:
+`CONTACT CATEGORIES
+Lead — Shown interest, not yet an active client. Track: source, timeline, questions, concerns, follow-up plan.
+Future Client — May become a client but needs preparation first. Track: expected timeline, preparation needs, resources provided, follow-up schedule.
+Active Client — Currently working with you. Track: goals, criteria, communication preferences, current stage, next milestone.
+Past Client — Completed a transaction. Track: closing date, home info, important dates, personal details, service opportunities.
+Sphere — Already knows, likes, or trusts you. Track: personal updates, life events, relationship notes, last meaningful interaction.
+Partner — Professional relationship that may create referrals. Track: organization, role, audience, relationship status, last interaction.
+Agent Referral — Other agents who may send or receive referrals. Track: market served, referral history, relationship notes.
+
+TIMELINE CATEGORIES
+Now — 0-3 months: Consultation, immediate planning, active follow-up.
+Soon — 3-6 months: Education, preparation, financial planning.
+Future — 6-12 months: Nurture, market updates, resource sharing.
+Long Term — 12+ months: Relationship maintenance, occasional value touches.
+
+FOLLOW-UP STANDARDS
+New inquiry — Respond as quickly as possible.
+Active buyer lead — Follow up every few days until consultation.
+Future buyer — Monthly value touch + periodic personal check-in.
+Sphere — Consistent personal touches + value updates.
+Partner — Relationship maintenance every quarter.
+Past client — Ongoing relationship plan.
+
+RELATIONSHIP MOVEMENT
+Website visitor → Lead → Future Client → Active Client → Past Client → Referral Relationship.
+Don't force movement — recognize when someone's ready for the next step.` },
+
+  { category:'reference', section:'CRM Reference', title:'CRM Maintenance Checklist', body:
+`WEEKLY REVIEW
+Review overdue follow-ups.
+Review upcoming tasks.
+Update timelines.
+Add notes from conversations.
+Identify opportunities.
+Schedule next actions.
+
+MONTHLY REVIEW
+Check database accuracy.
+Fill in missing information.
+Review lead movement between categories.
+
+QUARTERLY REVIEW
+Review relationship stages.
+Review inactive opportunities.
+Assess overall CRM effectiveness.
+
+Rule: AI can summarize notes, draft follow-ups, and flag overdue relationships — but relationships are still built personally.` }
+];
+
+async function seedAdditionalReferenceContentIfMissing(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('reference_library').select('title').eq('user_id', user.id).eq('category', 'reference');
+  if(error){ console.error(error); return; }
+  const existingTitles = new Set((data || []).map(r => r.title));
+  const missing = ADDITIONAL_REFERENCE_ITEMS.filter(item => !existingTitles.has(item.title));
+  if(missing.length === 0) return;
+  const rows = missing.map(item => ({ ...item, user_id: user.id, is_custom: false }));
+  const { error: insErr } = await supabaseClient.from('reference_library').insert(rows);
+  if(insErr) console.error(insErr);
+}
+
 async function loadRefLibrary(){
   const user = getCurrentUser();
   const { data, error } = await supabaseClient
@@ -2397,6 +2837,7 @@ function renderRefLibrary(){
 
 async function initReferenceLibraryModule(){
   await seedReferenceLibraryIfEmpty();
+  await seedAdditionalReferenceContentIfMissing();
   refLibraryCache = await loadRefLibrary();
   document.getElementById('ref-count-hint').textContent = refLibraryCache.length + ' entries';
   renderRefLibrary();
@@ -2424,6 +2865,122 @@ async function initReferenceLibraryModule(){
     refLibraryCache = await loadRefLibrary();
     document.getElementById('ref-count-hint').textContent = refLibraryCache.length + ' entries';
     renderRefLibrary();
+  });
+}
+
+
+/* ---- js/public-submissions-admin.js ---- */
+/* ---------------------------------------------------------------
+   Authenticated-side view of public_submissions (see public-tools.js
+   for how rows get created). "Add as contact" creates a real Contacts
+   row from the submission and marks it converted; "Dismiss" just
+   deletes it. Table: public_submissions.
+--------------------------------------------------------------- */
+async function loadPublicSubmissions(){
+  const { data, error } = await supabaseClient
+    .from('public_submissions').select('*').eq('converted', false).order('created_at', { ascending: false });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function markSubmissionConverted(id){
+  const { error } = await supabaseClient.from('public_submissions').update({ converted: true }).eq('id', id);
+  if(error) console.error(error);
+}
+async function deleteSubmissionRow(id){
+  const { error } = await supabaseClient.from('public_submissions').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderSubmissions(){
+  const list = document.getElementById('submissions-list');
+  const empty = document.getElementById('submissions-empty');
+  const countEl = document.getElementById('submissions-count-hint');
+  if(!list) return;
+  const subs = await loadPublicSubmissions();
+  if(countEl) countEl.textContent = subs.length + ' new';
+  list.innerHTML = '';
+  empty.style.display = subs.length === 0 ? 'block' : 'none';
+  subs.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'lead-item';
+    row.innerHTML =
+      '<div class="lead-main">' +
+        '<b>' + escapeHtml(s.name || 'Anonymous') + '</b>' +
+        '<span class="lead-badge">' + escapeHtml(s.tool_name) + '</span>' +
+        '<div class="lead-sub">' + (s.email ? escapeHtml(s.email) : '') + (s.phone ? ' · ' + escapeHtml(s.phone) : '') + '</div>' +
+        '<div class="lead-sub">' + escapeHtml((s.summary || '').slice(0, 140)) + '</div>' +
+      '</div>' +
+      '<div class="lead-actions">' +
+        '<button class="pill-btn small submission-convert-btn">Add as contact</button>' +
+        '<button class="row-remove" aria-label="Dismiss">×</button>' +
+      '</div>';
+    row.querySelector('.submission-convert-btn').addEventListener('click', async () => {
+      await addContactRow({
+        name: s.name || ('Unknown (from ' + s.tool_name + ')'),
+        email: s.email || '',
+        phone: s.phone || '',
+        category: 'Lead',
+        source: s.tool_name,
+        relationship_notes: s.summary || ''
+      });
+      await markSubmissionConverted(s.id);
+      renderSubmissions();
+      renderContacts();
+    });
+    row.querySelector('.row-remove').addEventListener('click', async () => {
+      await deleteSubmissionRow(s.id);
+      renderSubmissions();
+    });
+    list.appendChild(row);
+  });
+}
+
+/* ---- js/neighborhood-profiles-admin.js ---- */
+async function seedNeighborhoodProfilesIfEmpty(){
+  const { count, error } = await supabaseClient.from('neighborhood_profiles').select('id', { count: 'exact', head: true });
+  if(error){ console.error(error); return; }
+  if(count && count > 0) return;
+  const defaults = ['Cooper City','Pembroke Pines','Plantation'].map(name => ({ name, price_range:'', vibe:'', commute_notes:'', schools_notes:'', best_for:'' }));
+  const { error: insErr } = await supabaseClient.from('neighborhood_profiles').insert(defaults);
+  if(insErr) console.error(insErr);
+}
+async function updateNeighborhoodProfile(id, fields){
+  const { error } = await supabaseClient.from('neighborhood_profiles').update(fields).eq('id', id);
+  if(error) console.error(error);
+}
+async function renderNeighborhoodAdmin(){
+  const container = document.getElementById('neighborhood-admin-list');
+  if(!container) return;
+  await seedNeighborhoodProfilesIfEmpty();
+  const profiles = await loadNeighborhoodProfiles();
+  container.innerHTML = '';
+  profiles.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'exercise';
+    div.innerHTML =
+      '<div class="exercise-head"><h4>' + escapeHtml(p.name) + '</h4></div>' +
+      '<div class="form-grid" style="margin-top:8px;">' +
+        '<input type="text" class="np-price" placeholder="Price range (e.g. $450k-$650k)" value="' + escapeHtml(p.price_range || '') + '">' +
+        '<input type="text" class="np-vibe" placeholder="Vibe / description" value="' + escapeHtml(p.vibe || '') + '">' +
+        '<input type="text" class="np-commute" placeholder="Commute notes" value="' + escapeHtml(p.commute_notes || '') + '">' +
+        '<input type="text" class="np-schools" placeholder="School notes" value="' + escapeHtml(p.schools_notes || '') + '">' +
+        '<input type="text" class="np-bestfor full" placeholder="Best for..." value="' + escapeHtml(p.best_for || '') + '">' +
+      '</div>' +
+      '<div class="save-bar"><button class="pill-btn small np-save-btn">Save</button></div>';
+    div.querySelector('.np-save-btn').addEventListener('click', async () => {
+      await updateNeighborhoodProfile(p.id, {
+        price_range: div.querySelector('.np-price').value.trim(),
+        vibe: div.querySelector('.np-vibe').value.trim(),
+        commute_notes: div.querySelector('.np-commute').value.trim(),
+        schools_notes: div.querySelector('.np-schools').value.trim(),
+        best_for: div.querySelector('.np-bestfor').value.trim()
+      });
+      const btn = div.querySelector('.np-save-btn');
+      const orig = btn.textContent;
+      btn.textContent = 'Saved!';
+      setTimeout(() => { btn.textContent = orig; }, 1200);
+    });
+    container.appendChild(div);
   });
 }
 
@@ -2462,9 +3019,12 @@ function setKpi(id, val){
 }
 
 async function initBusinessModule(){
+  await renderSubmissions();
   await initContactsModule();
   await initPipelineModule();
   await initContentModule();
+  await initCalendarModule();
+  await renderNeighborhoodAdmin();
   await initReferenceLibraryModule();
   await renderBusinessKpis();
 }
@@ -2578,23 +3138,13 @@ window.refreshTodaySummary = renderTodaySummary;
 
 /* ---- js/app.js ---- */
 /* ---------------------------------------------------------------
-   App shell logic.
-   NOTE ON THIS PHASE: this is the *foundation* build — file
-   structure, Supabase auth, and schema. The feature modules below
-   (routine/habits/chores/bills/appointments/workouts) still read
-   and write through the local storageGet/storageSet helpers, same
-   as V1. Migrating each one to the Supabase tables in schema.sql
-   (foods, meal_logs, workouts, habits, tasks, etc.) is the next
-   phase, module by module.
+   App shell logic: tab switching, session init, and wiring up every
+   module's event listeners. Every feature module (routine, habits,
+   chores, bills, appointments, workouts, priorities, inbox, etc.) is
+   Supabase-backed as of 2026-07-20 — see CHANGELOG.md.
 --------------------------------------------------------------- */
 
-/* ---------------- Storage helpers (local, pending Supabase migration) ---------------- */
-function storageGet(key){
-  try{ return localStorage.getItem(key); }catch(e){ return null; }
-}
-function storageSet(key, value){
-  try{ localStorage.setItem(key, value); return true; }catch(e){ return false; }
-}
+/* ---------------- Date helpers ---------------- */
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function mondayOfWeek(d){
   const date = new Date(d);
@@ -2609,113 +3159,159 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
-/* ---------------- Generic checklist group (routine / habits / chores) ---------------- */
-function createChecklist(prefix, defaultItems, period){
-  function getMarker(){
-    if(period === 'day') return todayStr();
-    if(period === 'week') return mondayOfWeek(new Date());
-    if(period === 'month') return new Date().toISOString().slice(0,7);
-    return null;
-  }
-  function getItems(){
-    const raw = storageGet(prefix + '-items');
-    if(raw){ try{ return JSON.parse(raw); }catch(e){} }
-    storageSet(prefix + '-items', JSON.stringify(defaultItems));
-    return defaultItems.slice();
-  }
-  function getState(){
-    const marker = getMarker();
-    const storedMarker = storageGet(prefix + '-marker');
-    const raw = storageGet(prefix + '-state');
-    let state = {};
-    try{ state = raw ? JSON.parse(raw) : {}; }catch(e){ state = {}; }
-    if(period && storedMarker !== marker){
-      state = {};
-      storageSet(prefix + '-state', JSON.stringify(state));
-      storageSet(prefix + '-marker', marker);
-    }
-    return state;
-  }
-  function toggle(text, val){
-    const state = getState();
-    state[text] = val;
-    storageSet(prefix + '-state', JSON.stringify(state));
-  }
-  function addItem(text){
-    const items = getItems();
-    items.push(text);
-    storageSet(prefix + '-items', JSON.stringify(items));
-  }
-  function removeItem(text){
-    let items = getItems();
-    items = items.filter(i => i !== text);
-    storageSet(prefix + '-items', JSON.stringify(items));
-    const state = getState();
-    delete state[text];
-    storageSet(prefix + '-state', JSON.stringify(state));
-  }
-  return {getItems, getState, toggle, addItem, removeItem};
+/* ---------------- Checklist groups (routine / chores) ----------------
+   Migrated from localStorage to the Supabase "checklist_items" +
+   "checklist_logs" tables (see remaining_features_migration.sql) —
+   same generalized definitions+logs shape already used by habits.js
+   and content-checklist.js, parameterized by list_key + reset period
+   instead of five separate copies of the same pattern. */
+const CHECKLIST_DEFAULTS = {
+  'routine-morning': { period: 'day',   items: ["Get up","Get dressed","Eat breakfast","Check today's priorities"] },
+  'routine-evening': { period: 'day',   items: ["Set out tomorrow's clothes","Tidy one surface","Wind-down / screens off","Lights out"] },
+  'chores-daily':    { period: 'day',   items: ["Dishes","Wipe counters","Make bed","Take out trash if full"] },
+  'chores-weekly':   { period: 'week',  items: ["Vacuum/sweep","Clean bathroom","Laundry","Change sheets","Grocery run"] },
+  'chores-monthly':  { period: 'month', items: ["Deep clean fridge","Dust","Wipe baseboards","Declutter one area"] }
+};
+
+function periodMarker(period){
+  if(period === 'day') return todayStr();
+  if(period === 'week') return mondayOfWeek(new Date());
+  if(period === 'month') return new Date().toISOString().slice(0,7);
+  return null;
 }
 
-const routineMorning = createChecklist('routine-morning', ["Get up","Get dressed","Eat breakfast","Check today's priorities"], 'day');
-const routineEvening = createChecklist('routine-evening', ["Set out tomorrow's clothes","Tidy one surface","Wind-down / screens off","Lights out"], 'day');
-const choresDaily = createChecklist('chores-daily', ["Dishes","Wipe counters","Make bed","Take out trash if full"], 'day');
-const choresWeekly = createChecklist('chores-weekly', ["Vacuum/sweep","Clean bathroom","Laundry","Change sheets","Grocery run"], 'week');
-const choresMonthly = createChecklist('chores-monthly', ["Deep clean fridge","Dust","Wipe baseboards","Declutter one area"], 'month');
+async function seedChecklistIfEmpty(listKey){
+  const user = getCurrentUser();
+  const { count, error } = await supabaseClient
+    .from('checklist_items').select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id).eq('list_key', listKey).eq('archived', false);
+  if(error){ console.error(error); return; }
+  if(count && count > 0) return;
+  const defs = CHECKLIST_DEFAULTS[listKey].items;
+  const rows = defs.map((name, i) => ({ user_id: user.id, list_key: listKey, name, sort_order: i }));
+  const { error: insErr } = await supabaseClient.from('checklist_items').insert(rows);
+  if(insErr) console.error(insErr);
+}
+async function loadChecklistItems(listKey){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('checklist_items').select('*').eq('user_id', user.id).eq('list_key', listKey).eq('archived', false).order('sort_order');
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function loadChecklistLogs(listKey, marker){
+  const user = getCurrentUser();
+  const items = await loadChecklistItems(listKey);
+  const itemIds = items.map(i => i.id);
+  if(itemIds.length === 0) return [];
+  const { data, error } = await supabaseClient
+    .from('checklist_logs').select('*').eq('user_id', user.id).eq('period_marker', marker).in('item_id', itemIds);
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function setChecklistItemLog(itemId, marker, completed){
+  const user = getCurrentUser();
+  if(completed){
+    const { error } = await supabaseClient
+      .from('checklist_logs')
+      .upsert({ user_id: user.id, item_id: itemId, period_marker: marker, completed: true }, { onConflict: 'item_id,period_marker' });
+    if(error) console.error(error);
+  } else {
+    const { error } = await supabaseClient
+      .from('checklist_logs').delete().eq('item_id', itemId).eq('period_marker', marker);
+    if(error) console.error(error);
+  }
+}
+async function addChecklistItemRow(listKey, name){
+  const items = await loadChecklistItems(listKey);
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('checklist_items').insert({ user_id: user.id, list_key: listKey, name, sort_order: items.length });
+  if(error) console.error(error);
+}
+async function removeChecklistItemRow(id){
+  const { error } = await supabaseClient.from('checklist_items').update({ archived: true }).eq('id', id);
+  if(error) console.error(error);
+}
 
-/* Note: habits moved to js/habits.js (Supabase-backed) — no longer part
-   of this generic localStorage checklist group. */
-const MOUNTS = [
-  {group: routineMorning, containerId:'routine-morning-list', showRemove:true},
-  {group: routineEvening, containerId:'routine-evening-list', showRemove:true},
-  {group: choresDaily, containerId:'chores-daily-list', showRemove:true},
-  {group: choresWeekly, containerId:'chores-weekly-list', showRemove:true},
-  {group: choresMonthly, containerId:'chores-monthly-list', showRemove:true},
+const CHECKLIST_MOUNTS = [
+  { listKey: 'routine-morning', containerId: 'routine-morning-list' },
+  { listKey: 'routine-evening', containerId: 'routine-evening-list' },
+  { listKey: 'chores-daily',    containerId: 'chores-daily-list' },
+  { listKey: 'chores-weekly',   containerId: 'chores-weekly-list' },
+  { listKey: 'chores-monthly',  containerId: 'chores-monthly-list' }
 ];
 
-function renderChecklist(mount){
+async function renderChecklist(mount){
   const container = document.getElementById(mount.containerId);
   if(!container) return;
-  const items = mount.group.getItems();
-  const state = mount.group.getState();
-  container.innerHTML = '';
-  if(items.length === 0){
-    container.innerHTML = '<div class="empty-note">Nothing here yet.</div>';
-    return;
-  }
-  items.forEach((text, idx) => {
+  await seedChecklistIfEmpty(mount.listKey);
+  const period = CHECKLIST_DEFAULTS[mount.listKey].period;
+  const marker = periodMarker(period);
+  const items = await loadChecklistItems(mount.listKey);
+  const logs = await loadChecklistLogs(mount.listKey, marker);
+  const doneIds = new Set(logs.filter(l => l.completed).map(l => l.item_id));
+
+  container.innerHTML = items.length === 0 ? '<div class="empty-note">Nothing here yet.</div>' : '';
+  items.forEach(item => {
+    const isDone = doneIds.has(item.id);
     const row = document.createElement('div');
-    row.className = 'task-row' + (state[text] ? ' done' : '');
-    const cbId = mount.containerId + '-cb-' + idx;
+    row.className = 'task-row' + (isDone ? ' done' : '');
+    const cbId = mount.containerId + '-cb-' + item.id;
     row.innerHTML =
-      '<input type="checkbox" id="' + cbId + '" ' + (state[text] ? 'checked' : '') + '>' +
-      '<label for="' + cbId + '">' + escapeHtml(text) + '</label>' +
-      (mount.showRemove ? '<button class="row-remove" aria-label="Remove">×</button>' : '');
-    row.querySelector('input').addEventListener('change', e => {
-      mount.group.toggle(text, e.target.checked);
-      renderAllMounts();
+      '<input type="checkbox" id="' + cbId + '" ' + (isDone ? 'checked' : '') + '>' +
+      '<label for="' + cbId + '">' + escapeHtml(item.name) + '</label>' +
+      '<button class="row-remove" aria-label="Remove">×</button>';
+    row.querySelector('input').addEventListener('change', async e => {
+      await setChecklistItemLog(item.id, marker, e.target.checked);
+      renderChecklist(mount);
     });
-    if(mount.showRemove){
-      row.querySelector('.row-remove').addEventListener('click', () => {
-        mount.group.removeItem(text);
-        renderAllMounts();
-      });
-    }
+    row.querySelector('.row-remove').addEventListener('click', async () => {
+      await removeChecklistItemRow(item.id);
+      renderChecklist(mount);
+    });
     container.appendChild(row);
   });
 }
-function renderAllMounts(){ MOUNTS.forEach(renderChecklist); }
-
-/* ---------------- Today's priorities (max 3) ---------------- */
-const TASK_KEY = 'dash-today-tasks';
-const MAX_TASKS = 3;
-function loadTasks(){
-  const raw = storageGet(TASK_KEY);
-  try{ return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
+async function renderAllMounts(){
+  for(const mount of CHECKLIST_MOUNTS){ await renderChecklist(mount); }
 }
-function saveTasks(t){ storageSet(TASK_KEY, JSON.stringify(t)); }
-function renderPriorities(){
-  const tasks = loadTasks();
+async function resetRoutineToday(){
+  const user = getCurrentUser();
+  const marker = todayStr();
+  const morning = await loadChecklistItems('routine-morning');
+  const evening = await loadChecklistItems('routine-evening');
+  const ids = [...morning, ...evening].map(i => i.id);
+  if(ids.length){
+    await supabaseClient.from('checklist_logs').delete().eq('user_id', user.id).eq('period_marker', marker).in('item_id', ids);
+  }
+  renderChecklist(CHECKLIST_MOUNTS[0]);
+  renderChecklist(CHECKLIST_MOUNTS[1]);
+}
+
+/* ---------------- Today's priorities (max 3) ----------------
+   Migrated from localStorage to the Supabase "daily_priorities" table.
+   Scoped to today's date, so — unlike the old localStorage version,
+   which never actually reset — it naturally starts fresh each day
+   while keeping history for anyone who wants to look back later. */
+const MAX_TASKS = 3;
+async function loadTasks(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('daily_priorities').select('*').eq('user_id', user.id).eq('priority_date', todayStr()).order('created_at');
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addPriorityRow(content){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('daily_priorities').insert({ user_id: user.id, content, priority_date: todayStr(), done: false });
+  if(error) console.error(error);
+}
+async function togglePriorityRow(id, done){
+  const { error } = await supabaseClient.from('daily_priorities').update({ done }).eq('id', id);
+  if(error) console.error(error);
+}
+async function renderPriorities(){
+  const tasks = await loadTasks();
   ['dash-task-list','home-priorities-list'].forEach(id => {
     const list = document.getElementById(id);
     if(!list) return;
@@ -2723,16 +3319,14 @@ function renderPriorities(){
     if(tasks.length === 0){
       list.innerHTML = '<div class="empty-note">Nothing added yet — what matters most today?</div>';
     }
-    tasks.forEach((t, idx) => {
+    tasks.forEach((t) => {
       const row = document.createElement('div');
       row.className = 'task-row' + (t.done ? ' done' : '');
-      const cbId = id + '-t-' + idx;
+      const cbId = id + '-t-' + t.id;
       row.innerHTML = '<input type="checkbox" id="' + cbId + '" ' + (t.done ? 'checked' : '') + '>' +
-        '<label for="' + cbId + '">' + escapeHtml(t.text) + '</label>';
-      row.querySelector('input').addEventListener('change', e => {
-        const cur = loadTasks();
-        cur[idx].done = e.target.checked;
-        saveTasks(cur);
+        '<label for="' + cbId + '">' + escapeHtml(t.content) + '</label>';
+      row.querySelector('input').addEventListener('change', async e => {
+        await togglePriorityRow(t.id, e.target.checked);
         renderPriorities();
       });
       list.appendChild(row);
@@ -2743,54 +3337,60 @@ function renderPriorities(){
   const fullMsg = document.getElementById('dash-full-msg');
   if(fullMsg) fullMsg.style.display = tasks.length >= MAX_TASKS ? 'block' : 'none';
 }
-function addTask(){
+async function addTask(){
   const input = document.getElementById('dash-task-input');
   const val = input.value.trim();
   if(!val) return;
-  const tasks = loadTasks();
+  const tasks = await loadTasks();
   if(tasks.length >= MAX_TASKS){
     document.getElementById('dash-full-msg').style.display = 'block';
     return;
   }
-  tasks.push({text: val, done: false});
-  saveTasks(tasks);
+  await addPriorityRow(val);
   input.value = '';
   renderPriorities();
 }
 
-/* ---------------- Quick capture inbox ---------------- */
-const INBOX_KEY = 'dash-inbox';
-function loadInbox(){
-  const raw = storageGet(INBOX_KEY);
-  try{ return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
+/* ---------------- Quick capture inbox ----------------
+   Migrated from localStorage to the Supabase "inbox_items" table. */
+async function loadInbox(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('inbox_items').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+  if(error){ console.error(error); return []; }
+  return data;
 }
-function saveInbox(items){ storageSet(INBOX_KEY, JSON.stringify(items)); }
-function renderInbox(){
-  const items = loadInbox();
+async function addInboxItemRow(content){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('inbox_items').insert({ user_id: user.id, content });
+  if(error) console.error(error);
+}
+async function deleteInboxItemRow(id){
+  const { error } = await supabaseClient.from('inbox_items').delete().eq('id', id);
+  if(error) console.error(error);
+}
+async function renderInbox(){
+  const items = await loadInbox();
   const list = document.getElementById('inbox-list');
   const empty = document.getElementById('inbox-empty');
   list.innerHTML = '';
   empty.style.display = items.length === 0 ? 'block' : 'none';
-  items.forEach((item, idx) => {
+  items.forEach((item) => {
     const row = document.createElement('div');
     row.className = 'inbox-item';
-    row.innerHTML = '<span>' + escapeHtml(item) + '</span><button aria-label="Remove">×</button>';
-    row.querySelector('button').addEventListener('click', () => {
-      const cur = loadInbox();
-      cur.splice(idx, 1);
-      saveInbox(cur);
+    row.innerHTML = '<span>' + escapeHtml(item.content) + '</span><button aria-label="Remove">×</button>';
+    row.querySelector('button').addEventListener('click', async () => {
+      await deleteInboxItemRow(item.id);
       renderInbox();
     });
     list.appendChild(row);
   });
 }
-function addInboxItem(){
+async function addInboxItem(){
   const input = document.getElementById('inbox-input');
   const val = input.value.trim();
   if(!val) return;
-  const items = loadInbox();
-  items.unshift(val);
-  saveInbox(items);
+  await addInboxItemRow(val);
   input.value = '';
   renderInbox();
 }
@@ -2863,6 +3463,174 @@ async function addAppt(){
   document.getElementById('appt-notes').value = '';
   renderApptsFull();
   renderApptsToday();
+}
+
+/* ---- js/notes.js ---- */
+/* ---------------------------------------------------------------
+   Notes: quick freeform capture. Table: notes (already existed in
+   schema.sql, unused until now).
+--------------------------------------------------------------- */
+async function loadNotes(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('notes').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addNoteRow(content){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('notes').insert({ user_id: user.id, content });
+  if(error) console.error(error);
+}
+async function deleteNoteRow(id){
+  const { error } = await supabaseClient.from('notes').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderNotes(){
+  const list = document.getElementById('notes-list');
+  const empty = document.getElementById('notes-empty');
+  const countEl = document.getElementById('notes-count-hint');
+  if(!list) return;
+  const notes = await loadNotes();
+  if(countEl) countEl.textContent = notes.length + ' total';
+  list.innerHTML = '';
+  empty.style.display = notes.length === 0 ? 'block' : 'none';
+  notes.forEach(n => {
+    const row = document.createElement('div');
+    row.className = 'inbox-item';
+    const when = new Date(n.created_at).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+    row.innerHTML = '<span>' + escapeHtml(n.content) + '<br><span style="font-size:11px;opacity:0.5;">' + when + '</span></span>' +
+      '<button aria-label="Remove">×</button>';
+    row.querySelector('button').addEventListener('click', async () => {
+      await deleteNoteRow(n.id);
+      renderNotes();
+    });
+    list.appendChild(row);
+  });
+}
+
+async function initNotesModule(){
+  document.getElementById('note-add-btn').addEventListener('click', async () => {
+    const input = document.getElementById('note-input');
+    const content = input.value.trim();
+    if(!content) return;
+    await addNoteRow(content);
+    input.value = '';
+    renderNotes();
+  });
+  await renderNotes();
+}
+
+/* ---- js/weekly-reviews.js ---- */
+/* ---------------------------------------------------------------
+   Weekly Reviews: one entry per week (unique on user_id + week_start
+   in the DB), auto-scoped to the current Monday-start week. Table:
+   weekly_reviews (already existed in schema.sql, unused until now).
+--------------------------------------------------------------- */
+const REVIEW_FIELDS = ['wins','challenges','lessons','nutrition_consistency','workout_consistency','business_wins','next_week_priorities'];
+const REVIEW_FIELD_TO_INPUT = {
+  wins: 'review-wins', challenges: 'review-challenges', lessons: 'review-lessons',
+  nutrition_consistency: 'review-nutrition', workout_consistency: 'review-workout',
+  business_wins: 'review-business', next_week_priorities: 'review-next-priorities'
+};
+
+async function loadCurrentWeekReview(){
+  const user = getCurrentUser();
+  const weekStart = mondayOfWeek(new Date());
+  const { data, error } = await supabaseClient
+    .from('weekly_reviews').select('*').eq('user_id', user.id).eq('week_start', weekStart).maybeSingle();
+  if(error){ console.error(error); return null; }
+  return data;
+}
+async function loadPastReviews(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('weekly_reviews').select('*').eq('user_id', user.id).order('week_start', { ascending: false });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function saveCurrentWeekReview(fields){
+  const user = getCurrentUser();
+  const weekStart = mondayOfWeek(new Date());
+  const { error } = await supabaseClient
+    .from('weekly_reviews')
+    .upsert({ user_id: user.id, week_start: weekStart, ...fields }, { onConflict: 'user_id,week_start' });
+  if(error) console.error(error);
+}
+async function deleteReviewRow(id){
+  const { error } = await supabaseClient.from('weekly_reviews').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderCurrentWeekReview(){
+  const hintEl = document.getElementById('review-week-hint');
+  const weekStart = mondayOfWeek(new Date());
+  if(hintEl) hintEl.textContent = 'week of ' + weekStart;
+  const existing = await loadCurrentWeekReview();
+  REVIEW_FIELDS.forEach(field => {
+    const el = document.getElementById(REVIEW_FIELD_TO_INPUT[field]);
+    if(el) el.value = (existing && existing[field]) || '';
+  });
+}
+
+async function renderPastReviews(){
+  const list = document.getElementById('reviews-list');
+  const empty = document.getElementById('reviews-empty');
+  if(!list) return;
+  const currentWeekStart = mondayOfWeek(new Date());
+  const all = await loadPastReviews();
+  const past = all.filter(r => r.week_start !== currentWeekStart);
+
+  list.innerHTML = '';
+  empty.style.display = past.length === 0 ? 'block' : 'none';
+  past.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'ref-item';
+    const summary = [
+      r.wins ? 'Wins: ' + r.wins : '',
+      r.challenges ? 'Challenges: ' + r.challenges : '',
+      r.lessons ? 'Lessons: ' + r.lessons : '',
+      r.nutrition_consistency ? 'Nutrition: ' + r.nutrition_consistency : '',
+      r.workout_consistency ? 'Workouts: ' + r.workout_consistency : '',
+      r.business_wins ? 'Business: ' + r.business_wins : '',
+      r.next_week_priorities ? 'Next week: ' + r.next_week_priorities : ''
+    ].filter(Boolean).join('\n\n');
+    row.innerHTML =
+      '<div class="ref-item-head"><div><b>Week of ' + r.week_start + '</b></div></div>' +
+      '<div class="ref-body">' + escapeHtml(summary || 'No details entered.') + '</div>' +
+      '<div class="ref-item-actions" style="display:none;"><button class="ref-delete-btn">Delete</button></div>';
+    const head = row.querySelector('.ref-item-head');
+    const actions = row.querySelector('.ref-item-actions');
+    head.addEventListener('click', () => {
+      row.classList.toggle('open');
+      actions.style.display = row.classList.contains('open') ? 'flex' : 'none';
+    });
+    row.querySelector('.ref-delete-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await deleteReviewRow(r.id);
+      renderPastReviews();
+    });
+    list.appendChild(row);
+  });
+}
+
+async function initReviewsModule(){
+  document.getElementById('review-save-btn').addEventListener('click', async () => {
+    const fields = {};
+    REVIEW_FIELDS.forEach(field => {
+      fields[field] = document.getElementById(REVIEW_FIELD_TO_INPUT[field]).value.trim();
+    });
+    await saveCurrentWeekReview(fields);
+    const btn = document.getElementById('review-save-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Saved!';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+    renderPastReviews();
+  });
+
+  await renderCurrentWeekReview();
+  await renderPastReviews();
 }
 
 /* ---------------- Bills ----------------
@@ -3433,31 +4201,27 @@ function initApp(user){
   document.getElementById('inbox-add-btn').addEventListener('click', addInboxItem);
   document.getElementById('inbox-input').addEventListener('keydown', e => { if(e.key === 'Enter') addInboxItem(); });
 
-  document.getElementById('routine-morning-add').addEventListener('click', () => {
+  document.getElementById('routine-morning-add').addEventListener('click', async () => {
     const input = document.getElementById('routine-morning-input');
-    if(input.value.trim()){ routineMorning.addItem(input.value.trim()); input.value=''; renderAllMounts(); }
+    if(input.value.trim()){ await addChecklistItemRow('routine-morning', input.value.trim()); input.value=''; renderChecklist(CHECKLIST_MOUNTS[0]); }
   });
-  document.getElementById('routine-evening-add').addEventListener('click', () => {
+  document.getElementById('routine-evening-add').addEventListener('click', async () => {
     const input = document.getElementById('routine-evening-input');
-    if(input.value.trim()){ routineEvening.addItem(input.value.trim()); input.value=''; renderAllMounts(); }
+    if(input.value.trim()){ await addChecklistItemRow('routine-evening', input.value.trim()); input.value=''; renderChecklist(CHECKLIST_MOUNTS[1]); }
   });
-  document.getElementById('reset-routine-btn').addEventListener('click', () => {
-    storageSet('routine-morning-state', '{}');
-    storageSet('routine-evening-state', '{}');
-    renderAllMounts();
-  });
+  document.getElementById('reset-routine-btn').addEventListener('click', resetRoutineToday);
 
-  document.getElementById('chores-daily-add').addEventListener('click', () => {
+  document.getElementById('chores-daily-add').addEventListener('click', async () => {
     const input = document.getElementById('chores-daily-input');
-    if(input.value.trim()){ choresDaily.addItem(input.value.trim()); input.value=''; renderAllMounts(); }
+    if(input.value.trim()){ await addChecklistItemRow('chores-daily', input.value.trim()); input.value=''; renderChecklist(CHECKLIST_MOUNTS[2]); }
   });
-  document.getElementById('chores-weekly-add').addEventListener('click', () => {
+  document.getElementById('chores-weekly-add').addEventListener('click', async () => {
     const input = document.getElementById('chores-weekly-input');
-    if(input.value.trim()){ choresWeekly.addItem(input.value.trim()); input.value=''; renderAllMounts(); }
+    if(input.value.trim()){ await addChecklistItemRow('chores-weekly', input.value.trim()); input.value=''; renderChecklist(CHECKLIST_MOUNTS[3]); }
   });
-  document.getElementById('chores-monthly-add').addEventListener('click', () => {
+  document.getElementById('chores-monthly-add').addEventListener('click', async () => {
     const input = document.getElementById('chores-monthly-input');
-    if(input.value.trim()){ choresMonthly.addItem(input.value.trim()); input.value=''; renderAllMounts(); }
+    if(input.value.trim()){ await addChecklistItemRow('chores-monthly', input.value.trim()); input.value=''; renderChecklist(CHECKLIST_MOUNTS[4]); }
   });
 
   document.getElementById('bill-add-btn').addEventListener('click', addBill);
@@ -3484,11 +4248,309 @@ function initApp(user){
   initGroceryModule();
   initMealBuilderModule();
   initTasksModule();
+  initNotesModule();
+  initReviewsModule();
   initBusinessModule();
   renderTodaySummary();
 }
 
 window.initApp = initApp;
+
+
+/* ---- js/public-tools.js ---- */
+/* ---------------------------------------------------------------
+   Public Tools: the app's first no-login surface, reached via the
+   URL hash (#public) — see showPublicShell()/initAuth() above.
+   Every tool writes to the "public_submissions" table (anonymous
+   insert allowed by RLS; only signed-in users can read it back —
+   see the "Public Tool Submissions" card in the Business tab, which
+   is how a submission becomes a real Contact).
+   Uses the same `supabaseClient` as the rest of the app — no
+   session is required for an insert the RLS policy allows.
+--------------------------------------------------------------- */
+async function submitPublicSubmission(toolName, answers, summary, name, email, phone){
+  const { error } = await supabaseClient.from('public_submissions').insert({
+    tool_name: toolName, name: name || null, email: email || null, phone: phone || null, answers, summary
+  });
+  if(error) console.error(error);
+}
+
+function showPublicToolPanel(toolKey){
+  document.getElementById('public-landing').style.display = 'none';
+  document.querySelectorAll('.public-tool-panel').forEach(p => p.style.display = 'none');
+  const panel = document.getElementById('public-tool-' + toolKey);
+  if(panel) panel.style.display = 'block';
+}
+function showPublicLanding(){
+  document.getElementById('public-landing').style.display = 'block';
+  document.querySelectorAll('.public-tool-panel').forEach(p => p.style.display = 'none');
+}
+
+/* ---- Home Match Quiz ---- */
+const QUIZ_TIMELINE = ['Now (0-3 mo)','Soon (3-6 mo)','Future (6-12 mo)','Long Term (12+ mo)'];
+const QUIZ_BUYER_TYPE = ['First-time buyer','Move-up buyer','Relocating from out of state','Investor'];
+const QUIZ_PRIORITY = ['Good schools','Short commute','New construction','Character & charm','Low HOA'];
+const QUIZ_LOCATION_PREF = ['Cooper City','Pembroke Pines','Plantation','Not sure yet'];
+
+function buildQuizResult(answers){
+  let city = answers.locationPref !== 'Not sure yet' ? answers.locationPref : null;
+  if(!city){
+    if(answers.priority === 'Good schools') city = 'Cooper City';
+    else if(answers.priority === 'New construction') city = 'Pembroke Pines';
+    else if(answers.priority === 'Character & charm') city = 'Plantation';
+    else city = 'Cooper City, Pembroke Pines, or Plantation';
+  }
+  const lines = [];
+  lines.push('Based on what you shared, ' + city + ' looks like a strong starting point for your search.');
+  if(answers.buyerType === 'Relocating from out of state'){
+    lines.push("Since you're relocating, it's worth comparing insurance, taxes, and cost of living against where you're coming from before narrowing down a neighborhood.");
+  } else if(answers.buyerType === 'First-time buyer'){
+    lines.push("As a first-time buyer, understanding the true monthly cost — not just the sticker price — will matter more than almost anything else.");
+  } else if(answers.buyerType === 'Move-up buyer'){
+    lines.push("As a move-up buyer, timing your sale and your purchase together will be the biggest thing to plan around.");
+  } else if(answers.buyerType === 'Investor'){
+    lines.push('As an investor, rental demand and appreciation trends in each area matter more than personal fit.');
+  }
+  if(answers.timeline === 'Now (0-3 mo)'){
+    lines.push("With a 0-3 month timeline, it's worth getting pre-approved and touring soon.");
+  } else {
+    lines.push("With your timeline, there's time to do this thoughtfully rather than rushed.");
+  }
+  return lines.join(' ');
+}
+
+let quizAnswersCache = {};
+let quizResultCache = '';
+
+function initQuizTool(){
+  document.getElementById('quiz-timeline').innerHTML = QUIZ_TIMELINE.map(o => '<option>' + o + '</option>').join('');
+  document.getElementById('quiz-buyer-type').innerHTML = QUIZ_BUYER_TYPE.map(o => '<option>' + o + '</option>').join('');
+  document.getElementById('quiz-priority').innerHTML = QUIZ_PRIORITY.map(o => '<option>' + o + '</option>').join('');
+  document.getElementById('quiz-location-pref').innerHTML = QUIZ_LOCATION_PREF.map(o => '<option>' + o + '</option>').join('');
+
+  document.getElementById('quiz-see-results-btn').addEventListener('click', () => {
+    quizAnswersCache = {
+      timeline: document.getElementById('quiz-timeline').value,
+      buyerType: document.getElementById('quiz-buyer-type').value,
+      priority: document.getElementById('quiz-priority').value,
+      locationPref: document.getElementById('quiz-location-pref').value
+    };
+    quizResultCache = buildQuizResult(quizAnswersCache);
+    document.getElementById('quiz-result-text').textContent = quizResultCache;
+    document.getElementById('quiz-step-questions').style.display = 'none';
+    document.getElementById('quiz-step-results').style.display = 'block';
+  });
+
+  document.getElementById('quiz-submit-btn').addEventListener('click', async () => {
+    const name = document.getElementById('quiz-name').value.trim();
+    const email = document.getElementById('quiz-email').value.trim();
+    if(!email) return;
+    await submitPublicSubmission('Home Match Quiz', quizAnswersCache, quizResultCache, name, email, null);
+    document.getElementById('quiz-thanks').style.display = 'block';
+    document.getElementById('quiz-submit-btn').disabled = true;
+  });
+}
+
+/* ---- Future Home Planner ---- */
+function buildPlannerResult(targetPrice, currentSavings, monthlySavings){
+  const downTarget = targetPrice * 0.2;
+  const remaining = Math.max(0, downTarget - currentSavings);
+  if(monthlySavings <= 0){
+    return 'At a $' + targetPrice.toLocaleString() + ' target price, a 20% down payment is about $' + downTarget.toLocaleString() + '. Add a monthly savings amount above zero to see an estimated timeline.';
+  }
+  const months = Math.ceil(remaining / monthlySavings);
+  if(months <= 0){
+    return "Good news — based on what you've saved, you may already be close to a 20% down payment ($" + downTarget.toLocaleString() + ') on a $' + targetPrice.toLocaleString() + ' home.';
+  }
+  const years = Math.floor(months / 12);
+  const remMonths = months % 12;
+  const timeStr = (years > 0 ? years + ' year' + (years === 1 ? '' : 's') + (remMonths > 0 ? ', ' : '') : '') +
+    (remMonths > 0 || years === 0 ? remMonths + ' month' + (remMonths === 1 ? '' : 's') : '');
+  return 'For a $' + targetPrice.toLocaleString() + ' home, a 20% down payment is about $' + downTarget.toLocaleString() + '. At $' + monthlySavings.toLocaleString() + '/month, that\'s roughly ' + timeStr + ' away. This is a rough estimate — a real plan accounts for closing costs, rate changes, and your specific loan program.';
+}
+
+let plannerResultCache = '';
+let plannerAnswersCache = {};
+
+function initPlannerTool(){
+  document.getElementById('planner-see-results-btn').addEventListener('click', () => {
+    const targetPrice = Number(document.getElementById('planner-target-price').value) || 0;
+    const currentSavings = Number(document.getElementById('planner-current-savings').value) || 0;
+    const monthlySavings = Number(document.getElementById('planner-monthly-savings').value) || 0;
+    if(!targetPrice) return;
+    plannerAnswersCache = { targetPrice, currentSavings, monthlySavings };
+    plannerResultCache = buildPlannerResult(targetPrice, currentSavings, monthlySavings);
+    document.getElementById('planner-result-text').textContent = plannerResultCache;
+    document.getElementById('planner-step-questions').style.display = 'none';
+    document.getElementById('planner-step-results').style.display = 'block';
+  });
+
+  document.getElementById('planner-submit-btn').addEventListener('click', async () => {
+    const name = document.getElementById('planner-name').value.trim();
+    const email = document.getElementById('planner-email').value.trim();
+    if(!email) return;
+    await submitPublicSubmission('Future Home Planner', plannerAnswersCache, plannerResultCache, name, email, null);
+    document.getElementById('planner-thanks').style.display = 'block';
+    document.getElementById('planner-submit-btn').disabled = true;
+  });
+}
+
+/* ---- Neighborhood Explorer ----
+   Reads from "neighborhood_profiles" — a small public-readable table
+   YOU fill in from the authenticated app (Business tab → "Neighborhood
+   Profiles" card). Deliberately not auto-generated: Claude doesn't
+   know your actual local market, and inventing specifics would be
+   misinformation. Seeded with 3 blank rows the first time either
+   the admin card or this public page loads. */
+async function loadNeighborhoodProfiles(){
+  const { data, error } = await supabaseClient.from('neighborhood_profiles').select('*').order('name');
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function renderExplorerList(){
+  const container = document.getElementById('explorer-list');
+  if(!container) return;
+  const profiles = await loadNeighborhoodProfiles();
+  container.className = 'grocery-grid';
+  container.innerHTML = '';
+  profiles.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'exercise';
+    div.innerHTML = '<div class="exercise-head"><h4>' + escapeHtml(p.name) + '</h4></div>' +
+      '<p class="muted" style="margin:6px 0 0;">' + escapeHtml(p.price_range || 'Price range: ask Rachelle') + '</p>' +
+      (p.vibe ? '<p style="margin:8px 0 0; font-size:14px;">' + escapeHtml(p.vibe) + '</p>' : '') +
+      (p.commute_notes ? '<p style="margin:8px 0 0; font-size:13px; opacity:0.75;">Commute: ' + escapeHtml(p.commute_notes) + '</p>' : '') +
+      (p.schools_notes ? '<p style="margin:6px 0 0; font-size:13px; opacity:0.75;">Schools: ' + escapeHtml(p.schools_notes) + '</p>' : '') +
+      (p.best_for ? '<p style="margin:6px 0 0; font-size:13px; opacity:0.75;">Best for: ' + escapeHtml(p.best_for) + '</p>' : '');
+    container.appendChild(div);
+  });
+}
+function initExplorerTool(){
+  renderExplorerList();
+  document.getElementById('explorer-submit-btn').addEventListener('click', async () => {
+    const name = document.getElementById('explorer-name').value.trim();
+    const email = document.getElementById('explorer-email').value.trim();
+    if(!email) return;
+    await submitPublicSubmission('Neighborhood Explorer', {}, 'Requested a personalized neighborhood comparison', name, email, null);
+    document.getElementById('explorer-thanks').style.display = 'block';
+    document.getElementById('explorer-submit-btn').disabled = true;
+  });
+}
+
+/* ---- Relocation Planner ---- */
+const RELOCATION_TIMELINE = ['0-3 months','3-6 months','6-12 months','Just researching'];
+const RELOCATION_FAMILY = ['Just me','Me + partner','Family with kids','Family with pets'];
+
+function buildRelocationChecklist(origin, timeline, family, mustHaves){
+  const lines = [];
+  lines.push('Relocation checklist for your move from ' + (origin || 'out of state') + ':');
+  lines.push('');
+  lines.push("• Compare Florida homeowners insurance costs before you fall in love with a specific house — they vary a lot by age of roof and construction type.");
+  lines.push("• Check flood zone status for any property you're seriously considering.");
+  if(family === 'Family with kids'){
+    lines.push("• Verify school zone assignment directly with the district — don't rely on listing sites alone.");
+  }
+  if(family === 'Family with pets'){
+    lines.push('• Ask about HOA pet restrictions before touring — some communities cap breed or weight.');
+  }
+  lines.push('• Get a rough side-by-side of cost of living vs. where you\'re moving from — Florida has no state income tax, but insurance and HOA fees can offset that.');
+  lines.push("• If you can't visit in person yet, ask for a live video walkthrough rather than relying on photos alone.");
+  if(mustHaves){
+    lines.push('• Keep "' + mustHaves + '" as your filter for every listing you look at — it\'s easy to drift from your own priorities mid-search.');
+  }
+  lines.push('');
+  lines.push('Timeline: ' + timeline + '. ' + (timeline === '0-3 months' ? 'Worth starting neighborhood comparisons and lender conversations now.' : 'You have time to research thoroughly before making decisions.'));
+  return lines.join('\n');
+}
+
+let relocationAnswersCache = {};
+let relocationResultCache = '';
+
+function initRelocationTool(){
+  document.getElementById('relocation-timeline').innerHTML = RELOCATION_TIMELINE.map(o => '<option>' + o + '</option>').join('');
+  document.getElementById('relocation-family').innerHTML = RELOCATION_FAMILY.map(o => '<option>' + o + '</option>').join('');
+
+  document.getElementById('relocation-see-results-btn').addEventListener('click', () => {
+    const origin = document.getElementById('relocation-origin').value.trim();
+    const timeline = document.getElementById('relocation-timeline').value;
+    const family = document.getElementById('relocation-family').value;
+    const mustHaves = document.getElementById('relocation-musthaves').value.trim();
+    relocationAnswersCache = { origin, timeline, family, mustHaves };
+    relocationResultCache = buildRelocationChecklist(origin, timeline, family, mustHaves);
+    document.getElementById('relocation-result-text').textContent = relocationResultCache;
+    document.getElementById('relocation-step-questions').style.display = 'none';
+    document.getElementById('relocation-step-results').style.display = 'block';
+  });
+
+  document.getElementById('relocation-submit-btn').addEventListener('click', async () => {
+    const name = document.getElementById('relocation-name').value.trim();
+    const email = document.getElementById('relocation-email').value.trim();
+    if(!email) return;
+    await submitPublicSubmission('Relocation Planner', relocationAnswersCache, relocationResultCache, name, email, null);
+    document.getElementById('relocation-thanks').style.display = 'block';
+    document.getElementById('relocation-submit-btn').disabled = true;
+  });
+}
+
+/* ---- Buyer Stage Check-in ---- */
+const BUYER_STAGES = {
+  'Just Browsing': "You're in the research phase — a great time to get familiar with neighborhoods, price ranges, and what you actually want before anything feels urgent.",
+  'Actively Looking': "You're touring and comparing homes — make sure you're pre-approved (not just pre-qualified) so you can move quickly when the right one shows up.",
+  'Under Contract': "You're in the inspection and financing window — this is when most last-minute concerns surface, so don't rush past the inspection report.",
+  'Closing Soon': "You're almost there — confirm your final walkthrough and verify wire transfer instructions by phone, not just email (wire fraud specifically targets this step).",
+  'Already Closed': 'Congratulations! This is a great time to save your home info and set a reminder for your homestead exemption filing deadline.'
+};
+
+let buyerStageResultCache = '';
+let buyerStageCache = '';
+
+function initBuyerStageTool(){
+  document.getElementById('buyerstage-select').innerHTML = Object.keys(BUYER_STAGES).map(s => '<option>' + s + '</option>').join('');
+
+  document.getElementById('buyerstage-see-results-btn').addEventListener('click', () => {
+    buyerStageCache = document.getElementById('buyerstage-select').value;
+    buyerStageResultCache = BUYER_STAGES[buyerStageCache];
+    document.getElementById('buyerstage-result-text').textContent = buyerStageResultCache;
+    document.getElementById('buyerstage-step-questions').style.display = 'none';
+    document.getElementById('buyerstage-step-results').style.display = 'block';
+  });
+
+  document.getElementById('buyerstage-submit-btn').addEventListener('click', async () => {
+    const name = document.getElementById('buyerstage-name').value.trim();
+    const email = document.getElementById('buyerstage-email').value.trim();
+    await submitPublicSubmission('Buyer Stage Check-in', { stage: buyerStageCache }, buyerStageResultCache, name, email, null);
+    document.getElementById('buyerstage-thanks').style.display = 'block';
+    document.getElementById('buyerstage-submit-btn').disabled = true;
+  });
+}
+
+/* ---- Landing + init ---- */
+let publicToolsInitialized = false;
+function initPublicTools(){
+  if(publicToolsInitialized){
+    showPublicLanding();
+    return;
+  }
+  publicToolsInitialized = true;
+
+  document.getElementById('public-landing').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-public-tool]');
+    if(!btn) return;
+    showPublicToolPanel(btn.dataset.publicTool);
+  });
+  document.querySelectorAll('.public-back-btn').forEach(btn => {
+    btn.addEventListener('click', showPublicLanding);
+  });
+
+  initQuizTool();
+  initPlannerTool();
+  initExplorerTool();
+  initRelocationTool();
+  initBuyerStageTool();
+
+  showPublicLanding();
+}
+window.initPublicTools = initPublicTools;
 
 
 </script>

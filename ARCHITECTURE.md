@@ -50,6 +50,52 @@ changes user data relevant to "today" should call
 `window.refreshTodaySummary()` after writing, so the Home card stays in
 sync — follow the existing call sites as examples.
 
+## Contacts (the CRM)
+
+`js/contacts.js` follows the standard module pattern above, with one
+addition worth knowing about: category filtering. It reuses the
+`.ref-filter-btn` pill pattern that Reference Library established first
+(`contactsActiveCategory` mirrors `refActiveCategory`) rather than
+inventing a new filter UI — when a new module needs "filter a list by a
+fixed set of tags," copy this pattern rather than building a third one.
+
+## Public Tools (built 2026-07-20)
+
+The first genuinely public-facing (no-login) surface in the app — routed
+via `window.location.hash` (`#public`) rather than a real server route,
+since this is a static single-file app. `initAuth()` checks the hash
+before deciding whether to show the sign-in screen, the authenticated
+app shell, or `#public-shell`; a `hashchange` listener keeps that in
+sync if the hash changes after load (e.g. clicking the "back to sign in"
+or "explore public tools" links, which don't reload the page).
+
+Each of the 5 tools (`js/public-tools.js`) follows the same two-step
+shape: a small `form-grid` of questions → a computed result (plain
+JS logic, no AI/network calls) → an optional name/email capture that
+inserts one row into `public_submissions`. All 5 share
+`submitPublicSubmission()`, `showPublicToolPanel()`, and
+`showPublicLanding()` rather than each having its own show/hide logic.
+
+**Why two tables have no `user_id`:** `public_submissions` and
+`neighborhood_profiles` are the only tables in the app not scoped by
+`auth.uid()` — see the explanation in `DATABASE.md`. Don't copy their RLS
+pattern for anything that isn't genuinely public-facing; every other
+table in this app should keep the standard `auth.uid() = user_id` scoping.
+
+**Neighborhood Explorer's data intentionally isn't generated.** Claude
+doesn't have real knowledge of Cooper City/Pembroke Pines/Plantation's
+actual price ranges, schools, or commute times, and inventing plausible-
+sounding specifics would be misinformation shown to real prospective
+buyers. Instead, `neighborhood_profiles` is owner-edited (Business tab)
+and simply displayed as-is on the public page. Follow this same pattern
+for any future public content that depends on real local knowledge:
+build the editable admin surface, not a Claude-generated placeholder.
+
+**Turning a submission into a Contact** happens via the "Public Tool
+Submissions" card in the Business tab (`renderSubmissions()` in
+`public-submissions-admin.js`), which reuses `addContactRow()` from
+`contacts.js` rather than duplicating contact-creation logic.
+
 ## Reference Library seeding
 
 `reference_library` is seeded client-side, once per user, from the
@@ -59,6 +105,17 @@ every user's copy independently editable rather than sharing one static
 global table. If the seed content itself needs updating in the future,
 editing `SEED_LIBRARY` only affects *new* users — existing users' rows
 must be updated via a migration if they need the same change retroactively.
+
+**Adding new seed content to an already-shipped library** (as opposed to
+the initial seed) needs a different pattern, since `seedReferenceLibraryIfEmpty()`
+only fires when the table is completely empty for that user — it won't
+retroactively add anything to an account that's already been seeded.
+`seedAdditionalReferenceContentIfMissing()` is the template for this:
+define the new items in their own constant (`ADDITIONAL_REFERENCE_ITEMS`),
+check which titles the user already has, and insert only what's missing.
+Runs on every login, cheap, and idempotent. Reuse this shape for any
+future one-off addition to seed content rather than editing `SEED_LIBRARY`
+and hoping existing users pick it up some other way.
 
 ## Adding a new feature — checklist
 
