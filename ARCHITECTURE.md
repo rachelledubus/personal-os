@@ -96,6 +96,21 @@ Submissions" card in the Business tab (`renderSubmissions()` in
 `public-submissions-admin.js`), which reuses `addContactRow()` from
 `contacts.js` rather than duplicating contact-creation logic.
 
+## Layout system: mobile pill bar → desktop sidebar
+
+`.main-layout` wraps `<nav class="tabs">` and `<div class="wrap">`. Below
+900px it's just a normal block stack (nav on top, content below — the
+original mobile layout, unchanged). At 900px and up, a media query turns
+it into a flex row: nav becomes a sticky sidebar, `.wrap` becomes the
+content pane beside it. This is the *only* thing that changes between the
+two — same buttons, same `data-tab` attributes, same `switchTab()`
+function. Don't build a second navigation component for "desktop mode";
+if a future nav-related feature is needed, extend the existing
+`<nav class="tabs">` markup and let the media query keep doing its job.
+`<span class="nav-group-label">` elements inside the nav are invisible on
+mobile (`display:none`) and become sidebar section headers on desktop —
+follow this pattern for grouping, don't add a second markup structure.
+
 ## Reference Library seeding
 
 `reference_library` is seeded client-side, once per user, from the

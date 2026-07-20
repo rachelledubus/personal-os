@@ -34,6 +34,15 @@ index of what each table is for.
 | `content_calendar_items` | Forward-looking content calendar (date/platform/status) |
 | `reference_library` | Voice/CTA/Script/Prompt/Template library |
 | `grocery_items` | Grocery list (checkable, categorized) |
+| `local_knowledge_entries` | System 02: searchable local facts/FAQs |
+| `community_resources` | System 02: schools/HOAs/orgs/businesses/events directory |
+| `market_updates` | Systems 02 & 06: monthly market + research reports |
+| `client_milestones` | System 08: per-client journey checklist (attached to Contacts) |
+| `business_goals` | System 09: goals with progress tracking |
+| `kpi_snapshots` | System 10: monthly KPI history |
+| `roadmap_items` | System 11: interactive phase-based roadmap |
+| `marketing_campaigns` | System 04: campaign tracker |
+| `automation_log` | System 12: AI automation tracker |
 | `public_submissions` | Public Tools visitor capture (see below) |
 | `neighborhood_profiles` | Owner-edited, publicly-displayed neighborhood facts (see below) |
 
@@ -86,6 +95,19 @@ load), these two entries insert for *every* user on next login if
 missing, checked by title — see `seedAdditionalReferenceContentIfMissing()`
 in `ARCHITECTURE.md` for why that's a different pattern from
 `seedReferenceLibraryIfEmpty()`.
+
+**`client_milestones`** — one row per milestone per contact, seeded with
+a fixed 8-step journey (Consultation → Search Active → Offer Submitted →
+Under Contract → Inspection → Closing Scheduled → Closed → Post-Close
+Follow-Up) the first time you expand a given Active Client's "Client
+Journey" checklist on their Contacts row — not seeded for every contact
+up front, only on demand.
+
+**System 05 (Relationship Growth)** has no dedicated table at all — it's
+built entirely from `contacts` (filtered to Sphere/Partner/Agent Referral)
+and `reference_library` (the Script Library), surfaced together in an
+"Outreach Playbook" card. Before adding a new table for something, check
+whether it's actually already represented across two existing ones first.
 
 **`grocery_items`** — seeded once per user (same pattern as
 `reference_library`/`habits`) from the staples that used to be a static,

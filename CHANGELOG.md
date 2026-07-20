@@ -1,5 +1,121 @@
 # Changelog
 
+## 2026-07-20 (8) — Complete the Business Operating System (all 16 systems, for real)
+
+**Why:** Feedback was that the app didn't have the actual BOS built into
+it — several of the 16 systems existed only as a row in a static
+reference table, not as something you could use. Interviewed to confirm
+scope: all remaining systems, built as real features.
+
+**Audit going in:** Systems 01, 03, 07, 13–16 were already fully built
+(Reference Library, Content, Contacts, Pipeline). Systems 02, 04, 05, 06,
+08, 09, 10, 11, 12 were missing or partial. All are now built.
+
+**What changed — 9 new tables, 1 new view, 1 extension of an existing
+feature:**
+
+- **System 02 (Local Knowledge)** — Local Knowledge Base (searchable
+  facts/FAQs), Community Resources (schools, HOAs, orgs, local
+  businesses, events).
+- **System 06 (Research) + rest of 02 (Local Intelligence)** — one
+  Market Updates feature covers both, since your own Reference Library
+  prompt (A1, Monthly Research Checklist) already describes them as the
+  same output: market changes, development, insurance, schools, buyer/
+  seller takeaways, logged monthly with history.
+- **System 04 (Business Growth: Marketing / Website & SEO)** — Marketing
+  Campaigns tracker: channel, dates, budget, status, results.
+- **System 05 (Relationship Growth: Sphere/Community/Network/Outreach
+  Playbook)** — no new table. Contacts already covers the DB, Sphere,
+  Partner, and Agent Referral categories; Reference Library already has
+  the Script Library. Built an "Outreach Playbook" card that just
+  surfaces your Sphere/Partner/Referral contacts next to a pointer to the
+  relevant scripts — the system was really already there, just not
+  visible as one thing.
+- **System 08 (Client Experience & Service Delivery)** — a real client
+  journey checklist (Consultation → Search Active → Offer Submitted →
+  Under Contract → Inspection → Closing Scheduled → Closed → Post-Close
+  Follow-Up), attached directly to any contact once they're an Active
+  Client — click "Client Journey" on their Contacts row to expand it.
+  Seeds itself the first time you open a given client's checklist.
+- **System 09 (Business Management)** — Business Goals: target vs.
+  current value with a progress bar (reuses the same progress-bar styling
+  as Nutrition macros and Finances' Debt/Savings cards).
+- **System 10 (Business Performance Review)** — KPI Snapshots: one click
+  saves the current Business KPIs (new contacts, referrals, pipeline
+  value, deals closed) as a dated snapshot, building a month-over-month
+  history instead of only ever seeing "right now."
+- **System 11 (Implementation Priority Roadmap)** — turned from three
+  sentences of static text into an actual checklist, grouped by phase
+  (Foundation/Growth/Expansion), seeded with a sensible starting set of
+  items per phase, fully editable.
+- **System 12 (AI Automation)** — Automation Log: what's running, status
+  (Active/Testing/Paused), hours saved per week — a place to actually
+  track the "AI accelerates execution" principle already written into
+  your Reference Library's AI Operating Rules, instead of it being
+  aspirational.
+
+**Business tab reorganized** to fit all this in without becoming
+unreadable: two new section dividers — "Local Knowledge" and "Growth &
+Performance" — alongside the five from the previous UI pass.
+
+**What did NOT change:** no new CSS. Every new card reuses `.exercise`/
+`.progress-track` (goals, already established by Debt Payoff), `.ref-item`
+(knowledge base, market updates — already established by Reference
+Library), `.lead-item` (campaigns — already established by Contacts/
+Pipeline/Content Calendar), `.inbox-item` (community resources,
+automation log, KPI snapshots — already established by Notes/Quick
+Capture), and `.task-row` (roadmap, client journey — already established
+by Habits/Chores). Nine new tables, zero new visual patterns.
+
+**Action required from you:** run `bos_completion_migration.sql` in the
+Supabase SQL Editor.
+
+---
+
+## 2026-07-20 (7) — Real navigation redesign: sidebar on desktop, page titles, more room to breathe
+
+**Why:** Follow-up on the previous UI pass — feedback was that it "doesn't
+feel actually designed" and navigation is clunky with 13 tabs. Asked for
+more spaciousness + stronger visual distinction between sections, with my
+call on desktop layout, used roughly equally on phone and laptop.
+
+**What changed:**
+
+- **Sidebar navigation on wider screens (≥900px).** This is the main fix
+  for "clunky navigation" — a wrapping 13-button pill bar doesn't scale,
+  but a vertical sidebar does. Below 900px (phones, most tablets),
+  everything looks and behaves exactly as before: the same pill bar
+  across the top. At 900px and up, the *same* `<nav>` and the *same*
+  buttons (no duplicated markup, no new JS) become a sticky left sidebar,
+  grouped under three labels — Personal, Business, More — so the full tab
+  list reads as three short, scannable lists instead of one flat wall of
+  13 buttons. `switchTab()` didn't need to change at all; it was already
+  driven by `data-tab` attributes and CSS classes, not layout position.
+- **Page titles.** Every one of the 13 panels now opens with a large
+  title (icon + name, e.g. "🥗 Nutrition") instead of dropping straight
+  into the first card. This was the biggest single fix for "doesn't feel
+  designed" — there's now a clear "you are here" moment on every screen,
+  which is standard in real apps and was missing before.
+- **More breathing room, bigger type.** Card padding increased (18×20px →
+  22×24px, even more on desktop), gaps between cards increased (16px →
+  20px), base font size nudged up slightly, topbar and headings sized up
+  a notch. This was direction "A" from your answer.
+- **Desktop gets its own layout, not just a wider mobile layout.** Content
+  area widens from a 760px centered column to sit alongside the sidebar
+  within a 1120px frame, and cards get extra padding on top of the global
+  increase — makes real use of laptop screen space instead of just
+  centering the same narrow phone layout with empty margins on both sides.
+
+**What did NOT change:** zero new colors. Every rule above reuses
+`--navy`/`--sand`/`--sage`/`--white`/`--accent` and the two existing
+fonts (DM Sans, Source Sans 3) exactly as already defined in `:root`.
+
+**Verified:** full syntax check, `<div>`/`<section>`/`<nav>` tag-balance
+check, and confirmed `switchTab()` and every event listener still target
+the same element IDs (unaffected by the new wrapper div and title divs).
+
+---
+
 ## 2026-07-20 (6) — UI polish for a 13-tab app, and closing the Reference Library loop
 
 **Why:** The app has grown from 11 tabs to 13, and the Business tab alone
