@@ -3,6 +3,12 @@
 Ordered by recommended priority, not by category. "Done" items are here for
 context on how recently they closed, not because they need action.
 
+User-requested Additions:
+- "Build Your Own Meal" feature based on the meal-building framework
+- Automated grocery list
+- Automated task list if not already added
+- A bit more extensive financial tab. Ask clarification questions to help me determine what else I need.
+
 ## ✅ Just completed (2026-07-20)
 - Migrate Workouts, Appointments, Bills from localStorage → Supabase
 
