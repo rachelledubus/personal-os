@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rachelle's System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ============ AUTH SCREEN ============ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <h1>Rachelle's System</h1>
+      <p>Personal operating system</p>
+    </div>
+    <div id="auth-title">Log in</div>
+    <form id="auth-form">
+      <div class="auth-field">
+        <label for="auth-email">Email</label>
+        <input type="email" id="auth-email" autocomplete="email" required>
+      </div>
+      <div class="auth-field">
+        <label for="auth-password">Password</label>
+        <input type="password" id="auth-password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" id="auth-submit-btn">Log in</button>
+    </form>
+    <button id="auth-toggle-btn">New here? Create an account</button>
+    <div id="auth-error"></div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="app-shell" style="display:none;">
+
+<div class="topbar">
+  <h1>Rachelle's System</h1>
+  <p id="date-line"></p>
+  <div class="account-bar">
+    <span id="signed-in-email"></span>
+    <button id="signout-btn">Sign out</button>
+  </div>
+</div>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="home">Home</button>
+  <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+  <button class="tab-btn" data-tab="workouts">Workouts</button>
+  <button class="tab-btn" data-tab="nutrition">Nutrition</button>
+  <button class="tab-btn" data-tab="habits">Habits</button>
+  <button class="tab-btn" data-tab="tasks">Tasks</button>
+  <button class="tab-btn" data-tab="chores">Chores</button>
+  <button class="tab-btn" data-tab="budget">Budget</button>
+  <button class="tab-btn" data-tab="appointments">Appointments</button>
+  <button class="tab-btn" data-tab="business">Business</button>
+  <button class="tab-btn" data-tab="tips">Tips</button>
+</nav>
+
+<div class="wrap">
+
+<!-- ============ HOME ============ -->
+<section class="panel active" id="panel-home">
+  <div class="card today-card">
+    <div class="label">Today</div>
+    <div class="today-grid">
+      <div class="today-item"><span class="today-emoji">🏋️</span><div><b id="today-workout-name">—</b><span id="today-workout-sub"></span></div></div>
+      <div class="today-item"><span class="today-emoji">🥗</span><div><b id="today-nutrition-cals">—</b><span id="today-nutrition-protein"></span></div></div>
+      <div class="today-item"><span class="today-emoji">✅</span><div><b id="today-habits">—</b><span>Habits</span></div></div>
+      <div class="today-item"><span class="today-emoji">🏠</span><div><b id="today-business">—</b><span>Business</span></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Today's priorities</div>
+    <div id="home-priorities-list"></div>
+  </div>
+  <div class="card">
+    <div class="label">Today's appointments</div>
+    <div id="home-appts-today"></div>
+  </div>
+  <div class="card">
+    <div class="label">Habits</div>
+    <div id="home-habits-list"></div>
+  </div>
+  <div class="card">
+    <div class="label">Jump to</div>
+    <div class="nav-grid">
+      <button class="nav-card" data-goto="dashboard"><span class="emoji">🗓️</span><span class="title">Full Dashboard</span><span class="sub">Priorities, inbox, routine</span></button>
+      <button class="nav-card" data-goto="workouts"><span class="emoji">🏋️</span><span class="title">Workouts</span><span class="sub">Log sets & reps</span></button>
+      <button class="nav-card" data-goto="nutrition"><span class="emoji">🥗</span><span class="title">Nutrition</span><span class="sub">Targets & grocery list</span></button>
+      <button class="nav-card" data-goto="tasks"><span class="emoji">✅</span><span class="title">Tasks</span><span class="sub">Personal, Real Estate & more</span></button>
+      <button class="nav-card" data-goto="chores"><span class="emoji">🧹</span><span class="title">Chores</span><span class="sub">Daily / weekly / monthly</span></button>
+      <button class="nav-card" data-goto="budget"><span class="emoji">💳</span><span class="title">Budget</span><span class="sub">Bills at a glance</span></button>
+      <button class="nav-card" data-goto="appointments"><span class="emoji">📌</span><span class="title">Appointments</span><span class="sub">Add & view upcoming</span></button>
+      <button class="nav-card" data-goto="business"><span class="emoji">🏠</span><span class="title">Business</span><span class="sub">SW Broward BOS reference</span></button>
+      <button class="nav-card" data-goto="tips"><span class="emoji">💡</span><span class="title">Tips</span><span class="sub">ADHD & autism strategies</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DASHBOARD ============ -->
+<section class="panel" id="panel-dashboard">
+  <div class="card">
+    <div class="label">Top priorities <span class="count-hint" id="dash-task-count">0 / 3</span></div>
+    <div id="dash-task-list"></div>
+    <div class="add-row">
+      <input type="text" id="dash-task-input" placeholder="Add a priority for today...">
+      <button id="dash-task-add-btn">Add</button>
+    </div>
+    <div class="full-msg" id="dash-full-msg">Capped at 3 on purpose — finish or drop one before adding another.</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Today's appointments</div>
+    <div id="dash-appts-today"></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Quick capture</div>
+    <div class="add-row" style="margin-bottom:12px;">
+      <input type="text" id="inbox-input" placeholder="Jot it down before it slips...">
+      <button id="inbox-add-btn">Add</button>
+    </div>
+    <div id="inbox-list"></div>
+    <div class="empty-note" id="inbox-empty">Nothing captured yet.</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Routine — Morning</div>
+    <div id="routine-morning-list"></div>
+    <div class="add-row"><input type="text" id="routine-morning-input" placeholder="Add a morning step..."><button id="routine-morning-add">Add</button></div>
+  </div>
+  <div class="card">
+    <div class="label">Routine — Evening</div>
+    <div id="routine-evening-list"></div>
+    <div class="add-row"><input type="text" id="routine-evening-input" placeholder="Add an evening step..."><button id="routine-evening-add">Add</button></div>
+    <div class="reset-bar"><button id="reset-routine-btn">Reset both routine checklists now</button></div>
+  </div>
+</section>
+
+<!-- ============ WORKOUTS ============ -->
+<section class="panel" id="panel-workouts">
+  <div class="fixed-note"><strong>Fixed:</strong> Cycle — Monday · Pilates — Wednesday. Log your lifting days below.</div>
+  <div class="day-select">
+    <button class="wk-day-btn active" data-day="A">Tue — Lower/Quad</button>
+    <button class="wk-day-btn" data-day="B">Thu — Posterior Chain</button>
+    <button class="wk-day-btn" data-day="C">Sat — Upper Body</button>
+  </div>
+  <div class="card">
+    <div id="wk-exercise-list"></div>
+    <div class="save-bar">
+      <span class="save-msg" id="wk-save-msg">Saved</span>
+      <button class="pill-btn" id="wk-save-btn">Save Today's Session</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NUTRITION ============ -->
+<section class="panel" id="panel-nutrition">
+  <div class="card">
+    <div class="label">Today's Totals</div>
+    <div class="macro-row"><span>Calories</span><span id="nt-calories">0 / 1835 kcal</span></div>
+    <div class="progress-track"><div class="progress-fill" id="nt-bar-calories" style="width:0%"></div></div>
+    <div class="macro-row"><span>Protein</span><span id="nt-protein">0 / 150g</span></div>
+    <div class="progress-track"><div class="progress-fill" id="nt-bar-protein" style="width:0%"></div></div>
+    <div class="macro-row"><span>Carbs</span><span id="nt-carbs">0 / 185g</span></div>
+    <div class="progress-track"><div class="progress-fill" id="nt-bar-carbs" style="width:0%"></div></div>
+    <div class="macro-row"><span>Fat</span><span id="nt-fat">0 / 55g</span></div>
+    <div class="progress-track"><div class="progress-fill" id="nt-bar-fat" style="width:0%"></div></div>
+  </div>
+  <div class="card">
+    <div class="label">Today's Meal Log</div>
+    <div id="meal-section-breakfast">
+      <h4 style="font-size:14px;margin-bottom:6px;">Breakfast</h4>
+      <div id="meal-log-breakfast"></div>
+      <div class="add-row">
+        <select id="meal-food-select-breakfast"><option value="">Choose a food...</option></select>
+        <input type="number" id="meal-servings-breakfast" value="1" min="0.25" step="0.25" style="width:70px;">
+        <button id="meal-add-btn-breakfast">Add</button>
+      </div>
+    </div>
+    <div id="meal-section-lunch" style="margin-top:16px;">
+      <h4 style="font-size:14px;margin-bottom:6px;">Lunch</h4>
+      <div id="meal-log-lunch"></div>
+      <div class="add-row">
+        <select id="meal-food-select-lunch"><option value="">Choose a food...</option></select>
+        <input type="number" id="meal-servings-lunch" value="1" min="0.25" step="0.25" style="width:70px;">
+        <button id="meal-add-btn-lunch">Add</button>
+      </div>
+    </div>
+    <div id="meal-section-dinner" style="margin-top:16px;">
+      <h4 style="font-size:14px;margin-bottom:6px;">Dinner</h4>
+      <div id="meal-log-dinner"></div>
+      <div class="add-row">
+        <select id="meal-food-select-dinner"><option value="">Choose a food...</option></select>
+        <input type="number" id="meal-servings-dinner" value="1" min="0.25" step="0.25" style="width:70px;">
+        <button id="meal-add-btn-dinner">Add</button>
+      </div>
+    </div>
+    <div id="meal-section-snacks" style="margin-top:16px;">
+      <h4 style="font-size:14px;margin-bottom:6px;">Snacks</h4>
+      <div id="meal-log-snacks"></div>
+      <div class="add-row">
+        <select id="meal-food-select-snacks"><option value="">Choose a food...</option></select>
+        <input type="number" id="meal-servings-snacks" value="1" min="0.25" step="0.25" style="width:70px;">
+        <button id="meal-add-btn-snacks">Add</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Food Database</div>
+    <div id="food-db-list"></div>
+    <div class="form-grid">
+      <input type="text" id="food-name" placeholder="Food name">
+      <input type="text" id="food-serving" placeholder="Serving size (e.g. 4oz)">
+      <input type="number" id="food-calories" placeholder="Calories">
+      <input type="number" id="food-protein" placeholder="Protein (g)">
+      <input type="number" id="food-carbs" placeholder="Carbs (g)">
+      <input type="number" id="food-fat" placeholder="Fat (g)">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="food-add-btn">Add food</button></div>
+  </div>
+  <div class="card">
+    <div class="label">Daily Targets</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="num">1,835</div><div class="unit">kcal / day</div></div>
+      <div class="stat"><div class="num">150g</div><div class="unit">protein</div></div>
+      <div class="stat"><div class="num">55g</div><div class="unit">fat</div></div>
+      <div class="stat"><div class="num">185g</div><div class="unit">carbs</div></div>
+      <div class="stat"><div class="num">25-30g</div><div class="unit">fiber</div></div>
+      <div class="stat"><div class="num">80-100oz</div><div class="unit">water baseline</div></div>
+    </div>
+    <p class="muted" style="margin-top:14px;">Maintenance ≈ 2,185 kcal. Moderate ~350 kcal deficit for recomposition — track measurements alongside the scale.</p>
+  </div>
+  <div class="card">
+    <div class="label">Meal-Building Framework</div>
+    <h3 style="font-size:16px; margin-bottom:6px;">Protein + Carb + Soft Veggie + Fat + Flavor</h3>
+    <table>
+      <tr><th>Slot</th><th>Options</th></tr>
+      <tr><td>Protein</td><td>Ground chicken/turkey, chicken breast/thighs, ground beef, lean pork, shrimp, Greek yogurt, cottage cheese, protein powder</td></tr>
+      <tr><td>Carb</td><td>Mashed/roasted potato, sweet potato, pasta, bread</td></tr>
+      <tr><td>Soft veggie</td><td>Cooked spinach, sautéed zucchini, roasted/mashed carrots, butternut squash, cauliflower mash</td></tr>
+      <tr><td>Fat</td><td>Olive oil, avocado, smooth nut butter, shredded cheese, full-fat yogurt</td></tr>
+      <tr><td>Flavor</td><td>Soy sauce, garlic, lemon, herbs, salsa, hot sauce, curry paste</td></tr>
+    </table>
+    <p class="muted" style="margin-top:12px;">No rice, quinoa, oats, coconut, pistachio, egg whites, tuna, salmon, tofu, or eggs.</p>
+  </div>
+  <div class="card">
+    <div class="label">Grocery List</div>
+    <div class="grocery-grid">
+      <div><h4>Proteins</h4><ul><li>Ground chicken/turkey</li><li>Chicken breast/thighs</li><li>Ground beef</li><li>Lean pork</li><li>Shrimp</li><li>Greek yogurt</li><li>Cottage cheese</li><li>Protein powder</li></ul></div>
+      <div><h4>Carbs</h4><ul><li>Potatoes</li><li>Sweet potatoes</li><li>Pasta</li><li>Bread</li></ul></div>
+      <div><h4>Fats</h4><ul><li>Olive oil</li><li>Avocado</li><li>Smooth nut butter</li><li>Cheese</li></ul></div>
+      <div><h4>Fruits</h4><ul><li>Banana</li><li>Mango</li><li>Berries</li><li>Applesauce</li></ul></div>
+      <div><h4>Vegetables</h4><ul><li>Spinach</li><li>Zucchini</li><li>Carrots</li><li>Butternut squash</li><li>Cauliflower</li></ul></div>
+      <div><h4>Frozen</h4><ul><li>Chicken/turkey</li><li>Shrimp</li><li>Mixed vegetables</li><li>Fruit for smoothies</li><li>Sweet potato</li></ul></div>
+      <div><h4>Pantry</h4><ul><li>Olive oil</li><li>Garlic</li><li>Soy sauce</li><li>Canned tomatoes</li><li>Pasta</li><li>Herbs</li><li>Honey</li></ul></div>
+      <div><h4>Convenience</h4><ul><li>Rotisserie chicken</li><li>Pre-cut veg</li><li>Microwaveable sweet potato</li><li>Yogurt cups</li><li>Protein shakes</li></ul></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Supplements Worth It</div>
+    <p>Creatine monohydrate — 3-5g/day, any time. Protein powder — convenience only. Caffeine — 3-6mg/kg pre-workout if tolerated. Vitamin D and magnesium — worth checking levels.</p>
+  </div>
+</section>
+
+<!-- ============ HABITS ============ -->
+<section class="panel" id="panel-habits">
+  <div class="card">
+    <div class="label">Daily habits <span class="count-hint">resets each day</span></div>
+    <div id="habits-full-list"></div>
+    <div class="add-row"><input type="text" id="habits-input" placeholder="Add a habit to track..."><button id="habits-add-btn">Add</button></div>
+    <p class="muted" style="margin-top:10px;">Kept intentionally short — a habit tracker with 15 items stops getting checked. Add sparingly.</p>
+  </div>
+</section>
+
+<!-- ============ TASKS ============ -->
+<section class="panel" id="panel-tasks">
+  <div class="card">
+    <div class="label">Add a task</div>
+    <div class="form-grid">
+      <input type="text" id="task-title" class="full" placeholder="Task title">
+      <select id="task-category"></select>
+      <input type="date" id="task-due">
+      <select id="task-priority">
+        <option value="low">Low priority</option>
+        <option value="medium" selected>Medium priority</option>
+        <option value="high">High priority</option>
+      </select>
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="task-add-btn">Add task</button></div>
+  </div>
+  <div class="card">
+    <div class="label">All tasks</div>
+    <div id="tasks-list"></div>
+  </div>
+</section>
+
+<!-- ============ CHORES ============ -->
+<section class="panel" id="panel-chores">
+  <div class="card">
+    <div class="label">Daily <span class="count-hint">resets each day</span></div>
+    <div id="chores-daily-list"></div>
+    <div class="add-row"><input type="text" id="chores-daily-input" placeholder="Add a daily chore..."><button id="chores-daily-add">Add</button></div>
+  </div>
+  <div class="card">
+    <div class="label">Weekly <span class="count-hint">resets every Monday</span></div>
+    <div id="chores-weekly-list"></div>
+    <div class="add-row"><input type="text" id="chores-weekly-input" placeholder="Add a weekly chore..."><button id="chores-weekly-add">Add</button></div>
+  </div>
+  <div class="card">
+    <div class="label">Monthly <span class="count-hint">resets each month</span></div>
+    <div id="chores-monthly-list"></div>
+    <div class="add-row"><input type="text" id="chores-monthly-input" placeholder="Add a monthly chore..."><button id="chores-monthly-add">Add</button></div>
+  </div>
+</section>
+
+<!-- ============ BUDGET ============ -->
+<section class="panel" id="panel-budget">
+  <div class="card">
+    <div class="label">Bills <span class="count-hint" id="bills-total">$0/mo</span></div>
+    <div id="bills-list"></div>
+    <div class="empty-note" id="bills-empty">No bills added yet.</div>
+    <div class="form-grid">
+      <input type="text" id="bill-name" placeholder="Bill name">
+      <input type="number" id="bill-amount" placeholder="Amount ($)">
+      <input type="number" id="bill-day" placeholder="Due day (1-31)" min="1" max="31">
+      <button id="bill-add-btn" class="pill-btn">Add bill</button>
+    </div>
+    <p class="muted" style="margin-top:10px;">Paid checkboxes reset automatically at the start of each month.</p>
+  </div>
+</section>
+
+<!-- ============ APPOINTMENTS ============ -->
+<section class="panel" id="panel-appointments">
+  <div class="card">
+    <div class="label">Add an appointment</div>
+    <div class="form-grid">
+      <input type="text" id="appt-title" class="full" placeholder="Title">
+      <input type="date" id="appt-date">
+      <input type="time" id="appt-time">
+      <input type="text" id="appt-notes" class="full" placeholder="Notes (optional)">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="appt-add-btn">Add appointment</button></div>
+  </div>
+  <div class="card">
+    <div class="label">Upcoming</div>
+    <div id="appts-list"></div>
+    <div class="empty-note" id="appts-empty">Nothing scheduled yet.</div>
+    <p class="muted" style="margin-top:10px;">Anything dated today automatically shows on Home and the Dashboard.</p>
+  </div>
+</section>
+
+<!-- ============ BUSINESS ============ -->
+<section class="panel" id="panel-business">
+  <div class="card">
+    <div class="label">SW Broward Business Operating System</div>
+    <p>Your finalized 16-system reference manual for the solo-agent business. This is a quick-access summary — bring specific sections into chat, or upload files, for full detail on any system.</p>
+  </div>
+  <div class="card">
+    <div class="label">Brand Pillars</div>
+    <p>Education first, local expertise, transparency, practical guidance, trust through competence. Voice: warm, educational, analytical, direct but approachable.</p>
+  </div>
+  <div class="card">
+    <div class="label">Audience Profiles</div>
+    <p>SW Broward relocation buyers, first-time buyers, future homebuyers, referral partners, homeowners considering selling, military/public service, healthcare professionals.</p>
+  </div>
+  <div class="card">
+    <div class="label">16 Systems</div>
+    <table>
+      <tr><td>01</td><td>Brand Identity (Voice Guide, Audience Profiles)</td></tr>
+      <tr><td>02</td><td>Local Knowledge (Knowledge Base, Local Intelligence, Community Intelligence DB)</td></tr>
+      <tr><td>03</td><td>Content Engine</td></tr>
+      <tr><td>04</td><td>Business Growth (Pipeline Generation, Marketing, Lead Magnet & Funnels, Website & SEO)</td></tr>
+      <tr><td>05</td><td>Relationship Growth (Relationship DB & Tracking, Sphere, Community, Professional Network, Outreach Playbook)</td></tr>
+      <tr><td>06</td><td>Research</td></tr>
+      <tr><td>07</td><td>Marketing/Database</td></tr>
+      <tr><td>08</td><td>Client Experience & Service Delivery (consultation → active representation → closing/long-term)</td></tr>
+      <tr><td>09</td><td>Business Management</td></tr>
+      <tr><td>10</td><td>Business Performance Review</td></tr>
+      <tr><td>11</td><td>Implementation Priority Roadmap (Foundation → Growth → Expansion)</td></tr>
+      <tr><td>12</td><td>AI Automation</td></tr>
+      <tr><td>13</td><td>CTA Library</td></tr>
+      <tr><td>14</td><td>Script Library</td></tr>
+      <tr><td>15</td><td>Prompt Library</td></tr>
+      <tr><td>16</td><td>Template Library</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <div class="label">Roadmap</div>
+    <p>Phase 1 — Foundation. Phase 2 — Growth. Phase 3 — Expansion. Build order: organization → lead generation → relationships → conversion → scale.</p>
+  </div>
+</section>
+
+<!-- ============ TIPS ============ -->
+<section class="panel" id="panel-tips">
+  <div class="card">
+    <div class="label">Why apps alone often don't stick</div>
+    <p>Notification habituation (reminders become background noise), equal-weight lists (nothing signals what actually matters right now), and passive triggers (a notification asks you to interrupt what you're doing) are the three most common structural reasons calendar/reminder apps stop working — not a discipline problem.</p>
+  </div>
+  <div class="card">
+    <div class="label">What this site is built around</div>
+    <p>Tiered priority (Dashboard caps "today" at 3), one place for stray thoughts (Quick Capture), and checklists that reset themselves instead of relying on memory (Routine, Habits, Chores).</p>
+  </div>
+  <div class="card">
+    <div class="label">Environment ideas worth trying</div>
+    <p>External memory over willpower — visible systems (this dashboard, physical checklists) consistently outperform "just remembering." Reduce daily decisions that don't need to be decisions — same breakfast, same workout clothes routine, same grocery order. Sensory-friendly defaults — since texture already matters a lot to you for food, the same principle can extend to clothing, lighting, or noise.</p>
+  </div>
+</section>
+
+</div>
+</div>
+<!-- /app-shell -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/db.js"></script>
+<script src="js/nutrition.js"></script>
+<script src="js/tasks.js"></script>
+<script src="js/habits.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
