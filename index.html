@@ -825,6 +825,38 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
     <div class="save-bar"><button class="pill-btn" id="calendar-add-btn">Add to calendar</button></div>
   </div>
 
+  <div class="section-divider">Marketing &amp; Funnels</div>
+  <div class="card">
+    <div class="label">Lead Magnet Performance <span class="count-hint" id="magnets-count-hint"></span></div>
+    <p class="muted" style="margin-top:-4px;">System 04C — every guide, quiz, and planner, with submission counts pulled live from your public tools. No manual counting.</p>
+    <div id="magnets-list"></div>
+    <div class="empty-note" id="magnets-empty">No lead magnets tracked yet.</div>
+    <div class="form-grid">
+      <input type="text" id="magnet-name" class="full" placeholder="Lead magnet name">
+      <select id="magnet-stage"></select>
+      <select id="magnet-format"></select>
+      <select id="magnet-status"></select>
+      <input type="text" id="magnet-tool-key" class="full" placeholder="Matching public tool name (e.g. Home Match Quiz) — optional">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="magnet-add-btn">Add lead magnet</button></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Website &amp; SEO Tracker <span class="count-hint" id="seo-count-hint"></span></div>
+    <p class="muted" style="margin-top:-4px;">System 04D — neighborhood pages, service pages, and blog posts: what's live, what needs a refresh, what's still planned.</p>
+    <div id="seo-list"></div>
+    <div class="empty-note" id="seo-empty">No pages tracked yet.</div>
+    <div class="form-grid">
+      <input type="text" id="seo-page-name" class="full" placeholder="Page name (e.g. Cooper City Neighborhood Guide)">
+      <select id="seo-page-type"></select>
+      <input type="text" id="seo-keyword" placeholder="Target keyword">
+      <input type="text" id="seo-url" placeholder="URL (optional)">
+      <select id="seo-status"></select>
+      <input type="date" id="seo-last-reviewed" title="Last reviewed">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="seo-add-btn">Add page</button></div>
+  </div>
+
   <div class="section-divider">Local Knowledge</div>
   <div class="card">
     <div class="label">Local Knowledge Base <span class="count-hint" id="knowledge-count-hint"></span></div>
@@ -870,6 +902,23 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
     <div class="save-bar"><button class="pill-btn" id="market-add-btn">Save this month's update</button></div>
     <div id="market-list" style="margin-top:16px;"></div>
     <div class="empty-note" id="market-empty">No market updates logged yet.</div>
+  </div>
+
+  <div class="section-divider">Research</div>
+  <div class="card">
+    <div class="label">Monthly Research Log <span class="count-hint" id="research-count-hint"></span></div>
+    <p class="muted" style="margin-top:-4px;">System 06 — the record behind the Market Updates card above. Run Prompt Library A1 monthly, then log what changed here.</p>
+    <div id="research-list"></div>
+    <div class="empty-note" id="research-empty">No research logged yet.</div>
+    <div class="form-grid">
+      <input type="date" id="research-date" title="Research date">
+      <input type="text" id="research-system" placeholder="System reviewed (e.g. 02 - Local Knowledge)">
+      <input type="text" id="research-topic" class="full" placeholder="Topic">
+      <input type="date" id="research-next-review" title="Next review date">
+    </div>
+    <textarea id="research-findings" placeholder="What changed / findings..." style="border:1px solid #e2ded4; border-radius:10px; padding:9px 12px; font-size:14px; font-family:'Source Sans 3',sans-serif; width:100%; min-height:60px; resize:vertical; margin-top:8px;"></textarea>
+    <textarea id="research-action" placeholder="Action taken / content created..." style="border:1px solid #e2ded4; border-radius:10px; padding:9px 12px; font-size:14px; font-family:'Source Sans 3',sans-serif; width:100%; min-height:60px; resize:vertical; margin-top:8px;"></textarea>
+    <div class="save-bar"><button class="pill-btn" id="research-add-btn">Log research entry</button></div>
   </div>
 
   <div class="section-divider">Local Data &amp; Public Tools</div>
@@ -920,6 +969,20 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
       <textarea id="ref-add-body" placeholder="Full text — script, prompt, CTA list, or template..."></textarea>
       <div class="save-bar"><button class="pill-btn" id="ref-add-btn">Add to library</button></div>
     </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Template Library Index <span class="count-hint" id="template-index-count-hint"></span></div>
+    <p class="muted" style="margin-top:-4px;">System 16 — a map, not a duplicate. This only records where each reusable asset actually lives; the asset itself stays in the tab or card that owns it.</p>
+    <div id="template-index-list"></div>
+    <div class="empty-note" id="template-index-empty">Nothing indexed yet.</div>
+    <div class="form-grid">
+      <input type="text" id="template-index-name" class="full" placeholder="Template / asset name">
+      <input type="text" id="template-index-system" placeholder="Owning system (e.g. 08 - Client Experience)">
+      <select id="template-index-type"></select>
+      <input type="text" id="template-index-location" class="full" placeholder="Where it lives (e.g. Business tab > Contacts > Client Journey)">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="template-index-add-btn">Add to index</button></div>
   </div>
 
   <div class="section-divider">Growth &amp; Performance</div>
@@ -3868,6 +3931,349 @@ async function renderOutreachPlaybook(){
   });
 }
 
+/* ---- js/lead-magnets.js ---- */
+/* System 04C: Lead Magnet & Funnel System. Submission counts are computed
+   live from public_submissions.tool_name — matched against public_tool_key
+   below — so there's nothing to keep in sync manually. */
+const LEAD_MAGNET_STAGES = ['Awareness','Engagement','Consideration','Conversion'];
+const LEAD_MAGNET_FORMATS = ['Guide','Quiz','Planner','Checklist','Video','Other'];
+const LEAD_MAGNET_STATUSES = ['Live','Draft','Retired'];
+
+const SEED_LEAD_MAGNETS = [
+  { name:'Southwest Broward Relocation Guide', funnel_stage:'Awareness', format:'Guide', status:'Live', public_tool_key:'Relocation Planner' },
+  { name:'Home Match Quiz', funnel_stage:'Awareness', format:'Quiz', status:'Live', public_tool_key:'Home Match Quiz' },
+  { name:'Future Home Plan', funnel_stage:'Consideration', format:'Planner', status:'Live', public_tool_key:'Future Home Planner' },
+  { name:'Neighborhood Explorer', funnel_stage:'Engagement', format:'Other', status:'Live', public_tool_key:'Neighborhood Explorer' },
+  { name:'Where Am I in the Process? Check-in', funnel_stage:'Engagement', format:'Checklist', status:'Live', public_tool_key:'Buyer Stage Check-in' }
+];
+
+async function seedLeadMagnetsIfEmpty(){
+  const user = getCurrentUser();
+  const { count, error } = await supabaseClient
+    .from('lead_magnets').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+  if(error){ console.error(error); return; }
+  if(count && count > 0) return;
+  const rows = SEED_LEAD_MAGNETS.map(m => ({ ...m, user_id: user.id }));
+  const { error: insErr } = await supabaseClient.from('lead_magnets').insert(rows);
+  if(insErr) console.error(insErr);
+}
+async function loadLeadMagnets(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient.from('lead_magnets').select('*').eq('user_id', user.id).order('created_at');
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addLeadMagnetRow(magnet){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('lead_magnets').insert({ ...magnet, user_id: user.id });
+  if(error) console.error(error);
+}
+async function deleteLeadMagnetRow(id){
+  const { error } = await supabaseClient.from('lead_magnets').delete().eq('id', id);
+  if(error) console.error(error);
+}
+async function loadAllSubmissionsForCounting(){
+  const { data, error } = await supabaseClient.from('public_submissions').select('tool_name, converted');
+  if(error){ console.error(error); return []; }
+  return data;
+}
+
+async function renderLeadMagnets(){
+  const list = document.getElementById('magnets-list');
+  const empty = document.getElementById('magnets-empty');
+  const countEl = document.getElementById('magnets-count-hint');
+  if(!list) return;
+  await seedLeadMagnetsIfEmpty();
+  const [magnets, submissions] = await Promise.all([loadLeadMagnets(), loadAllSubmissionsForCounting()]);
+  if(countEl) countEl.textContent = magnets.length + ' tracked';
+  list.innerHTML = '';
+  empty.style.display = magnets.length === 0 ? 'block' : 'none';
+  magnets.forEach(m => {
+    const matches = submissions.filter(s => s.tool_name === m.public_tool_key);
+    const total = matches.length;
+    const converted = matches.filter(s => s.converted).length;
+    const row = document.createElement('div');
+    row.className = 'lead-item';
+    row.innerHTML =
+      '<div class="lead-main">' +
+        '<b>' + escapeHtml(m.name) + '</b>' +
+        '<span class="lead-badge">' + escapeHtml(m.status) + '</span>' +
+        '<div class="lead-sub">' + escapeHtml(m.funnel_stage) + ' · ' + escapeHtml(m.format) + '</div>' +
+        '<div class="lead-sub">' + (m.public_tool_key ? total + ' submission' + (total === 1 ? '' : 's') + ' · ' + converted + ' converted to contact' : 'No public tool linked — add a matching tool name to auto-count') + '</div>' +
+      '</div>' +
+      '<div class="lead-actions"><button class="row-remove" aria-label="Remove">×</button></div>';
+    row.querySelector('.row-remove').addEventListener('click', async () => {
+      await deleteLeadMagnetRow(m.id);
+      renderLeadMagnets();
+    });
+    list.appendChild(row);
+  });
+}
+
+async function initLeadMagnetsModule(){
+  document.getElementById('magnet-stage').innerHTML = LEAD_MAGNET_STAGES.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+  document.getElementById('magnet-format').innerHTML = LEAD_MAGNET_FORMATS.map(f => '<option value="' + f + '">' + f + '</option>').join('');
+  document.getElementById('magnet-status').innerHTML = LEAD_MAGNET_STATUSES.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+
+  document.getElementById('magnet-add-btn').addEventListener('click', async () => {
+    const name = document.getElementById('magnet-name').value.trim();
+    const funnel_stage = document.getElementById('magnet-stage').value;
+    const format = document.getElementById('magnet-format').value;
+    const status = document.getElementById('magnet-status').value;
+    const public_tool_key = document.getElementById('magnet-tool-key').value.trim() || null;
+    if(!name) return;
+    await addLeadMagnetRow({ name, funnel_stage, format, status, public_tool_key });
+    document.getElementById('magnet-name').value = '';
+    document.getElementById('magnet-tool-key').value = '';
+    renderLeadMagnets();
+  });
+
+  await renderLeadMagnets();
+}
+
+
+/* ---- js/seo-tracker.js ---- */
+/* System 04D: Website & SEO System */
+const SEO_PAGE_TYPES = ['Neighborhood Page','Service Page','Blog Post','Landing Page','Other'];
+const SEO_STATUSES = ['Published','Needs Update','Planned'];
+
+async function loadSeoPages(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient.from('seo_pages').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addSeoPageRow(page){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('seo_pages').insert({ ...page, user_id: user.id });
+  if(error) console.error(error);
+}
+async function updateSeoPageStatusRow(id, status){
+  const fields = { status };
+  if(status === 'Published') fields.last_reviewed_date = todayStr();
+  const { error } = await supabaseClient.from('seo_pages').update(fields).eq('id', id);
+  if(error) console.error(error);
+}
+async function deleteSeoPageRow(id){
+  const { error } = await supabaseClient.from('seo_pages').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderSeoPages(){
+  const list = document.getElementById('seo-list');
+  const empty = document.getElementById('seo-empty');
+  const countEl = document.getElementById('seo-count-hint');
+  if(!list) return;
+  const pages = await loadSeoPages();
+  if(countEl) countEl.textContent = pages.length + ' pages';
+  list.innerHTML = '';
+  empty.style.display = pages.length === 0 ? 'block' : 'none';
+  pages.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'lead-item';
+    const statusOptions = SEO_STATUSES.map(s => '<option value="' + s + '"' + (s === p.status ? ' selected' : '') + '>' + s + '</option>').join('');
+    row.innerHTML =
+      '<div class="lead-main">' +
+        '<b>' + escapeHtml(p.page_name) + '</b>' +
+        '<span class="lead-badge">' + escapeHtml(p.page_type) + '</span>' +
+        '<div class="lead-sub">' + (p.target_keyword ? 'Keyword: ' + escapeHtml(p.target_keyword) : 'No target keyword set') + '</div>' +
+        '<div class="lead-sub">' + (p.last_reviewed_date ? 'Last reviewed ' + p.last_reviewed_date : 'Not yet reviewed') + (p.url ? ' · ' + escapeHtml(p.url) : '') + '</div>' +
+      '</div>' +
+      '<div class="lead-actions">' +
+        '<select class="seo-status-select">' + statusOptions + '</select>' +
+        '<button class="row-remove" aria-label="Remove">×</button>' +
+      '</div>';
+    row.querySelector('.seo-status-select').addEventListener('change', async e => {
+      await updateSeoPageStatusRow(p.id, e.target.value);
+      renderSeoPages();
+    });
+    row.querySelector('.row-remove').addEventListener('click', async () => {
+      await deleteSeoPageRow(p.id);
+      renderSeoPages();
+    });
+    list.appendChild(row);
+  });
+}
+
+async function initSeoModule(){
+  document.getElementById('seo-page-type').innerHTML = SEO_PAGE_TYPES.map(t => '<option value="' + t + '">' + t + '</option>').join('');
+  document.getElementById('seo-status').innerHTML = SEO_STATUSES.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+
+  document.getElementById('seo-add-btn').addEventListener('click', async () => {
+    const page_name = document.getElementById('seo-page-name').value.trim();
+    const page_type = document.getElementById('seo-page-type').value;
+    const target_keyword = document.getElementById('seo-keyword').value.trim();
+    const url = document.getElementById('seo-url').value.trim();
+    const status = document.getElementById('seo-status').value;
+    const last_reviewed_date = document.getElementById('seo-last-reviewed').value || null;
+    if(!page_name) return;
+    await addSeoPageRow({ page_name, page_type, target_keyword, url, status, last_reviewed_date });
+    ['seo-page-name','seo-keyword','seo-url','seo-last-reviewed'].forEach(id => document.getElementById(id).value = '');
+    renderSeoPages();
+  });
+
+  await renderSeoPages();
+}
+
+
+/* ---- js/research-log.js ---- */
+/* System 06: Research System — the log behind the monthly Market Updates
+   card and Prompt Library entries A1/A2. */
+async function loadResearchEntries(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient.from('research_log').select('*').eq('user_id', user.id).order('research_date', { ascending: false });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addResearchEntryRow(entry){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('research_log').insert({ ...entry, user_id: user.id });
+  if(error) console.error(error);
+}
+async function deleteResearchEntryRow(id){
+  const { error } = await supabaseClient.from('research_log').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderResearchLog(){
+  const list = document.getElementById('research-list');
+  const empty = document.getElementById('research-empty');
+  const countEl = document.getElementById('research-count-hint');
+  if(!list) return;
+  const entries = await loadResearchEntries();
+  if(countEl) countEl.textContent = entries.length + ' logged';
+  list.innerHTML = '';
+  empty.style.display = entries.length === 0 ? 'block' : 'none';
+  entries.forEach(r => {
+    const overdue = r.next_review_date && r.next_review_date < todayStr();
+    const row = document.createElement('div');
+    row.className = 'ref-item';
+    const summary = [
+      r.findings ? 'Findings: ' + r.findings : '',
+      r.action_taken ? 'Action taken: ' + r.action_taken : '',
+      r.next_review_date ? 'Next review: ' + r.next_review_date + (overdue ? ' (overdue)' : '') : ''
+    ].filter(Boolean).join('\n\n');
+    row.innerHTML =
+      '<div class="ref-item-head"><div><b>' + escapeHtml(r.topic) + '</b><div class="ref-item-section">' + r.research_date + (r.system_reviewed ? ' · ' + escapeHtml(r.system_reviewed) : '') + '</div></div></div>' +
+      '<div class="ref-body">' + escapeHtml(summary || 'No details entered.') + '</div>' +
+      '<div class="ref-item-actions" style="display:none;"><button class="ref-delete-btn">Delete</button></div>';
+    const head = row.querySelector('.ref-item-head');
+    const actions = row.querySelector('.ref-item-actions');
+    head.addEventListener('click', () => {
+      row.classList.toggle('open');
+      actions.style.display = row.classList.contains('open') ? 'flex' : 'none';
+    });
+    row.querySelector('.ref-delete-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await deleteResearchEntryRow(r.id);
+      renderResearchLog();
+    });
+    list.appendChild(row);
+  });
+}
+
+async function initResearchLogModule(){
+  document.getElementById('research-add-btn').addEventListener('click', async () => {
+    const research_date = document.getElementById('research-date').value || todayStr();
+    const system_reviewed = document.getElementById('research-system').value.trim();
+    const topic = document.getElementById('research-topic').value.trim();
+    const findings = document.getElementById('research-findings').value.trim();
+    const action_taken = document.getElementById('research-action').value.trim();
+    const next_review_date = document.getElementById('research-next-review').value || null;
+    if(!topic) return;
+    await addResearchEntryRow({ research_date, system_reviewed, topic, findings, action_taken, next_review_date });
+    ['research-system','research-topic','research-findings','research-action','research-next-review'].forEach(id => document.getElementById(id).value = '');
+    renderResearchLog();
+  });
+
+  await renderResearchLog();
+}
+
+
+/* ---- js/template-index.js ---- */
+/* System 16: Template Library — this is the MAP, not a duplicate store.
+   It records where an asset actually lives; it never holds the asset's
+   content itself (that stays in the tab/card that owns it). */
+const TEMPLATE_INDEX_TYPES = ['Checklist','Guide','Worksheet','Tracker','Form','Presentation','Template','Other'];
+
+const SEED_TEMPLATE_INDEX = [
+  { template_name:'Client Journey Milestones', owning_system:'08 - Client Experience', location:'Business tab > Contacts > open an Active Client > Client Journey', template_type:'Checklist' },
+  { template_name:'Content Calendar', owning_system:'03 - Content Engine', location:'Business tab > Content Calendar', template_type:'Tracker' },
+  { template_name:'Weekly & Monthly Business Review', owning_system:'09/10 - Business Management & Performance Review', location:'Weekly Reviews tab (Business wins field) + Business tab > KPI Snapshots', template_type:'Worksheet' },
+  { template_name:'Voice Guide, CTA, Script & Prompt Libraries', owning_system:'01, 13, 14, 15', location:'Business tab > Reference Library', template_type:'Guide' },
+  { template_name:'Neighborhood Profile Framework', owning_system:'02C - Community Intelligence', location:'Business tab > Reference Library (Template filter) + Neighborhood Profiles card', template_type:'Template' },
+  { template_name:'Email Nurture Sequences', owning_system:'04C - Lead Magnet & Funnel', location:'Business tab > Reference Library (Template filter)', template_type:'Template' }
+];
+
+async function seedTemplateIndexIfEmpty(){
+  const user = getCurrentUser();
+  const { count, error } = await supabaseClient
+    .from('template_index').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+  if(error){ console.error(error); return; }
+  if(count && count > 0) return;
+  const rows = SEED_TEMPLATE_INDEX.map(t => ({ ...t, user_id: user.id }));
+  const { error: insErr } = await supabaseClient.from('template_index').insert(rows);
+  if(insErr) console.error(insErr);
+}
+async function loadTemplateIndex(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient.from('template_index').select('*').eq('user_id', user.id).order('created_at');
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addTemplateIndexRow(item){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('template_index').insert({ ...item, user_id: user.id });
+  if(error) console.error(error);
+}
+async function deleteTemplateIndexRow(id){
+  const { error } = await supabaseClient.from('template_index').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderTemplateIndex(){
+  const list = document.getElementById('template-index-list');
+  const empty = document.getElementById('template-index-empty');
+  const countEl = document.getElementById('template-index-count-hint');
+  if(!list) return;
+  await seedTemplateIndexIfEmpty();
+  const items = await loadTemplateIndex();
+  if(countEl) countEl.textContent = items.length + ' indexed';
+  list.innerHTML = '';
+  empty.style.display = items.length === 0 ? 'block' : 'none';
+  items.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'inbox-item';
+    row.innerHTML = '<span><b>' + escapeHtml(t.template_name) + '</b>' +
+      (t.owning_system ? ' · System ' + escapeHtml(t.owning_system) : '') +
+      '<br><span style="font-size:12px;opacity:0.65;">' + escapeHtml(t.location) + '</span></span>' +
+      '<button aria-label="Remove">×</button>';
+    row.querySelector('button').addEventListener('click', async () => {
+      await deleteTemplateIndexRow(t.id);
+      renderTemplateIndex();
+    });
+    list.appendChild(row);
+  });
+}
+
+async function initTemplateIndexModule(){
+  document.getElementById('template-index-type').innerHTML = TEMPLATE_INDEX_TYPES.map(t => '<option value="' + t + '">' + t + '</option>').join('');
+
+  document.getElementById('template-index-add-btn').addEventListener('click', async () => {
+    const template_name = document.getElementById('template-index-name').value.trim();
+    const owning_system = document.getElementById('template-index-system').value.trim();
+    const template_type = document.getElementById('template-index-type').value;
+    const location = document.getElementById('template-index-location').value.trim();
+    if(!template_name || !location) return;
+    await addTemplateIndexRow({ template_name, owning_system, template_type, location });
+    ['template-index-name','template-index-system','template-index-location'].forEach(id => document.getElementById(id).value = '');
+    renderTemplateIndex();
+  });
+
+  await renderTemplateIndex();
+}
+
+
 async function initBusinessModule(){
   await renderSubmissions();
   await initContactsModule();
@@ -3875,9 +4281,13 @@ async function initBusinessModule(){
   await renderOutreachPlaybook();
   await initContentModule();
   await initCalendarModule();
+  await initLeadMagnetsModule();
+  await initSeoModule();
   await initLocalKnowledgeModule();
+  await initResearchLogModule();
   await renderNeighborhoodAdmin();
   await initReferenceLibraryModule();
+  await initTemplateIndexModule();
   await initBusinessGoalsModule();
   await initKpiSnapshotsModule();
   await initCampaignsModule();
