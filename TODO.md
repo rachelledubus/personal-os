@@ -4,6 +4,9 @@ Ordered by recommended priority, not by category. "Done" items are here for
 context on how recently they closed, not because they need action.
 
 User-requested Additions:
+- Include year in header. 
+- Change the "Rachelle's System" in header to time-specific greetings.
+- Include a motivational quote widget that changes on dashboard.
 - "Build Your Own Meal" feature based on the meal-building framework
 - Automated grocery list
 - Automated task list if not already added
