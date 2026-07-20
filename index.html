@@ -126,6 +126,18 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
 .task-row label{ display:flex; flex-direction:column; gap:2px; }
 .task-meta{ font-size:11px; opacity:0.55; font-weight:400; }
 
+/* Leads & Pipeline */
+.lead-item{ background:var(--sand); border-radius:12px; padding:12px 14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+.lead-item.overdue{ box-shadow:inset 3px 0 0 var(--accent); }
+.lead-item.due-today{ box-shadow:inset 3px 0 0 var(--sage); }
+.lead-main{ flex:1; min-width:180px; }
+.lead-main b{ font-family:'DM Sans',sans-serif; font-size:14px; }
+.lead-badge{ display:inline-block; margin-left:8px; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; background:var(--white); color:var(--navy); border-radius:999px; padding:2px 8px; font-weight:700; font-family:'DM Sans',sans-serif; }
+.lead-sub{ font-size:12px; opacity:0.65; margin-top:3px; }
+.lead-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.pill-btn.small{ padding:6px 12px; font-size:11px; }
+.lead-actions select{ border:1px solid #e2ded4; border-radius:10px; padding:6px 8px; font-size:12px; font-family:'Source Sans 3',sans-serif; }
+
 /* ---------------- Auth screen ---------------- */
 #auth-screen{
   min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
@@ -493,6 +505,49 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
 
 <!-- ============ BUSINESS ============ -->
 <section class="panel" id="panel-business">
+  <div class="card">
+    <div class="label">Business KPIs</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="num" id="kpi-new-leads">0</div><div class="unit">new leads this month</div></div>
+      <div class="stat"><div class="num" id="kpi-followups-due">0</div><div class="unit">follow-ups due/overdue</div></div>
+      <div class="stat"><div class="num" id="kpi-pipeline-value">$0</div><div class="unit">active pipeline value</div></div>
+      <div class="stat"><div class="num" id="kpi-closed-month">0</div><div class="unit">deals closed this month</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Lead & Follow-Up Tracker</div>
+    <div id="leads-list"></div>
+    <div class="form-grid">
+      <input type="text" id="lead-name" placeholder="Lead name">
+      <input type="text" id="lead-phone" placeholder="Phone">
+      <input type="email" id="lead-email" placeholder="Email">
+      <input type="text" id="lead-source" placeholder="Source (referral, Zillow, etc.)">
+      <select id="lead-status"></select>
+      <input type="date" id="lead-followup" title="Next follow-up date">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="lead-add-btn">Add lead</button></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Pipeline <span class="count-hint" id="pipeline-total-value">$0 active</span></div>
+    <div id="pipeline-list"></div>
+    <div class="form-grid">
+      <input type="text" id="deal-client" class="full" placeholder="Client name">
+      <input type="text" id="deal-address" class="full" placeholder="Property address">
+      <select id="deal-stage"></select>
+      <input type="number" id="deal-value" placeholder="Estimated value ($)">
+      <input type="date" id="deal-close-date" class="full" title="Target close date">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="deal-add-btn">Add deal</button></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Content Checklist <span class="count-hint">resets each day</span></div>
+    <div id="content-checklist-list"></div>
+    <div class="add-row"><input type="text" id="content-input" placeholder="Add a content task..."><button id="content-add-btn">Add</button></div>
+  </div>
+
   <div class="card">
     <div class="label">SW Broward Business Operating System</div>
     <p>Your finalized 16-system reference manual for the solo-agent business. This is a quick-access summary — bring specific sections into chat, or upload files, for full detail on any system.</p>
@@ -1082,6 +1137,326 @@ async function initHabitsModule(){
 }
 
 
+/* ---- js/leads.js ---- */
+/* ---------------------------------------------------------------
+   Leads: lead + follow-up tracker. Table: leads.
+--------------------------------------------------------------- */
+const LEAD_STATUSES = ['New','Contacted','Nurturing','Client','Lost'];
+
+async function loadLeads(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('leads').select('*').eq('user_id', user.id)
+    .order('next_follow_up_date', { ascending: true, nullsFirst: false });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addLeadRow(lead){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('leads').insert({ ...lead, user_id: user.id });
+  if(error) console.error(error);
+}
+async function updateLeadRow(id, fields){
+  const { error } = await supabaseClient.from('leads').update(fields).eq('id', id);
+  if(error) console.error(error);
+}
+async function deleteLeadRow(id){
+  const { error } = await supabaseClient.from('leads').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+function daysFromToday(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00');
+  const today = new Date(todayStr() + 'T00:00:00');
+  return Math.round((d - today) / (1000*60*60*24));
+}
+
+async function renderLeads(){
+  const list = document.getElementById('leads-list');
+  if(!list) return;
+  const leads = await loadLeads();
+  list.innerHTML = leads.length === 0 ? '<div class="empty-note">No leads yet — add one below.</div>' : '';
+  leads.forEach(l => {
+    const diff = daysFromToday(l.next_follow_up_date);
+    const overdue = diff !== null && diff < 0;
+    const dueToday = diff === 0;
+    const row = document.createElement('div');
+    row.className = 'lead-item' + (overdue ? ' overdue' : '') + (dueToday ? ' due-today' : '');
+    row.innerHTML =
+      '<div class="lead-main">' +
+        '<b>' + escapeHtml(l.name) + '</b>' +
+        '<span class="lead-badge">' + escapeHtml(l.status) + '</span>' +
+        '<div class="lead-sub">' +
+          (l.phone ? escapeHtml(l.phone) + ' · ' : '') +
+          (l.email ? escapeHtml(l.email) + ' · ' : '') +
+          (l.source ? 'via ' + escapeHtml(l.source) : '') +
+        '</div>' +
+        '<div class="lead-sub">' +
+          (l.next_follow_up_date ? 'Follow up: ' + l.next_follow_up_date + (overdue ? ' (overdue)' : dueToday ? ' (today)' : '') : 'No follow-up date set') +
+        '</div>' +
+      '</div>' +
+      '<div class="lead-actions">' +
+        '<button class="pill-btn small contacted-btn">Mark contacted today</button>' +
+        '<button class="row-remove" aria-label="Remove">×</button>' +
+      '</div>';
+    row.querySelector('.contacted-btn').addEventListener('click', async () => {
+      await updateLeadRow(l.id, { last_contact_date: todayStr() });
+      renderLeads();
+      if(window.refreshTodaySummary) window.refreshTodaySummary();
+    });
+    row.querySelector('.row-remove').addEventListener('click', async () => {
+      await deleteLeadRow(l.id);
+      renderLeads();
+      if(window.refreshTodaySummary) window.refreshTodaySummary();
+    });
+    list.appendChild(row);
+  });
+}
+
+async function initLeadsModule(){
+  const statusSelect = document.getElementById('lead-status');
+  statusSelect.innerHTML = LEAD_STATUSES.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+
+  document.getElementById('lead-add-btn').addEventListener('click', async () => {
+    const name = document.getElementById('lead-name').value.trim();
+    const phone = document.getElementById('lead-phone').value.trim();
+    const email = document.getElementById('lead-email').value.trim();
+    const source = document.getElementById('lead-source').value.trim();
+    const status = statusSelect.value;
+    const next_follow_up_date = document.getElementById('lead-followup').value || null;
+    if(!name) return;
+    await addLeadRow({ name, phone, email, source, status, next_follow_up_date });
+    ['lead-name','lead-phone','lead-email','lead-source','lead-followup'].forEach(id => document.getElementById(id).value = '');
+    renderLeads();
+    if(window.refreshTodaySummary) window.refreshTodaySummary();
+  });
+
+  await renderLeads();
+}
+
+
+/* ---- js/pipeline.js ---- */
+/* ---------------------------------------------------------------
+   Pipeline: deal stage tracker. Table: pipeline_deals.
+--------------------------------------------------------------- */
+const PIPELINE_STAGES = ['New Lead','Consultation','Active Representation','Under Contract','Closing','Closed'];
+
+async function loadDeals(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('pipeline_deals').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addDealRow(deal){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('pipeline_deals').insert({ ...deal, user_id: user.id });
+  if(error) console.error(error);
+}
+async function updateDealStage(id, stage){
+  const { error } = await supabaseClient.from('pipeline_deals').update({ stage }).eq('id', id);
+  if(error) console.error(error);
+}
+async function deleteDealRow(id){
+  const { error } = await supabaseClient.from('pipeline_deals').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderPipeline(){
+  const list = document.getElementById('pipeline-list');
+  if(!list) return;
+  const deals = await loadDeals();
+  list.innerHTML = deals.length === 0 ? '<div class="empty-note">No deals in the pipeline yet.</div>' : '';
+  let totalValue = 0;
+  deals.forEach(d => {
+    if(d.stage !== 'Closed') totalValue += Number(d.estimated_value) || 0;
+    const row = document.createElement('div');
+    row.className = 'lead-item';
+    const stageOptions = PIPELINE_STAGES.map(s => '<option value="' + s + '"' + (s === d.stage ? ' selected' : '') + '>' + s + '</option>').join('');
+    row.innerHTML =
+      '<div class="lead-main">' +
+        '<b>' + escapeHtml(d.client_name) + '</b>' +
+        (d.property_address ? '<div class="lead-sub">' + escapeHtml(d.property_address) + '</div>' : '') +
+        (d.estimated_value ? '<div class="lead-sub">Est. value: $' + Number(d.estimated_value).toLocaleString() + '</div>' : '') +
+        (d.target_close_date ? '<div class="lead-sub">Target close: ' + d.target_close_date + '</div>' : '') +
+      '</div>' +
+      '<div class="lead-actions">' +
+        '<select class="stage-select">' + stageOptions + '</select>' +
+        '<button class="row-remove" aria-label="Remove">×</button>' +
+      '</div>';
+    row.querySelector('.stage-select').addEventListener('change', async e => {
+      await updateDealStage(d.id, e.target.value);
+      renderPipeline();
+      if(window.refreshTodaySummary) window.refreshTodaySummary();
+    });
+    row.querySelector('.row-remove').addEventListener('click', async () => {
+      await deleteDealRow(d.id);
+      renderPipeline();
+      if(window.refreshTodaySummary) window.refreshTodaySummary();
+    });
+    list.appendChild(row);
+  });
+  const totalEl = document.getElementById('pipeline-total-value');
+  if(totalEl) totalEl.textContent = '$' + totalValue.toLocaleString() + ' active';
+}
+
+async function initPipelineModule(){
+  const stageSelect = document.getElementById('deal-stage');
+  stageSelect.innerHTML = PIPELINE_STAGES.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+
+  document.getElementById('deal-add-btn').addEventListener('click', async () => {
+    const client_name = document.getElementById('deal-client').value.trim();
+    const property_address = document.getElementById('deal-address').value.trim();
+    const stage = stageSelect.value;
+    const estimated_value = Number(document.getElementById('deal-value').value) || null;
+    const target_close_date = document.getElementById('deal-close-date').value || null;
+    if(!client_name) return;
+    await addDealRow({ client_name, property_address, stage, estimated_value, target_close_date });
+    ['deal-client','deal-address','deal-value','deal-close-date'].forEach(id => document.getElementById(id).value = '');
+    renderPipeline();
+    if(window.refreshTodaySummary) window.refreshTodaySummary();
+  });
+
+  await renderPipeline();
+}
+
+
+/* ---- js/content-checklist.js ---- */
+/* ---------------------------------------------------------------
+   Content checklist: repeating daily content tasks.
+   Tables: content_items (definitions), content_logs (daily completion).
+   Mirrors the habits.js pattern.
+--------------------------------------------------------------- */
+async function loadContentDefs(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('content_items').select('*').eq('user_id', user.id).eq('archived', false).order('sort_order');
+  if(error){ console.error(error); return []; }
+  if(data.length === 0){
+    const defaults = ["Post to Instagram","Post to Facebook","Send/update newsletter","Respond to comments & DMs"];
+    for(let i=0;i<defaults.length;i++){
+      await supabaseClient.from('content_items').insert({ user_id: user.id, name: defaults[i], sort_order: i });
+    }
+    return loadContentDefs();
+  }
+  return data;
+}
+async function loadContentLogs(date){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('content_logs').select('*').eq('user_id', user.id).eq('log_date', date);
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function setContentLog(itemId, date, completed){
+  const user = getCurrentUser();
+  if(completed){
+    const { error } = await supabaseClient
+      .from('content_logs')
+      .upsert({ user_id: user.id, content_item_id: itemId, log_date: date, completed: true }, { onConflict: 'content_item_id,log_date' });
+    if(error) console.error(error);
+  } else {
+    const { error } = await supabaseClient
+      .from('content_logs').delete().eq('content_item_id', itemId).eq('log_date', date);
+    if(error) console.error(error);
+  }
+}
+async function addContentDef(name){
+  const user = getCurrentUser();
+  const defs = await loadContentDefs();
+  const { error } = await supabaseClient.from('content_items').insert({ user_id: user.id, name, sort_order: defs.length });
+  if(error) console.error(error);
+}
+async function removeContentDef(id){
+  const { error } = await supabaseClient.from('content_items').update({ archived: true }).eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderContentChecklist(){
+  const container = document.getElementById('content-checklist-list');
+  if(!container) return { total: 0, done: 0 };
+  const defs = await loadContentDefs();
+  const logs = await loadContentLogs(todayStr());
+  const doneIds = new Set(logs.filter(l => l.completed).map(l => l.content_item_id));
+
+  container.innerHTML = defs.length === 0 ? '<div class="empty-note">No content tasks yet.</div>' : '';
+  defs.forEach(item => {
+    const isDone = doneIds.has(item.id);
+    const row = document.createElement('div');
+    row.className = 'task-row' + (isDone ? ' done' : '');
+    const cbId = 'content-cb-' + item.id;
+    row.innerHTML =
+      '<input type="checkbox" id="' + cbId + '" ' + (isDone ? 'checked' : '') + '>' +
+      '<label for="' + cbId + '">' + escapeHtml(item.name) + '</label>' +
+      '<button class="row-remove" aria-label="Remove">×</button>';
+    row.querySelector('input').addEventListener('change', async e => {
+      await setContentLog(item.id, todayStr(), e.target.checked);
+      renderContentChecklist();
+      if(window.refreshTodaySummary) window.refreshTodaySummary();
+    });
+    row.querySelector('.row-remove').addEventListener('click', async () => {
+      await removeContentDef(item.id);
+      renderContentChecklist();
+    });
+    container.appendChild(row);
+  });
+
+  return { total: defs.length, done: doneIds.size };
+}
+
+async function initContentModule(){
+  document.getElementById('content-add-btn').addEventListener('click', async () => {
+    const input = document.getElementById('content-input');
+    if(input.value.trim()){
+      await addContentDef(input.value.trim());
+      input.value = '';
+      renderContentChecklist();
+    }
+  });
+  await renderContentChecklist();
+}
+
+
+/* ---- js/business.js ---- */
+/* ---------------------------------------------------------------
+   Business KPI dashboard — computed from leads, pipeline_deals,
+   and content_logs. Sits at the top of the Business tab.
+--------------------------------------------------------------- */
+async function renderBusinessKpis(){
+  const monthStr = new Date().toISOString().slice(0,7); // 'YYYY-MM'
+
+  try{
+    const leads = await loadLeads();
+    const newThisMonth = leads.filter(l => (l.created_at || '').slice(0,7) === monthStr).length;
+    const dueToday = leads.filter(l => l.next_follow_up_date === todayStr()).length;
+    const overdue = leads.filter(l => l.next_follow_up_date && l.next_follow_up_date < todayStr()).length;
+    setKpi('kpi-new-leads', newThisMonth);
+    setKpi('kpi-followups-due', dueToday + overdue);
+  }catch(e){ console.error(e); }
+
+  try{
+    const deals = await loadDeals();
+    const activeValue = deals.filter(d => d.stage !== 'Closed').reduce((sum,d) => sum + (Number(d.estimated_value)||0), 0);
+    const closedThisMonth = deals.filter(d => d.stage === 'Closed' && (d.created_at||'').slice(0,7) === monthStr).length;
+    setKpi('kpi-pipeline-value', '$' + activeValue.toLocaleString());
+    setKpi('kpi-closed-month', closedThisMonth);
+  }catch(e){ console.error(e); }
+}
+
+function setKpi(id, val){
+  const el = document.getElementById(id);
+  if(el) el.textContent = val;
+}
+
+async function initBusinessModule(){
+  await initLeadsModule();
+  await initPipelineModule();
+  await initContentModule();
+  await renderBusinessKpis();
+}
+
+
 /* ---- js/dashboard.js ---- */
 /* ---------------------------------------------------------------
    Home "Today" command center. Combines:
@@ -1132,11 +1507,10 @@ async function renderTodaySummary(){
   }catch(e){ console.error(e); }
 
   try{
-    const tasks = await loadTaskRows();
-    const biz = tasks.filter(t => t.category === 'Real Estate');
-    const done = biz.filter(t => t.completed).length;
+    const leads = await loadLeads();
+    const dueOrOverdue = leads.filter(l => l.next_follow_up_date && l.next_follow_up_date <= todayStr()).length;
     const el = document.getElementById('today-business');
-    if(el) el.textContent = biz.length === 0 ? 'No business tasks yet' : (done + ' / ' + biz.length + ' complete');
+    if(el) el.textContent = dueOrOverdue === 0 ? 'No follow-ups due' : (dueOrOverdue + ' follow-up' + (dueOrOverdue === 1 ? '' : 's') + ' due');
   }catch(e){ console.error(e); }
 }
 
@@ -1669,6 +2043,7 @@ function initApp(user){
   initHabitsModule();
   initNutritionModule();
   initTasksModule();
+  initBusinessModule();
   renderTodaySummary();
 }
 
