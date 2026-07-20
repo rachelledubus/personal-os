@@ -17,11 +17,16 @@ of what each table is for and whether the UI is actually connected to it yet.
 | `weekly_reviews` | Weekly reflection entries | ❌ Table exists, no UI yet |
 | `notes` | Quick freeform notes | ❌ Table exists, no UI yet |
 | `appointments` | Upcoming appointments | ✅ Appointments tab *(migrated — see Changelog)* |
-| `bills` | Recurring monthly bills | ✅ Budget tab *(migrated — see Changelog)* |
-| `leads` | Lead & follow-up tracker | ✅ Business tab |
+| `bills` | Recurring monthly bills | ✅ Finances tab *(migrated + `account` column added — see Changelog)* |
+| `transactions` | Income & expense ledger | ✅ Finances tab *(added — see Changelog)* |
+| `debts` | Debt payoff tracker | ✅ Finances tab *(added — see Changelog)* |
+| `savings_goals` | Savings goals with progress | ✅ Finances tab *(added — see Changelog)* |
+| `leads` | Old simple lead tracker | ⚠️ **Deprecated.** Data preserved, UI no longer uses it — see `contacts` below |
+| `contacts` | Full relationship/CRM tracker (replaces `leads`) | ✅ Business tab *(added — see Changelog)* |
 | `pipeline_deals` | Deal stage tracker | ✅ Business tab |
 | `content_items` / `content_logs` | Daily content checklist | ✅ Business tab |
 | `reference_library` | Voice/CTA/Script/Prompt/Template library | ✅ Business tab |
+| `grocery_items` | Grocery list (checkable, categorized) | ✅ Nutrition tab *(added — see Changelog)* |
 
 ## Not yet backed by any table (still `localStorage`)
 
@@ -34,6 +39,44 @@ devices or backed up. See `TODO.md` for the plan.
 - Chores — Daily / Weekly / Monthly checklists
 
 ## Notes on specific tables
+
+**`contacts`** — the real CRM, modeled directly on the uploaded spreadsheet
+("System 07 — Database, CRM & Follow-Up System"). Seven categories (`Lead`,
+`Future Client`, `Active Client`, `Past Client`, `Sphere`, `Partner`,
+`Agent Referral`) replace the old five-status `leads` model. Referral
+tracking isn't a separate table — it's `category = 'Agent Referral'` plus
+sources like `Sphere Referral` / `Partner Referral`, surfaced as a
+"referral relationships" KPI on the Business tab (counts any contact whose
+category is Agent Referral, or whose source mentions "referral"). Fields
+mirror the spreadsheet's four blocks (Basic Information, Relationship
+Information, Real Estate Information, Follow-Up Information); the
+spreadsheet's computed `Days Until Follow-Up` and `Status` columns aren't
+stored — they're calculated live in the UI from `next_follow_up_date`,
+same approach as the existing `daysFromToday()` helper already used
+elsewhere in the app.
+
+**`leads`** — deprecated but not deleted. See `contacts_migration.sql`,
+which is additive-only: it creates `contacts` and copies every existing
+lead into it, without touching or dropping the `leads` table. Nothing was
+lost. `leads` can be dropped manually later, once you've confirmed the new
+Contacts view has everything — see the commented-out `drop table` line at
+the bottom of the migration file.
+
+**`transactions` / `debts` / `savings_goals`** — the Finances tab (the tab
+formerly labeled "Budget"). All three, plus `bills`, share an `account`
+column (`'Personal'` or `'Business'`), and the Finances tab has one filter
+pill row at the top that filters all four sections at once. Logging a debt
+payment or a bill doesn't just update that table — a debt payment also
+inserts a matching `Expense` row into `transactions`, so the Income &
+Expenses ledger and the Debt Payoff tracker never drift apart. Savings
+contributions do NOT create a transaction (treated as a transfer, not
+income/spending, to avoid double-counting net cash flow).
+
+**`grocery_items`** — seeded once per user (same pattern as
+`reference_library`/`habits`) from the staples that used to be a static,
+uneditable list. "Build Your Own Meal" writes into this table too, via
+`addGroceryItemIfMissing()`, so picking ingredients there and shopping for
+them are the same list.
 
 **`workouts`** — one row per logged session, not one row per exercise. The
 `exercises` jsonb column holds an array like

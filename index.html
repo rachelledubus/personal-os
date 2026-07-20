@@ -208,7 +208,7 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
 <div id="app-shell" style="display:none;">
 
 <div class="topbar">
-  <h1>Rachelle's System</h1>
+  <h1 id="greeting-line">Rachelle's System</h1>
   <p id="date-line"></p>
   <div class="account-bar">
     <span id="signed-in-email"></span>
@@ -224,7 +224,7 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
   <button class="tab-btn" data-tab="habits">Habits</button>
   <button class="tab-btn" data-tab="tasks">Tasks</button>
   <button class="tab-btn" data-tab="chores">Chores</button>
-  <button class="tab-btn" data-tab="budget">Budget</button>
+  <button class="tab-btn" data-tab="budget">Finances</button>
   <button class="tab-btn" data-tab="appointments">Appointments</button>
   <button class="tab-btn" data-tab="business">Business</button>
   <button class="tab-btn" data-tab="tips">Tips</button>
@@ -242,6 +242,10 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
       <div class="today-item"><span class="today-emoji">✅</span><div><b id="today-habits">—</b><span>Habits</span></div></div>
       <div class="today-item"><span class="today-emoji">🏠</span><div><b id="today-business">—</b><span>Business</span></div></div>
     </div>
+  </div>
+  <div class="card" id="quote-card">
+    <div class="label">Today's Nudge <span class="count-hint" id="quote-refresh-hint" style="cursor:pointer; text-decoration:underline;">shuffle</span></div>
+    <p id="quote-text" style="font-size:15px; line-height:1.5; font-style:italic; margin:0;"></p>
   </div>
   <div class="card">
     <div class="label">Today's priorities</div>
@@ -263,7 +267,7 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
       <button class="nav-card" data-goto="nutrition"><span class="emoji">🥗</span><span class="title">Nutrition</span><span class="sub">Targets & grocery list</span></button>
       <button class="nav-card" data-goto="tasks"><span class="emoji">✅</span><span class="title">Tasks</span><span class="sub">Personal, Real Estate & more</span></button>
       <button class="nav-card" data-goto="chores"><span class="emoji">🧹</span><span class="title">Chores</span><span class="sub">Daily / weekly / monthly</span></button>
-      <button class="nav-card" data-goto="budget"><span class="emoji">💳</span><span class="title">Budget</span><span class="sub">Bills at a glance</span></button>
+      <button class="nav-card" data-goto="budget"><span class="emoji">💳</span><span class="title">Finances</span><span class="sub">Bills, income, debt & savings</span></button>
       <button class="nav-card" data-goto="appointments"><span class="emoji">📌</span><span class="title">Appointments</span><span class="sub">Add & view upcoming</span></button>
       <button class="nav-card" data-goto="business"><span class="emoji">🏠</span><span class="title">Business</span><span class="sub">SW Broward BOS reference</span></button>
       <button class="nav-card" data-goto="tips"><span class="emoji">💡</span><span class="title">Tips</span><span class="sub">ADHD & autism strategies</span></button>
@@ -419,17 +423,31 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
     <p class="muted" style="margin-top:12px;">No rice, quinoa, oats, coconut, pistachio, egg whites, tuna, salmon, tofu, or eggs.</p>
   </div>
   <div class="card">
-    <div class="label">Grocery List</div>
-    <div class="grocery-grid">
-      <div><h4>Proteins</h4><ul><li>Ground chicken/turkey</li><li>Chicken breast/thighs</li><li>Ground beef</li><li>Lean pork</li><li>Shrimp</li><li>Greek yogurt</li><li>Cottage cheese</li><li>Protein powder</li></ul></div>
-      <div><h4>Carbs</h4><ul><li>Potatoes</li><li>Sweet potatoes</li><li>Pasta</li><li>Bread</li></ul></div>
-      <div><h4>Fats</h4><ul><li>Olive oil</li><li>Avocado</li><li>Smooth nut butter</li><li>Cheese</li></ul></div>
-      <div><h4>Fruits</h4><ul><li>Banana</li><li>Mango</li><li>Berries</li><li>Applesauce</li></ul></div>
-      <div><h4>Vegetables</h4><ul><li>Spinach</li><li>Zucchini</li><li>Carrots</li><li>Butternut squash</li><li>Cauliflower</li></ul></div>
-      <div><h4>Frozen</h4><ul><li>Chicken/turkey</li><li>Shrimp</li><li>Mixed vegetables</li><li>Fruit for smoothies</li><li>Sweet potato</li></ul></div>
-      <div><h4>Pantry</h4><ul><li>Olive oil</li><li>Garlic</li><li>Soy sauce</li><li>Canned tomatoes</li><li>Pasta</li><li>Herbs</li><li>Honey</li></ul></div>
-      <div><h4>Convenience</h4><ul><li>Rotisserie chicken</li><li>Pre-cut veg</li><li>Microwaveable sweet potato</li><li>Yogurt cups</li><li>Protein shakes</li></ul></div>
+    <div class="label">Build Your Own Meal</div>
+    <p class="muted" style="margin-top:-4px;">Pick one from each slot below, or hit shuffle for a random combo.</p>
+    <div class="form-grid">
+      <select id="mb-protein"></select>
+      <select id="mb-carb"></select>
+      <select id="mb-veggie"></select>
+      <select id="mb-fat"></select>
+      <select id="mb-flavor"></select>
     </div>
+    <p id="mb-result" style="margin-top:12px; font-weight:600;"></p>
+    <div class="save-bar">
+      <button class="pill-btn" id="mb-shuffle-btn">Shuffle</button>
+      <button class="pill-btn" id="mb-grocery-btn">Add ingredients to grocery list</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Grocery List <span class="count-hint" id="grocery-count-hint"></span></div>
+    <p class="muted" style="margin-top:-4px;">Starts from your usual staples — check items off as you shop, add anything extra, and clear the checked ones when you're done.</p>
+    <div id="grocery-list"></div>
+    <div class="add-row">
+      <input type="text" id="grocery-item-input" placeholder="Add an item...">
+      <select id="grocery-item-category"></select>
+      <button id="grocery-add-btn">Add</button>
+    </div>
+    <div class="reset-bar"><button id="grocery-clear-btn">Clear checked items</button></div>
   </div>
   <div class="card">
     <div class="label">Supplements Worth It</div>
@@ -488,8 +506,18 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
   </div>
 </section>
 
-<!-- ============ BUDGET ============ -->
+<!-- ============ BUDGET / FINANCES ============ -->
 <section class="panel" id="panel-budget">
+  <div class="card">
+    <div class="label">Finances <span class="count-hint" id="finance-net-hint"></span></div>
+    <p class="muted" style="margin-top:-4px;">Filter everything below by account.</p>
+    <div class="ref-filters" id="finance-account-filter">
+      <button class="ref-filter-btn active" data-account="All">All</button>
+      <button class="ref-filter-btn" data-account="Personal">Personal</button>
+      <button class="ref-filter-btn" data-account="Business">Business</button>
+    </div>
+  </div>
+
   <div class="card">
     <div class="label">Bills <span class="count-hint" id="bills-total">$0/mo</span></div>
     <div id="bills-list"></div>
@@ -498,10 +526,56 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
       <input type="text" id="bill-name" placeholder="Bill name">
       <input type="number" id="bill-amount" placeholder="Amount ($)">
       <input type="number" id="bill-day" placeholder="Due day (1-31)" min="1" max="31">
+      <select id="bill-account"></select>
       <button id="bill-add-btn" class="pill-btn">Add bill</button>
     </div>
     <p class="muted" style="margin-top:10px;">Paid checkboxes reset automatically at the start of each month.</p>
   </div>
+
+  <div class="card">
+    <div class="label">Income &amp; Expenses <span class="count-hint" id="txn-summary-hint"></span></div>
+    <div id="txn-list"></div>
+    <div class="empty-note" id="txn-empty">No transactions logged yet.</div>
+    <div class="form-grid">
+      <select id="txn-type"></select>
+      <select id="txn-account"></select>
+      <input type="number" id="txn-amount" placeholder="Amount ($)">
+      <input type="date" id="txn-date">
+      <input type="text" id="txn-description" class="full" placeholder="Description">
+      <select id="txn-recurrence"></select>
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="txn-add-btn">Add transaction</button></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Debt Payoff <span class="count-hint" id="debt-summary-hint"></span></div>
+    <div id="debts-list"></div>
+    <div class="empty-note" id="debts-empty">No debts tracked yet.</div>
+    <div class="form-grid">
+      <input type="text" id="debt-name" class="full" placeholder="Debt name (e.g. Chase credit card)">
+      <select id="debt-account"></select>
+      <input type="number" id="debt-original" placeholder="Original balance ($)">
+      <input type="number" id="debt-current" placeholder="Current balance ($)">
+      <input type="number" id="debt-rate" placeholder="Interest rate (%)" step="0.01">
+      <input type="number" id="debt-min-payment" placeholder="Minimum payment ($)">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="debt-add-btn">Add debt</button></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Savings Goals <span class="count-hint" id="savings-summary-hint"></span></div>
+    <div id="savings-list"></div>
+    <div class="empty-note" id="savings-empty">No savings goals yet.</div>
+    <div class="form-grid">
+      <input type="text" id="savings-name" class="full" placeholder="Goal name (e.g. Emergency fund)">
+      <select id="savings-account"></select>
+      <input type="number" id="savings-target" placeholder="Target amount ($)">
+      <input type="number" id="savings-current" placeholder="Current amount ($)">
+      <input type="date" id="savings-target-date" title="Target date (optional)">
+    </div>
+    <div class="save-bar"><button class="pill-btn" id="savings-add-btn">Add goal</button></div>
+  </div>
+
 </section>
 
 <!-- ============ APPOINTMENTS ============ -->
@@ -529,25 +603,49 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
   <div class="card">
     <div class="label">Business KPIs</div>
     <div class="stat-grid">
-      <div class="stat"><div class="num" id="kpi-new-leads">0</div><div class="unit">new leads this month</div></div>
+      <div class="stat"><div class="num" id="kpi-new-leads">0</div><div class="unit">new contacts this month</div></div>
       <div class="stat"><div class="num" id="kpi-followups-due">0</div><div class="unit">follow-ups due/overdue</div></div>
+      <div class="stat"><div class="num" id="kpi-referrals">0</div><div class="unit">referral relationships</div></div>
       <div class="stat"><div class="num" id="kpi-pipeline-value">$0</div><div class="unit">active pipeline value</div></div>
       <div class="stat"><div class="num" id="kpi-closed-month">0</div><div class="unit">deals closed this month</div></div>
     </div>
   </div>
 
   <div class="card">
-    <div class="label">Lead & Follow-Up Tracker</div>
-    <div id="leads-list"></div>
-    <div class="form-grid">
-      <input type="text" id="lead-name" placeholder="Lead name">
-      <input type="text" id="lead-phone" placeholder="Phone">
-      <input type="email" id="lead-email" placeholder="Email">
-      <input type="text" id="lead-source" placeholder="Source (referral, Zillow, etc.)">
-      <select id="lead-status"></select>
-      <input type="date" id="lead-followup" title="Next follow-up date">
+    <div class="label">Contacts <span class="count-hint" id="contacts-count-hint"></span></div>
+    <p class="muted" style="margin-top:-4px;">Every contact carries a category, a source, a timeline, and a next action — no valuable relationship should sit without one.</p>
+    <div class="ref-filters" id="contacts-filters">
+      <button class="ref-filter-btn active" data-cat="all">All</button>
+      <button class="ref-filter-btn" data-cat="Lead">Lead</button>
+      <button class="ref-filter-btn" data-cat="Future Client">Future Client</button>
+      <button class="ref-filter-btn" data-cat="Active Client">Active Client</button>
+      <button class="ref-filter-btn" data-cat="Past Client">Past Client</button>
+      <button class="ref-filter-btn" data-cat="Sphere">Sphere</button>
+      <button class="ref-filter-btn" data-cat="Partner">Partner</button>
+      <button class="ref-filter-btn" data-cat="Agent Referral">Agent Referral</button>
     </div>
-    <div class="save-bar"><button class="pill-btn" id="lead-add-btn">Add lead</button></div>
+    <div id="contacts-list" style="margin-top:12px;"></div>
+
+    <div class="ref-add-form">
+      <div class="label" style="margin-bottom:8px;">Add a contact</div>
+      <div class="form-grid">
+        <input type="text" id="contact-name" class="full" placeholder="Name">
+        <input type="text" id="contact-phone" placeholder="Phone">
+        <input type="email" id="contact-email" placeholder="Email">
+        <select id="contact-category"></select>
+        <select id="contact-source"></select>
+        <select id="contact-buyer-seller"></select>
+        <select id="contact-timeline"></select>
+        <select id="contact-persona"></select>
+        <select id="contact-location"></select>
+        <input type="text" id="contact-next-action" class="full" placeholder="Next action (e.g. Send school-zone map)">
+        <input type="date" id="contact-followup" title="Next follow-up date">
+        <input type="date" id="contact-last-contact" title="Last contact date">
+        <input type="text" id="contact-last-conversation" class="full" placeholder="Last conversation summary">
+      </div>
+      <textarea id="contact-notes" placeholder="Relationship notes — how you connected, personal details, goals, concerns..."></textarea>
+      <div class="save-bar"><button class="pill-btn" id="contact-add-btn">Add contact</button></div>
+    </div>
   </div>
 
   <div class="card">
@@ -1008,6 +1106,203 @@ async function initNutritionModule(){
 }
 
 
+/* ---- js/grocery.js ---- */
+/* ---------------------------------------------------------------
+   Grocery List: automated version of what used to be a static list
+   in the Nutrition tab. Seeded once per user from the same staples
+   that were previously hardcoded, then fully interactive — check
+   items off, add your own, clear checked items. Also the landing
+   spot for ingredients added from "Build Your Own Meal" (meal-builder.js).
+   Table: grocery_items.
+--------------------------------------------------------------- */
+const GROCERY_CATEGORIES = ['Proteins','Carbs','Fats','Fruits','Vegetables','Frozen','Pantry','Convenience','Other'];
+
+const SEED_GROCERY_ITEMS = [
+  {name:'Ground chicken/turkey', category:'Proteins'}, {name:'Chicken breast/thighs', category:'Proteins'},
+  {name:'Ground beef', category:'Proteins'}, {name:'Lean pork', category:'Proteins'}, {name:'Shrimp', category:'Proteins'},
+  {name:'Greek yogurt', category:'Proteins'}, {name:'Cottage cheese', category:'Proteins'}, {name:'Protein powder', category:'Proteins'},
+  {name:'Potatoes', category:'Carbs'}, {name:'Sweet potatoes', category:'Carbs'}, {name:'Pasta', category:'Carbs'}, {name:'Bread', category:'Carbs'},
+  {name:'Olive oil', category:'Fats'}, {name:'Avocado', category:'Fats'}, {name:'Smooth nut butter', category:'Fats'}, {name:'Cheese', category:'Fats'},
+  {name:'Banana', category:'Fruits'}, {name:'Mango', category:'Fruits'}, {name:'Berries', category:'Fruits'}, {name:'Applesauce', category:'Fruits'},
+  {name:'Spinach', category:'Vegetables'}, {name:'Zucchini', category:'Vegetables'}, {name:'Carrots', category:'Vegetables'}, {name:'Butternut squash', category:'Vegetables'}, {name:'Cauliflower', category:'Vegetables'},
+  {name:'Chicken/turkey', category:'Frozen'}, {name:'Shrimp', category:'Frozen'}, {name:'Mixed vegetables', category:'Frozen'}, {name:'Fruit for smoothies', category:'Frozen'}, {name:'Sweet potato', category:'Frozen'},
+  {name:'Olive oil', category:'Pantry'}, {name:'Garlic', category:'Pantry'}, {name:'Soy sauce', category:'Pantry'}, {name:'Canned tomatoes', category:'Pantry'}, {name:'Pasta', category:'Pantry'}, {name:'Herbs', category:'Pantry'}, {name:'Honey', category:'Pantry'},
+  {name:'Rotisserie chicken', category:'Convenience'}, {name:'Pre-cut veg', category:'Convenience'}, {name:'Microwaveable sweet potato', category:'Convenience'}, {name:'Yogurt cups', category:'Convenience'}, {name:'Protein shakes', category:'Convenience'}
+];
+
+let groceryCache = [];
+
+async function seedGroceryItemsIfEmpty(){
+  const user = getCurrentUser();
+  const { count, error } = await supabaseClient
+    .from('grocery_items').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+  if(error){ console.error(error); return; }
+  if(count && count > 0) return;
+  const rows = SEED_GROCERY_ITEMS.map(item => ({ ...item, user_id: user.id }));
+  const { error: insErr } = await supabaseClient.from('grocery_items').insert(rows);
+  if(insErr) console.error(insErr);
+}
+async function loadGroceryItems(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('grocery_items').select('*').eq('user_id', user.id).order('category').order('name');
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addGroceryItemRow(name, category){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('grocery_items').insert({ user_id: user.id, name, category: category || 'Other' });
+  if(error) console.error(error);
+}
+async function addGroceryItemIfMissing(name, category){
+  const exists = groceryCache.some(i => i.name.toLowerCase() === name.toLowerCase() && i.category === category);
+  if(exists) return;
+  await addGroceryItemRow(name, category);
+}
+async function toggleGroceryItemRow(id, checked){
+  const { error } = await supabaseClient.from('grocery_items').update({ checked }).eq('id', id);
+  if(error) console.error(error);
+}
+async function deleteGroceryItemRow(id){
+  const { error } = await supabaseClient.from('grocery_items').delete().eq('id', id);
+  if(error) console.error(error);
+}
+async function clearCheckedGroceryItems(){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('grocery_items').delete().eq('user_id', user.id).eq('checked', true);
+  if(error) console.error(error);
+}
+
+async function renderGroceryList(){
+  const container = document.getElementById('grocery-list');
+  if(!container) return;
+  groceryCache = await loadGroceryItems();
+  const countEl = document.getElementById('grocery-count-hint');
+  if(countEl) countEl.textContent = groceryCache.filter(i => !i.checked).length + ' to buy';
+
+  container.innerHTML = '';
+  if(groceryCache.length === 0){
+    container.innerHTML = '<div class="empty-note">Nothing on the list yet.</div>';
+    return;
+  }
+  container.className = 'grocery-grid';
+  GROCERY_CATEGORIES.forEach(cat => {
+    const items = groceryCache.filter(i => i.category === cat);
+    if(items.length === 0) return;
+    const group = document.createElement('div');
+    const heading = document.createElement('h4');
+    heading.textContent = cat;
+    group.appendChild(heading);
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'task-row' + (item.checked ? ' done' : '');
+      const cbId = 'grocery-cb-' + item.id;
+      row.innerHTML =
+        '<input type="checkbox" id="' + cbId + '" ' + (item.checked ? 'checked' : '') + '>' +
+        '<label for="' + cbId + '">' + escapeHtml(item.name) + '</label>' +
+        '<button class="row-remove" aria-label="Remove">×</button>';
+      row.querySelector('input').addEventListener('change', async e => {
+        await toggleGroceryItemRow(item.id, e.target.checked);
+        renderGroceryList();
+      });
+      row.querySelector('.row-remove').addEventListener('click', async () => {
+        await deleteGroceryItemRow(item.id);
+        renderGroceryList();
+      });
+      group.appendChild(row);
+    });
+    container.appendChild(group);
+  });
+}
+
+async function initGroceryModule(){
+  await seedGroceryItemsIfEmpty();
+
+  const catSelect = document.getElementById('grocery-item-category');
+  catSelect.innerHTML = GROCERY_CATEGORIES.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+
+  document.getElementById('grocery-add-btn').addEventListener('click', async () => {
+    const input = document.getElementById('grocery-item-input');
+    const name = input.value.trim();
+    if(!name) return;
+    await addGroceryItemRow(name, catSelect.value);
+    input.value = '';
+    renderGroceryList();
+  });
+  document.getElementById('grocery-clear-btn').addEventListener('click', async () => {
+    await clearCheckedGroceryItems();
+    renderGroceryList();
+  });
+
+  await renderGroceryList();
+}
+
+
+/* ---- js/meal-builder.js ---- */
+/* ---------------------------------------------------------------
+   Build Your Own Meal: interactive version of the Meal-Building
+   Framework card above it. Pick (or shuffle) one item per slot,
+   optionally push the picks straight to the Grocery List. No new
+   nutrition data — the slot options are the exact same lists already
+   documented in the Meal-Building Framework card.
+--------------------------------------------------------------- */
+const MEAL_BUILDER_SLOTS = {
+  protein: { category: 'Proteins', options: ['Ground chicken/turkey','Chicken breast/thighs','Ground beef','Lean pork','Shrimp','Greek yogurt','Cottage cheese','Protein powder'] },
+  carb:    { category: 'Carbs',    options: ['Mashed/roasted potato','Sweet potato','Pasta','Bread'] },
+  veggie:  { category: 'Vegetables', options: ['Cooked spinach','Sautéed zucchini','Roasted/mashed carrots','Butternut squash','Cauliflower mash'] },
+  fat:     { category: 'Fats',     options: ['Olive oil','Avocado','Smooth nut butter','Shredded cheese','Full-fat yogurt'] },
+  flavor:  { category: 'Pantry',   options: ['Soy sauce','Garlic','Lemon','Herbs','Salsa','Hot sauce','Curry paste'] }
+};
+
+function populateMealBuilderSelects(){
+  Object.keys(MEAL_BUILDER_SLOTS).forEach(key => {
+    const sel = document.getElementById('mb-' + key);
+    if(!sel) return;
+    sel.innerHTML = MEAL_BUILDER_SLOTS[key].options.map(o => '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + '</option>').join('');
+  });
+}
+function renderMealBuilderResult(){
+  const parts = Object.keys(MEAL_BUILDER_SLOTS).map(key => {
+    const sel = document.getElementById('mb-' + key);
+    return sel ? sel.value : '';
+  }).filter(Boolean);
+  const el = document.getElementById('mb-result');
+  if(el) el.textContent = parts.length ? parts.join(' + ') : '';
+}
+function shuffleMealBuilder(){
+  Object.keys(MEAL_BUILDER_SLOTS).forEach(key => {
+    const sel = document.getElementById('mb-' + key);
+    if(!sel) return;
+    const opts = MEAL_BUILDER_SLOTS[key].options;
+    sel.value = opts[Math.floor(Math.random() * opts.length)];
+  });
+  renderMealBuilderResult();
+}
+async function addMealBuilderToGroceryList(){
+  const btn = document.getElementById('mb-grocery-btn');
+  const origText = btn.textContent;
+  for(const key of Object.keys(MEAL_BUILDER_SLOTS)){
+    const sel = document.getElementById('mb-' + key);
+    if(!sel || !sel.value) continue;
+    await addGroceryItemIfMissing(sel.value, MEAL_BUILDER_SLOTS[key].category);
+  }
+  await renderGroceryList();
+  btn.textContent = 'Added!';
+  setTimeout(() => { btn.textContent = origText; }, 1500);
+}
+
+async function initMealBuilderModule(){
+  populateMealBuilderSelects();
+  shuffleMealBuilder();
+  Object.keys(MEAL_BUILDER_SLOTS).forEach(key => {
+    const sel = document.getElementById('mb-' + key);
+    if(sel) sel.addEventListener('change', renderMealBuilderResult);
+  });
+  document.getElementById('mb-shuffle-btn').addEventListener('click', shuffleMealBuilder);
+  document.getElementById('mb-grocery-btn').addEventListener('click', addMealBuilderToGroceryList);
+}
+
+
 /* ---- js/tasks.js ---- */
 /* ---------------------------------------------------------------
    Tasks: general task manager. Table: tasks.
@@ -1194,31 +1489,45 @@ async function initHabitsModule(){
 }
 
 
-/* ---- js/leads.js ---- */
+/* ---- js/contacts.js ---- */
 /* ---------------------------------------------------------------
-   Leads: lead + follow-up tracker. Table: leads.
---------------------------------------------------------------- */
-const LEAD_STATUSES = ['New','Contacted','Nurturing','Client','Lost'];
+   Contacts: full relationship/CRM tracker, modeled directly on the
+   uploaded CRM spreadsheet (System 07 — Database, CRM & Follow-Up
+   System). Replaces the older, simpler "Leads" tracker. Table:
+   contacts (see contacts_migration.sql). Referral tracking isn't a
+   separate feature here — it's the "Agent Referral" category plus
+   sphere/partner-referral sources, surfaced in the Business KPIs.
 
-async function loadLeads(){
+   The old `leads` table/data is untouched in the database — nothing
+   was deleted — the UI just no longer reads or writes it. See
+   DATABASE.md.
+--------------------------------------------------------------- */
+const CONTACT_CATEGORIES = ['Lead','Future Client','Active Client','Past Client','Sphere','Partner','Agent Referral'];
+const CONTACT_SOURCES = ['Relocation Guide','Real Payment Guide','Website SEO','Facebook Group','Sphere Referral','Partner Referral','Agent Referral','Open House','Other'];
+const CONTACT_BUYER_SELLER = ['Buyer','Seller','Both'];
+const CONTACT_TIMELINES = ['Now (0-3 mo)','Soon (3-6 mo)','Future (6-12 mo)','Long Term (12+ mo)'];
+const CONTACT_PERSONAS = ['First-Time Buyer','Move-Up Buyer','Relocation Buyer','Investor','Seller','Downsizer','Other'];
+const CONTACT_LOCATIONS = ['Cooper City','Pembroke Pines','Plantation','Other'];
+
+async function loadContacts(){
   const user = getCurrentUser();
   const { data, error } = await supabaseClient
-    .from('leads').select('*').eq('user_id', user.id)
+    .from('contacts').select('*').eq('user_id', user.id)
     .order('next_follow_up_date', { ascending: true, nullsFirst: false });
   if(error){ console.error(error); return []; }
   return data;
 }
-async function addLeadRow(lead){
+async function addContactRow(contact){
   const user = getCurrentUser();
-  const { error } = await supabaseClient.from('leads').insert({ ...lead, user_id: user.id });
+  const { error } = await supabaseClient.from('contacts').insert({ ...contact, user_id: user.id });
   if(error) console.error(error);
 }
-async function updateLeadRow(id, fields){
-  const { error } = await supabaseClient.from('leads').update(fields).eq('id', id);
+async function updateContactRow(id, fields){
+  const { error } = await supabaseClient.from('contacts').update(fields).eq('id', id);
   if(error) console.error(error);
 }
-async function deleteLeadRow(id){
-  const { error } = await supabaseClient.from('leads').delete().eq('id', id);
+async function deleteContactRow(id){
+  const { error } = await supabaseClient.from('contacts').delete().eq('id', id);
   if(error) console.error(error);
 }
 
@@ -1229,67 +1538,128 @@ function daysFromToday(dateStr){
   return Math.round((d - today) / (1000*60*60*24));
 }
 
-async function renderLeads(){
-  const list = document.getElementById('leads-list');
+let contactsCache = [];
+let contactsActiveCategory = 'all';
+
+function filterContacts(){
+  if(contactsActiveCategory === 'all') return contactsCache;
+  return contactsCache.filter(c => c.category === contactsActiveCategory);
+}
+
+async function renderContacts(){
+  const list = document.getElementById('contacts-list');
   if(!list) return;
-  const leads = await loadLeads();
-  list.innerHTML = leads.length === 0 ? '<div class="empty-note">No leads yet — add one below.</div>' : '';
-  leads.forEach(l => {
-    const diff = daysFromToday(l.next_follow_up_date);
+  contactsCache = await loadContacts();
+  const countEl = document.getElementById('contacts-count-hint');
+  if(countEl) countEl.textContent = contactsCache.length + ' total';
+
+  const results = filterContacts();
+  list.innerHTML = results.length === 0 ? '<div class="empty-note">No contacts in this view yet.</div>' : '';
+  results.forEach(c => {
+    const diff = daysFromToday(c.next_follow_up_date);
     const overdue = diff !== null && diff < 0;
     const dueToday = diff === 0;
     const row = document.createElement('div');
     row.className = 'lead-item' + (overdue ? ' overdue' : '') + (dueToday ? ' due-today' : '');
+    const metaLine = [c.timeline, c.persona, c.location_interest].filter(Boolean).map(escapeHtml).join(' · ');
+    let followLine = 'No next action set';
+    if(c.next_action || c.next_follow_up_date){
+      followLine = (c.next_action ? escapeHtml(c.next_action) : 'Follow up') +
+        (c.next_follow_up_date ? ' — ' + c.next_follow_up_date : '') +
+        (overdue ? ' (overdue)' : dueToday ? ' (today)' : '');
+    }
     row.innerHTML =
       '<div class="lead-main">' +
-        '<b>' + escapeHtml(l.name) + '</b>' +
-        '<span class="lead-badge">' + escapeHtml(l.status) + '</span>' +
+        '<b>' + escapeHtml(c.name) + '</b>' +
+        '<span class="lead-badge">' + escapeHtml(c.category) + '</span>' +
         '<div class="lead-sub">' +
-          (l.phone ? escapeHtml(l.phone) + ' · ' : '') +
-          (l.email ? escapeHtml(l.email) + ' · ' : '') +
-          (l.source ? 'via ' + escapeHtml(l.source) : '') +
+          (c.phone ? escapeHtml(c.phone) + ' · ' : '') +
+          (c.email ? escapeHtml(c.email) + ' · ' : '') +
+          (c.source ? 'via ' + escapeHtml(c.source) : '') +
         '</div>' +
-        '<div class="lead-sub">' +
-          (l.next_follow_up_date ? 'Follow up: ' + l.next_follow_up_date + (overdue ? ' (overdue)' : dueToday ? ' (today)' : '') : 'No follow-up date set') +
-        '</div>' +
+        (metaLine ? '<div class="lead-sub">' + metaLine + '</div>' : '') +
+        '<div class="lead-sub">' + followLine + '</div>' +
       '</div>' +
       '<div class="lead-actions">' +
         '<button class="pill-btn small contacted-btn">Mark contacted today</button>' +
         '<button class="row-remove" aria-label="Remove">×</button>' +
       '</div>';
     row.querySelector('.contacted-btn').addEventListener('click', async () => {
-      await updateLeadRow(l.id, { last_contact_date: todayStr() });
-      renderLeads();
+      await updateContactRow(c.id, { last_contact_date: todayStr() });
+      renderContacts();
       if(window.refreshTodaySummary) window.refreshTodaySummary();
     });
     row.querySelector('.row-remove').addEventListener('click', async () => {
-      await deleteLeadRow(l.id);
-      renderLeads();
+      await deleteContactRow(c.id);
+      renderContacts();
       if(window.refreshTodaySummary) window.refreshTodaySummary();
     });
     list.appendChild(row);
   });
 }
 
-async function initLeadsModule(){
-  const statusSelect = document.getElementById('lead-status');
-  statusSelect.innerHTML = LEAD_STATUSES.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+function populateContactSelects(){
+  const map = {
+    'contact-category': CONTACT_CATEGORIES,
+    'contact-source': CONTACT_SOURCES,
+    'contact-buyer-seller': CONTACT_BUYER_SELLER,
+    'contact-timeline': CONTACT_TIMELINES,
+    'contact-persona': CONTACT_PERSONAS,
+    'contact-location': CONTACT_LOCATIONS
+  };
+  const placeholders = {
+    'contact-buyer-seller': 'Buyer/Seller',
+    'contact-timeline': 'Timeline',
+    'contact-persona': 'Persona',
+    'contact-location': 'Location interest'
+  };
+  Object.keys(map).forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const opts = map[id].map(v => '<option value="' + v + '">' + v + '</option>').join('');
+    sel.innerHTML = placeholders[id] ? ('<option value="">' + placeholders[id] + '...</option>' + opts) : opts;
+  });
+}
 
-  document.getElementById('lead-add-btn').addEventListener('click', async () => {
-    const name = document.getElementById('lead-name').value.trim();
-    const phone = document.getElementById('lead-phone').value.trim();
-    const email = document.getElementById('lead-email').value.trim();
-    const source = document.getElementById('lead-source').value.trim();
-    const status = statusSelect.value;
-    const next_follow_up_date = document.getElementById('lead-followup').value || null;
+async function initContactsModule(){
+  populateContactSelects();
+
+  document.getElementById('contacts-filters').addEventListener('click', (e) => {
+    const btn = e.target.closest('.ref-filter-btn');
+    if(!btn) return;
+    document.querySelectorAll('#contacts-filters .ref-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    contactsActiveCategory = btn.dataset.cat;
+    renderContacts();
+  });
+
+  document.getElementById('contact-add-btn').addEventListener('click', async () => {
+    const name = document.getElementById('contact-name').value.trim();
     if(!name) return;
-    await addLeadRow({ name, phone, email, source, status, next_follow_up_date });
-    ['lead-name','lead-phone','lead-email','lead-source','lead-followup'].forEach(id => document.getElementById(id).value = '');
-    renderLeads();
+    const contact = {
+      name,
+      phone: document.getElementById('contact-phone').value.trim(),
+      email: document.getElementById('contact-email').value.trim(),
+      category: document.getElementById('contact-category').value || 'Lead',
+      source: document.getElementById('contact-source').value || null,
+      buyer_seller: document.getElementById('contact-buyer-seller').value || null,
+      timeline: document.getElementById('contact-timeline').value || null,
+      persona: document.getElementById('contact-persona').value || null,
+      location_interest: document.getElementById('contact-location').value || null,
+      next_action: document.getElementById('contact-next-action').value.trim(),
+      next_follow_up_date: document.getElementById('contact-followup').value || null,
+      last_contact_date: document.getElementById('contact-last-contact').value || null,
+      last_conversation: document.getElementById('contact-last-conversation').value.trim(),
+      relationship_notes: document.getElementById('contact-notes').value.trim()
+    };
+    await addContactRow(contact);
+    ['contact-name','contact-phone','contact-email','contact-next-action','contact-followup','contact-last-contact','contact-last-conversation','contact-notes'].forEach(id => document.getElementById(id).value = '');
+    ['contact-category','contact-source','contact-buyer-seller','contact-timeline','contact-persona','contact-location'].forEach(id => document.getElementById(id).value = '');
+    renderContacts();
     if(window.refreshTodaySummary) window.refreshTodaySummary();
   });
 
-  await renderLeads();
+  await renderContacts();
 }
 
 
@@ -2060,19 +2430,21 @@ async function initReferenceLibraryModule(){
 
 /* ---- js/business.js ---- */
 /* ---------------------------------------------------------------
-   Business KPI dashboard — computed from leads, pipeline_deals,
+   Business KPI dashboard — computed from contacts, pipeline_deals,
    and content_logs. Sits at the top of the Business tab.
 --------------------------------------------------------------- */
 async function renderBusinessKpis(){
   const monthStr = new Date().toISOString().slice(0,7); // 'YYYY-MM'
 
   try{
-    const leads = await loadLeads();
-    const newThisMonth = leads.filter(l => (l.created_at || '').slice(0,7) === monthStr).length;
-    const dueToday = leads.filter(l => l.next_follow_up_date === todayStr()).length;
-    const overdue = leads.filter(l => l.next_follow_up_date && l.next_follow_up_date < todayStr()).length;
+    const contacts = await loadContacts();
+    const newThisMonth = contacts.filter(c => (c.date_added || '').slice(0,7) === monthStr).length;
+    const dueToday = contacts.filter(c => c.next_follow_up_date === todayStr()).length;
+    const overdue = contacts.filter(c => c.next_follow_up_date && c.next_follow_up_date < todayStr()).length;
+    const referrals = contacts.filter(c => c.category === 'Agent Referral' || (c.source||'').toLowerCase().includes('referral')).length;
     setKpi('kpi-new-leads', newThisMonth);
     setKpi('kpi-followups-due', dueToday + overdue);
+    setKpi('kpi-referrals', referrals);
   }catch(e){ console.error(e); }
 
   try{
@@ -2090,7 +2462,7 @@ function setKpi(id, val){
 }
 
 async function initBusinessModule(){
-  await initLeadsModule();
+  await initContactsModule();
   await initPipelineModule();
   await initContentModule();
   await initReferenceLibraryModule();
@@ -2123,7 +2495,44 @@ function getTodayWorkout(){
   return WEEKDAY_WORKOUT[new Date().getDay()];
 }
 
+/* ---------------- Motivational quote widget ----------------
+   Original lines (no real-person attribution, no external source) —
+   themed around ADHD-friendly systems, real estate work, and the
+   "external memory over willpower" philosophy already in the Tips tab.
+   Picks a new random one each time the Home tab is shown, or when the
+   "shuffle" link is clicked. */
+const MOTIVATIONAL_QUOTES = [
+  "You don't need to feel ready. You need to take the next small step.",
+  "A system you actually use beats a perfect plan you don't.",
+  "Progress today doesn't have to be big — it just has to be real.",
+  "You're not behind. You're exactly where your next step is.",
+  "Done is a decision, not a feeling you wait for.",
+  "One follow-up today keeps a relationship warm for months.",
+  "Your future self is built by what you check off today, not what you plan to.",
+  "Rest is part of the split, not a break from it.",
+  "You don't have to want to start. You just have to start.",
+  "Small, boring, repeated actions are what actually compound.",
+  "Every client you're helping today started as a stranger you followed up with.",
+  "The list exists so your brain doesn't have to hold it. Let it.",
+  "You get to decide what today's win looks like — it doesn't have to be everything.",
+  "A messy done is worth more than a perfect someday.",
+  "Consistency isn't about motivation. It's about making the next step obvious.",
+  "You've handled hard days before. This one's no different.",
+  "The follow-up you send today is the deal you close next month.",
+  "One habit checked is proof, not just a checkbox.",
+  "Confidence comes after you start, not before.",
+  "You're allowed to build the day in your own order."
+];
+
+function renderQuote(){
+  const el = document.getElementById('quote-text');
+  if(!el) return;
+  const q = MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)];
+  el.textContent = q;
+}
+
 async function renderTodaySummary(){
+  renderQuote();
   const wk = getTodayWorkout();
   const wEl = document.getElementById('today-workout-name');
   const wSubEl = document.getElementById('today-workout-sub');
@@ -2148,8 +2557,8 @@ async function renderTodaySummary(){
   }catch(e){ console.error(e); }
 
   try{
-    const leads = await loadLeads();
-    const dueOrOverdue = leads.filter(l => l.next_follow_up_date && l.next_follow_up_date <= todayStr()).length;
+    const contacts = await loadContacts();
+    const dueOrOverdue = contacts.filter(c => c.next_follow_up_date && c.next_follow_up_date <= todayStr()).length;
     const el = document.getElementById('today-business');
     if(el) el.textContent = dueOrOverdue === 0 ? 'No follow-ups due' : (dueOrOverdue + ' follow-up' + (dueOrOverdue === 1 ? '' : 's') + ' due');
   }catch(e){ console.error(e); }
@@ -2499,16 +2908,17 @@ async function renderBills(){
   const empty = document.getElementById('bills-empty');
   const totalEl = document.getElementById('bills-total');
   if(!list) return;
+  const filtered = bills.filter(b => financeActiveAccount === 'All' || (b.account || 'Personal') === financeActiveAccount);
   list.innerHTML = '';
-  empty.style.display = bills.length === 0 ? 'block' : 'none';
+  empty.style.display = filtered.length === 0 ? 'block' : 'none';
   let total = 0;
-  bills.forEach(b => {
+  filtered.forEach(b => {
     total += Number(b.amount) || 0;
     const row = document.createElement('div');
     row.className = 'bill-item';
     row.innerHTML =
       '<input type="checkbox" ' + (b.paid ? 'checked' : '') + '>' +
-      '<div class="info"><b>' + escapeHtml(b.name) + '</b><span>$' + b.amount + ' · due day ' + b.due_day + '</span></div>' +
+      '<div class="info"><b>' + escapeHtml(b.name) + '</b><span>$' + b.amount + ' · due day ' + b.due_day + ' · ' + escapeHtml(b.account || 'Personal') + '</span></div>' +
       '<button aria-label="Remove">×</button>';
     row.querySelector('input').addEventListener('change', async e => {
       await toggleBillPaidRow(b.id, e.target.checked);
@@ -2517,6 +2927,7 @@ async function renderBills(){
     row.querySelector('button').addEventListener('click', async () => {
       await deleteBillRow(b.id);
       renderBills();
+      renderFinanceSummary();
     });
     list.appendChild(row);
   });
@@ -2526,12 +2937,329 @@ async function addBill(){
   const name = document.getElementById('bill-name').value.trim();
   const amount = Number(document.getElementById('bill-amount').value) || 0;
   const due_day = Number(document.getElementById('bill-day').value) || null;
+  const account = document.getElementById('bill-account').value || 'Personal';
   if(!name || !amount || !due_day) return;
-  await addBillRow({ name, amount, due_day, paid: false });
+  await addBillRow({ name, amount, due_day, account, paid: false });
   document.getElementById('bill-name').value = '';
   document.getElementById('bill-amount').value = '';
   document.getElementById('bill-day').value = '';
   renderBills();
+}
+
+/* ---- js/finance.js ---- */
+/* ---------------------------------------------------------------
+   Finances tab, beyond Bills: Income & Expenses ledger, Debt Payoff,
+   Savings Goals — plus a shared Personal/Business account filter
+   that Bills also respects. Tables: transactions, debts,
+   savings_goals (see finance_migration.sql). Bills gained an
+   `account` column via the same migration.
+--------------------------------------------------------------- */
+const FINANCE_ACCOUNTS = ['Personal','Business'];
+const TXN_TYPES = ['Income','Expense'];
+const TXN_RECURRENCE = ['One-time','Weekly','Biweekly','Monthly','Yearly'];
+
+let financeActiveAccount = 'All';
+
+function matchesFinanceAccount(row){
+  return financeActiveAccount === 'All' || (row.account || 'Personal') === financeActiveAccount;
+}
+
+/* ---- Transactions (Income & Expenses) ---- */
+async function loadTransactions(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('transactions').select('*').eq('user_id', user.id).order('txn_date', { ascending: false });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addTransactionRow(txn){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('transactions').insert({ ...txn, user_id: user.id });
+  if(error) console.error(error);
+}
+async function deleteTransactionRow(id){
+  const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderTransactions(){
+  const list = document.getElementById('txn-list');
+  const empty = document.getElementById('txn-empty');
+  const hintEl = document.getElementById('txn-summary-hint');
+  if(!list) return [];
+  const all = await loadTransactions();
+  const filtered = all.filter(matchesFinanceAccount);
+
+  list.innerHTML = '';
+  empty.style.display = filtered.length === 0 ? 'block' : 'none';
+  filtered.forEach(t => {
+    const isIncome = t.type === 'Income';
+    const row = document.createElement('div');
+    row.className = 'inbox-item';
+    row.innerHTML = '<span><b>' + escapeHtml(t.description || t.type) + '</b> · ' + t.txn_date + ' · ' + escapeHtml(t.account || 'Personal') +
+      (t.is_recurring ? ' · ' + escapeHtml(t.recurrence || 'Recurring') : '') +
+      ' — <span style="color:' + (isIncome ? 'var(--sage)' : 'var(--accent)') + '; font-weight:700;">' + (isIncome ? '+' : '-') + '$' + Number(t.amount).toFixed(2) + '</span></span>' +
+      '<button aria-label="Remove">×</button>';
+    row.querySelector('button').addEventListener('click', async () => {
+      await deleteTransactionRow(t.id);
+      renderTransactions();
+      renderFinanceSummary();
+    });
+    list.appendChild(row);
+  });
+
+  const monthStr = new Date().toISOString().slice(0,7);
+  const thisMonth = filtered.filter(t => (t.txn_date || '').slice(0,7) === monthStr);
+  const income = thisMonth.filter(t => t.type === 'Income').reduce((s,t) => s + Number(t.amount||0), 0);
+  const expenses = thisMonth.filter(t => t.type === 'Expense').reduce((s,t) => s + Number(t.amount||0), 0);
+  if(hintEl) hintEl.textContent = (income - expenses >= 0 ? '+' : '-') + '$' + Math.abs(income - expenses).toFixed(0) + ' net this month';
+
+  return all;
+}
+
+async function initTransactionsModule(){
+  document.getElementById('txn-type').innerHTML = TXN_TYPES.map(t => '<option value="' + t + '">' + t + '</option>').join('');
+  document.getElementById('txn-account').innerHTML = FINANCE_ACCOUNTS.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+  document.getElementById('txn-recurrence').innerHTML = TXN_RECURRENCE.map(r => '<option value="' + r + '">' + r + '</option>').join('');
+
+  document.getElementById('txn-add-btn').addEventListener('click', async () => {
+    const type = document.getElementById('txn-type').value;
+    const account = document.getElementById('txn-account').value;
+    const amount = Number(document.getElementById('txn-amount').value) || 0;
+    const txn_date = document.getElementById('txn-date').value || todayStr();
+    const description = document.getElementById('txn-description').value.trim();
+    const recurrence = document.getElementById('txn-recurrence').value;
+    if(!amount) return;
+    await addTransactionRow({
+      type, account, amount, txn_date, description,
+      is_recurring: recurrence !== 'One-time',
+      recurrence: recurrence !== 'One-time' ? recurrence : null
+    });
+    document.getElementById('txn-amount').value = '';
+    document.getElementById('txn-date').value = '';
+    document.getElementById('txn-description').value = '';
+    renderTransactions();
+    renderFinanceSummary();
+  });
+
+  await renderTransactions();
+}
+
+/* ---- Debt Payoff ---- */
+async function loadDebts(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('debts').select('*').eq('user_id', user.id).order('created_at', { ascending: true });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addDebtRow(debt){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('debts').insert({ ...debt, user_id: user.id });
+  if(error) console.error(error);
+}
+async function updateDebtBalance(id, current_balance){
+  const { error } = await supabaseClient.from('debts').update({ current_balance }).eq('id', id);
+  if(error) console.error(error);
+}
+async function deleteDebtRow(id){
+  const { error } = await supabaseClient.from('debts').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderDebts(){
+  const list = document.getElementById('debts-list');
+  const empty = document.getElementById('debts-empty');
+  const hintEl = document.getElementById('debt-summary-hint');
+  if(!list) return;
+  const all = await loadDebts();
+  const filtered = all.filter(matchesFinanceAccount);
+
+  list.innerHTML = '';
+  empty.style.display = filtered.length === 0 ? 'block' : 'none';
+  let totalRemaining = 0;
+  filtered.forEach(d => {
+    totalRemaining += Number(d.current_balance) || 0;
+    const original = Number(d.original_balance) || 0;
+    const current = Number(d.current_balance) || 0;
+    const pctPaid = original > 0 ? Math.max(0, Math.min(100, ((original - current) / original) * 100)) : 0;
+    const div = document.createElement('div');
+    div.className = 'exercise';
+    div.innerHTML =
+      '<div class="exercise-head"><h4>' + escapeHtml(d.name) + '</h4><span class="target">' + escapeHtml(d.account || 'Personal') + (d.interest_rate ? ' · ' + d.interest_rate + '%' : '') + '</span></div>' +
+      '<div class="macro-row"><span>$' + current.toFixed(0) + ' of $' + original.toFixed(0) + '</span><span>' + pctPaid.toFixed(0) + '% paid off</span></div>' +
+      '<div class="progress-track"><div class="progress-fill" style="width:' + pctPaid + '%"></div></div>' +
+      (d.minimum_payment ? '<p class="muted" style="margin-top:8px;">Min payment: $' + Number(d.minimum_payment).toFixed(0) + '</p>' : '') +
+      '<div class="sets-row" style="margin-top:10px; align-items:center;">' +
+        '<input type="number" class="debt-payment-input" placeholder="Payment $" style="border:1px solid #e2ded4;border-radius:10px;padding:9px 12px;font-size:14px;font-family:\'Source Sans 3\',sans-serif;width:110px;">' +
+        '<button class="pill-btn small debt-log-btn">Log payment</button>' +
+        '<button class="row-remove" aria-label="Remove">×</button>' +
+      '</div>';
+    div.querySelector('.debt-log-btn').addEventListener('click', async () => {
+      const input = div.querySelector('.debt-payment-input');
+      const payment = Number(input.value) || 0;
+      if(payment <= 0) return;
+      const newBalance = Math.max(0, current - payment);
+      await updateDebtBalance(d.id, newBalance);
+      await addTransactionRow({
+        type: 'Expense', account: d.account || 'Personal', amount: payment,
+        txn_date: todayStr(), description: 'Debt payment: ' + d.name,
+        is_recurring: false, recurrence: null
+      });
+      input.value = '';
+      renderDebts();
+      renderTransactions();
+      renderFinanceSummary();
+    });
+    div.querySelector('.row-remove').addEventListener('click', async () => {
+      await deleteDebtRow(d.id);
+      renderDebts();
+      renderFinanceSummary();
+    });
+    list.appendChild(div);
+  });
+  if(hintEl) hintEl.textContent = '$' + totalRemaining.toFixed(0) + ' remaining';
+}
+
+async function initDebtsModule(){
+  document.getElementById('debt-account').innerHTML = FINANCE_ACCOUNTS.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+
+  document.getElementById('debt-add-btn').addEventListener('click', async () => {
+    const name = document.getElementById('debt-name').value.trim();
+    const account = document.getElementById('debt-account').value;
+    const original_balance = Number(document.getElementById('debt-original').value) || 0;
+    const current_balance = document.getElementById('debt-current').value !== '' ? Number(document.getElementById('debt-current').value) : original_balance;
+    const interest_rate = document.getElementById('debt-rate').value !== '' ? Number(document.getElementById('debt-rate').value) : null;
+    const minimum_payment = document.getElementById('debt-min-payment').value !== '' ? Number(document.getElementById('debt-min-payment').value) : null;
+    if(!name || !original_balance) return;
+    await addDebtRow({ name, account, original_balance, current_balance, interest_rate, minimum_payment });
+    ['debt-name','debt-original','debt-current','debt-rate','debt-min-payment'].forEach(id => document.getElementById(id).value = '');
+    renderDebts();
+    renderFinanceSummary();
+  });
+
+  await renderDebts();
+}
+
+/* ---- Savings Goals ---- */
+async function loadSavingsGoals(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('savings_goals').select('*').eq('user_id', user.id).order('created_at', { ascending: true });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addSavingsGoalRow(goal){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('savings_goals').insert({ ...goal, user_id: user.id });
+  if(error) console.error(error);
+}
+async function updateSavingsGoalAmount(id, current_amount){
+  const { error } = await supabaseClient.from('savings_goals').update({ current_amount }).eq('id', id);
+  if(error) console.error(error);
+}
+async function deleteSavingsGoalRow(id){
+  const { error } = await supabaseClient.from('savings_goals').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderSavingsGoals(){
+  const list = document.getElementById('savings-list');
+  const empty = document.getElementById('savings-empty');
+  const hintEl = document.getElementById('savings-summary-hint');
+  if(!list) return;
+  const all = await loadSavingsGoals();
+  const filtered = all.filter(matchesFinanceAccount);
+
+  list.innerHTML = '';
+  empty.style.display = filtered.length === 0 ? 'block' : 'none';
+  let totalSaved = 0;
+  filtered.forEach(g => {
+    totalSaved += Number(g.current_amount) || 0;
+    const target = Number(g.target_amount) || 0;
+    const current = Number(g.current_amount) || 0;
+    const pct = target > 0 ? Math.max(0, Math.min(100, (current / target) * 100)) : 0;
+    const div = document.createElement('div');
+    div.className = 'exercise';
+    div.innerHTML =
+      '<div class="exercise-head"><h4>' + escapeHtml(g.name) + '</h4><span class="target">' + escapeHtml(g.account || 'Personal') + (g.target_date ? ' · by ' + g.target_date : '') + '</span></div>' +
+      '<div class="macro-row"><span>$' + current.toFixed(0) + ' of $' + target.toFixed(0) + '</span><span>' + pct.toFixed(0) + '%</span></div>' +
+      '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="sets-row" style="margin-top:10px; align-items:center;">' +
+        '<input type="number" class="savings-contribution-input" placeholder="Add $" style="border:1px solid #e2ded4;border-radius:10px;padding:9px 12px;font-size:14px;font-family:\'Source Sans 3\',sans-serif;width:110px;">' +
+        '<button class="pill-btn small savings-log-btn">Add contribution</button>' +
+        '<button class="row-remove" aria-label="Remove">×</button>' +
+      '</div>';
+    div.querySelector('.savings-log-btn').addEventListener('click', async () => {
+      const input = div.querySelector('.savings-contribution-input');
+      const contribution = Number(input.value) || 0;
+      if(contribution <= 0) return;
+      await updateSavingsGoalAmount(g.id, current + contribution);
+      input.value = '';
+      renderSavingsGoals();
+      renderFinanceSummary();
+    });
+    div.querySelector('.row-remove').addEventListener('click', async () => {
+      await deleteSavingsGoalRow(g.id);
+      renderSavingsGoals();
+      renderFinanceSummary();
+    });
+    list.appendChild(div);
+  });
+  if(hintEl) hintEl.textContent = '$' + totalSaved.toFixed(0) + ' saved';
+}
+
+async function initSavingsModule(){
+  document.getElementById('savings-account').innerHTML = FINANCE_ACCOUNTS.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+
+  document.getElementById('savings-add-btn').addEventListener('click', async () => {
+    const name = document.getElementById('savings-name').value.trim();
+    const account = document.getElementById('savings-account').value;
+    const target_amount = Number(document.getElementById('savings-target').value) || 0;
+    const current_amount = Number(document.getElementById('savings-current').value) || 0;
+    const target_date = document.getElementById('savings-target-date').value || null;
+    if(!name || !target_amount) return;
+    await addSavingsGoalRow({ name, account, target_amount, current_amount, target_date });
+    ['savings-name','savings-target','savings-current','savings-target-date'].forEach(id => document.getElementById(id).value = '');
+    renderSavingsGoals();
+    renderFinanceSummary();
+  });
+
+  await renderSavingsGoals();
+}
+
+/* ---- Shared account filter + top-line summary ---- */
+async function renderFinanceSummary(){
+  const hintEl = document.getElementById('finance-net-hint');
+  if(!hintEl) return;
+  const [bills, debts, goals] = await Promise.all([loadBills(), loadDebts(), loadSavingsGoals()]);
+  const monthlyBills = bills.filter(matchesFinanceAccount).reduce((s,b) => s + (Number(b.amount)||0), 0);
+  const debtRemaining = debts.filter(matchesFinanceAccount).reduce((s,d) => s + (Number(d.current_balance)||0), 0);
+  const saved = goals.filter(matchesFinanceAccount).reduce((s,g) => s + (Number(g.current_amount)||0), 0);
+  hintEl.textContent = '$' + monthlyBills.toFixed(0) + '/mo bills · $' + debtRemaining.toFixed(0) + ' debt · $' + saved.toFixed(0) + ' saved';
+}
+
+async function initFinanceModule(){
+  document.getElementById('bill-account').innerHTML = FINANCE_ACCOUNTS.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+
+  document.getElementById('finance-account-filter').addEventListener('click', (e) => {
+    const btn = e.target.closest('.ref-filter-btn');
+    if(!btn) return;
+    document.querySelectorAll('#finance-account-filter .ref-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    financeActiveAccount = btn.dataset.account;
+    renderBills();
+    renderTransactions();
+    renderDebts();
+    renderSavingsGoals();
+    renderFinanceSummary();
+  });
+
+  await initTransactionsModule();
+  await initDebtsModule();
+  await initSavingsModule();
+  await renderBills();
+  await renderFinanceSummary();
 }
 
 /* ---------------- Workouts (placeholder — full engine is phase 2) ---------------- */
@@ -2670,9 +3398,20 @@ function switchTab(tabName){
 }
 
 /* ---------------- Init (called by auth.js once a session exists) ---------------- */
+function getGreeting(){
+  const hour = new Date().getHours();
+  if(hour < 5) return 'Good night, Rachelle';
+  if(hour < 12) return 'Good morning, Rachelle';
+  if(hour < 17) return 'Good afternoon, Rachelle';
+  if(hour < 22) return 'Good evening, Rachelle';
+  return 'Good night, Rachelle';
+}
+
 let appInitialized = false;
 function initApp(user){
-  document.getElementById('date-line').textContent = new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
+  document.getElementById('date-line').textContent = new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  const greetingEl = document.getElementById('greeting-line');
+  if(greetingEl) greetingEl.textContent = getGreeting();
   const emailEl = document.getElementById('signed-in-email');
   if(emailEl && user) emailEl.textContent = user.email;
 
@@ -2685,6 +3424,8 @@ function initApp(user){
   document.querySelectorAll('.nav-card').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.goto));
   });
+
+  document.getElementById('quote-refresh-hint').addEventListener('click', renderQuote);
 
   document.getElementById('dash-task-add-btn').addEventListener('click', addTask);
   document.getElementById('dash-task-input').addEventListener('keydown', e => { if(e.key === 'Enter') addTask(); });
@@ -2735,11 +3476,13 @@ function initApp(user){
   renderApptsToday();
   renderApptsFull();
   renderAllMounts();
-  renderBills();
+  initFinanceModule();
   renderWkDay('A');
 
   initHabitsModule();
   initNutritionModule();
+  initGroceryModule();
+  initMealBuilderModule();
   initTasksModule();
   initBusinessModule();
   renderTodaySummary();
