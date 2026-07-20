@@ -77,6 +77,27 @@ section.panel.active{ display:block; }
 .form-grid input{ border:1px solid #e2ded4; border-radius:10px; padding:9px 12px; font-size:14px; font-family:'Source Sans 3',sans-serif; }
 .form-grid .full{ grid-column:1 / -1; }
 
+/* Reference Library (Business tab: Script/Prompt/CTA/Template + Voice Guide) */
+.ref-search-row{ display:flex; gap:8px; margin-top:4px; }
+.ref-search-row input{ flex:1; border:1px solid #e2ded4; border-radius:10px; padding:9px 12px; font-size:14px; font-family:'Source Sans 3',sans-serif; }
+.ref-filters{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.ref-filter-btn{ font-family:'DM Sans', sans-serif; font-weight:700; font-size:11px; letter-spacing:0.03em; text-transform:uppercase; background:var(--sand); color:var(--navy); border:none; border-radius:999px; padding:7px 12px; cursor:pointer; opacity:0.7; }
+.ref-filter-btn.active{ background:var(--navy); color:var(--white); opacity:1; }
+.ref-count{ font-size:12px; opacity:0.5; margin:10px 0 4px; }
+.ref-item{ border-radius:12px; background:var(--sand); padding:12px 14px; margin-bottom:8px; }
+.ref-item-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; cursor:pointer; }
+.ref-item-head b{ font-family:'DM Sans',sans-serif; font-size:14px; display:block; }
+.ref-item-section{ font-size:11px; opacity:0.55; text-transform:uppercase; letter-spacing:0.04em; margin-top:2px; }
+.ref-badge{ flex-shrink:0; font-size:9px; text-transform:uppercase; letter-spacing:0.04em; background:var(--sage); color:var(--white); border-radius:999px; padding:3px 9px; font-weight:700; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+.ref-badge.custom{ background:var(--accent); }
+.ref-body{ display:none; white-space:pre-wrap; font-size:13.5px; line-height:1.55; margin-top:10px; padding-top:10px; border-top:1px solid rgba(22,50,79,0.08); }
+.ref-item.open .ref-body{ display:block; }
+.ref-item-actions{ display:flex; gap:14px; margin-top:10px; }
+.ref-item-actions button{ background:none; border:none; color:var(--navy); opacity:0.55; font-size:12px; cursor:pointer; text-decoration:underline; padding:0; font-family:'Source Sans 3',sans-serif; }
+.ref-add-form{ margin-top:14px; padding-top:14px; border-top:1px solid var(--sand); }
+.ref-add-form select{ border:1px solid #e2ded4; border-radius:10px; padding:9px 8px; font-size:14px; font-family:'Source Sans 3',sans-serif; }
+.ref-add-form textarea{ border:1px solid #e2ded4; border-radius:10px; padding:9px 12px; font-size:14px; font-family:'Source Sans 3',sans-serif; width:100%; min-height:80px; resize:vertical; margin-top:8px; }
+
 /* Nutrition/business tables */
 table{ width:100%; border-collapse:collapse; margin-top:8px; font-size:14px; }
 th{ text-align:left; font-family:'DM Sans', sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--sage); padding:6px 4px; border-bottom:1px solid var(--sand); }
@@ -550,16 +571,52 @@ td{ padding:8px 4px; border-bottom:1px solid var(--sand); vertical-align:top; }
 
   <div class="card">
     <div class="label">SW Broward Business Operating System</div>
-    <p>Your finalized 16-system reference manual for the solo-agent business. This is a quick-access summary — bring specific sections into chat, or upload files, for full detail on any system.</p>
+    <p>Your finalized 16-system reference manual for the solo-agent business, now live and searchable below — Voice Guide &amp; Audience Profiles (01), CTA Library (13), Script Library (14), Prompt Library (15), and Template Library (16). Every entry is editable: add your own scripts, prompts, and CTAs as you write them, and they'll search alongside the originals.</p>
   </div>
+
   <div class="card">
-    <div class="label">Brand Pillars</div>
-    <p>Education first, local expertise, transparency, practical guidance, trust through competence. Voice: warm, educational, analytical, direct but approachable.</p>
+    <div class="label">Reference Library <span class="count-hint" id="ref-count-hint"></span></div>
+    <div class="ref-search-row">
+      <input type="text" id="ref-search" placeholder="Search scripts, prompts, CTAs, templates...">
+    </div>
+    <div class="ref-filters" id="ref-filters">
+      <button class="ref-filter-btn active" data-cat="all">All</button>
+      <button class="ref-filter-btn" data-cat="voice">Voice &amp; Audience</button>
+      <button class="ref-filter-btn" data-cat="cta">CTA Library</button>
+      <button class="ref-filter-btn" data-cat="script">Script Library</button>
+      <button class="ref-filter-btn" data-cat="prompt">Prompt Library</button>
+      <button class="ref-filter-btn" data-cat="template">Template Library</button>
+    </div>
+    <div class="ref-count" id="ref-results-count"></div>
+    <div id="ref-list"></div>
+
+    <div class="ref-add-form">
+      <div class="label" style="margin-bottom:8px;">Add to library</div>
+      <div class="form-grid">
+        <select id="ref-add-category">
+          <option value="voice">Voice &amp; Audience</option>
+          <option value="cta">CTA Library</option>
+          <option value="script" selected>Script Library</option>
+          <option value="prompt">Prompt Library</option>
+          <option value="template">Template Library</option>
+        </select>
+        <input type="text" id="ref-add-section" placeholder="Section (e.g. Referral Scripts)">
+        <input type="text" id="ref-add-title" class="full" placeholder="Title">
+        <input type="text" id="ref-add-tags" class="full" placeholder="Tags (comma-separated, optional)">
+      </div>
+      <textarea id="ref-add-body" placeholder="Full text — script, prompt, CTA list, or template..."></textarea>
+      <div class="save-bar"><button class="pill-btn" id="ref-add-btn">Add to library</button></div>
+    </div>
   </div>
+
   <div class="card">
-    <div class="label">Audience Profiles</div>
-    <p>SW Broward relocation buyers, first-time buyers, future homebuyers, referral partners, homeowners considering selling, military/public service, healthcare professionals.</p>
+    <div class="label">Weekly &amp; Monthly Operating Rhythm</div>
+    <p><b>Daily —</b> follow up on due/overdue leads, respond to inquiries, complete the day's top business priority.</p>
+    <p><b>Weekly (Fri, 30 min) —</b> review activity (conversations, follow-ups, content published, partner touches), review results (leads created, consultations booked, relationships strengthened), name what created friction, and set next week's single most important focus.</p>
+    <p><b>Monthly (1st week, 60–90 min) —</b> review pipeline, marketing/content performance, relationship and partner activity, client experience feedback, and decide one system improvement to make.</p>
+    <p><b>Quarterly —</b> review what's working, what's not, and what to remove — strategic adjustment, not reinvention.</p>
   </div>
+
   <div class="card">
     <div class="label">16 Systems</div>
     <table>
@@ -1418,6 +1475,589 @@ async function initContentModule(){
 }
 
 
+/* ---- js/reference-library.js ---- */
+/* ---------------------------------------------------------------
+   Reference Library: searchable Script/Prompt/CTA/Template Library
+   + full Voice Guide & Audience Profiles, pulled from the SW Broward
+   BOS (systems 01, 13, 14, 15, 16). Table: reference_library.
+   Seeded once per user on first load from SEED_LIBRARY below, then
+   fully editable/searchable like every other table in this app.
+--------------------------------------------------------------- */
+const REF_CATEGORY_LABEL = { voice:'Voice & Audience', cta:'CTA Library', script:'Script Library', prompt:'Prompt Library', template:'Template Library' };
+
+const SEED_LIBRARY = [
+
+/* ============ 01 — VOICE GUIDE & AUDIENCE PROFILES ============ */
+{category:'voice', section:'Core Voice Traits', title:'Warm, Educational, Analytical, Direct but Approachable, Protective', body:
+`The brand sounds like a smart friend who happens to know real estate extremely well — not a generic real estate agent.
+
+01 — Warm: The reader should feel welcomed, understood, and supported. Use "you," "your situation," "what matters most to you." Avoid talking at people, making assumptions, sounding transactional.
+
+02 — Educational: The primary role is teacher. Every interaction should help someone understand something they didn't before. Answer: How does this work? Why does this matter? What should I consider? What mistakes should I avoid? Desired reaction: "I understand this better now."
+
+03 — Analytical: Don't rely on vague opinions — support with numbers, comparisons, examples, maps, real scenarios. Instead of "Cooper City is a great area," use: "Cooper City often attracts buyers who prioritize established neighborhoods and school stability. Understanding how that impacts inventory, pricing, and lifestyle fit helps buyers decide if it matches what they need."
+
+04 — Direct but Approachable: Tell the truth without creating fear. Preferred: "Before you fall in love with this house, there are a few things I would want you to check first." Avoid: "This house is a bad idea."
+
+05 — Protective: The client should feel "She is looking out for me." Protect clients from unexpected costs, poor-fit neighborhoods, emotional decisions, inspection surprises, buying without preparation.
+
+Writing style overall: conversational, educational, professional, clear, concise, data-supported, story-driven, emotionally aware. The goal is not to sound corporate — the goal is to sound knowledgeable and human.`},
+
+{category:'voice', section:'Voice Formula', title:'Teach → Explain → Relate → Guide', body:
+`Most content should follow this structure:
+
+Teach — introduce the important information.
+"One of the biggest mistakes relocating buyers make is choosing a neighborhood before understanding the full cost of living."
+
+Explain — break down why it matters.
+"A home's purchase price is only one part of the monthly payment. Insurance, taxes, HOA fees, and maintenance can change the actual affordability."
+
+Relate — connect it back to the person's situation.
+"If you are moving from another state, Florida's insurance market can be one of the biggest surprises."
+
+Guide — give the next step.
+"Before deciding on a community, compare the full monthly cost — not just the listing price."
+
+Before publishing anything, ask: Does this teach something useful? Answer a real question? Explain why something matters? Include examples or context? Help someone feel more prepared? If not, it likely doesn't fit the brand.`},
+
+{category:'voice', section:'Words & Phrases', title:'Realtor Language to Avoid / Preferred Phrases', body:
+`Avoid overused real estate phrases: dream home, forever home, hot market, act now, don't miss out, your dream starts here, luxury living, hidden gem, perfect opportunity, call me today, making dreams come true, "I would love to help you buy or sell." These feel generic and sales-focused.
+
+Preferred language patterns:
+"Make a confident decision"
+"Understand the real numbers"
+"Know what you are getting into"
+"Find the right fit"
+"Compare the trade-offs"
+"What I would want my own family to know"
+"The honest answer is..."
+"Here's what most buyers don't realize..."
+"Before you make a decision, look at..."
+"The goal is not just finding a house. It's finding the right fit."
+
+Content Opening Frameworks:
+Educational: "Most buyers don't realize..."
+Personal Guidance: "If this were my family..."
+Data Breakdown: "Let's look at the actual numbers..."
+Local Insider: "If you're moving to Southwest Broward..."`},
+
+{category:'voice', section:'Voice by Platform', title:'Website, Blog, Social, Client Communication', body:
+`Website & Lead Magnets — 90% educator / 10% realtor. Priorities: trust, clarity, expertise, search value. Avoid excessive personality, sales language, self-promotion. Reader should leave thinking: "This person knows what they are talking about."
+
+Blog Content — 75% educator / 25% personality. Include stories, opinions, examples, personal observations, occasional humor. Goal: make complicated topics easier and more enjoyable to understand.
+
+Social Media — 75% educator / 25% personality. Can include humor, relatable observations, behind-the-scenes thoughts, local personality. Example: "Florida buyers have two personalities: 'I want something newer because insurance scares me.' 'I want character and charm.' The problem? Those two things usually come with very different price tags."
+
+Client Communication — warm, calm, reassuring. Client should feel "I am being taken care of." Prioritize clear expectations, next steps, reducing anxiety, making decisions easier.
+
+Humor is allowed when relatable, light, human, observational — for social/blog/community content. Avoid humor in financial explanations, legal topics, partner communication, sensitive client situations.
+
+Desired reader takeaway: "Rachelle knows her stuff, but she also actually cares about making this process easier."`},
+
+{category:'voice', section:'Brand Decision Filter', title:'Quick Reference & Decision Filter', body:
+`Primary Identity: Southwest Broward Relocation & First-Time Homebuyer Specialist.
+Mission: Help people make confident buying decisions through education, transparency, and local expertise.
+Core Difference: A real estate advisor who teaches people how to choose — not just someone who helps them purchase.
+
+Known for: SW Broward expertise, honest neighborhood comparisons, real monthly cost analysis, insurance education, school zone guidance, first-time buyer support, relocation planning.
+
+Never become known for: generic real estate advice, sales pressure, hype, fear-based marketing, trend chasing, luxury lifestyle branding, transaction-first relationships.
+
+Brand Decision Filter — before creating any marketing, ask: "Does this help someone make a better real estate decision?" If yes, it fits the brand. If it only promotes the agent, creates urgency, or pushes a transaction, it does not.`},
+
+{category:'voice', section:'Audience: SW Broward Relocators', title:'Relocation Buyers (Cooper City, Pembroke Pines, Plantation)', body:
+`Priority: High. Who they are: people moving in from NY, NJ, CA, DC/VA and other high-cost metros for job changes, family changes, lifestyle, military assignments, healthcare opportunities, corporate relocation.
+
+Main problem: they don't know how to choose — they're choosing a city, neighborhood, school zone, commute, lifestyle, and long-term financial decision without local context.
+
+Biggest concerns: "What if we choose the wrong area?" (fit, community feel, commute, schools, resale value) · "What if Florida costs more than expected?" (insurance, taxes, HOA, maintenance, storm prep) · "Can I trust what I'm being told?" (wary of generic advice, outdated info, transaction-first agents).
+
+What they need: honest city comparisons, neighborhood education, real cost breakdowns, local insight, lifestyle guidance.
+
+Messaging: "Moving somewhere new is more than finding a house. It's making sure the city, neighborhood, commute, and costs actually fit your life."
+
+Content topics: Cooper City vs Pembroke Pines vs Plantation comparisons, moving-to-SW-Broward guides, neighborhood breakdowns, school zone education, insurance considerations, commute guides.
+
+Primary CTA: Get the Southwest Broward Relocation Starter Guide. Secondary CTA: Book a Neighborhood Planning Session.`},
+
+{category:'voice', section:'Audience: First-Time Buyers', title:'First-Time Buyers', body:
+`Priority: High. Who they are: younger professionals, couples, growing families, long-term renters purchasing their first home.
+
+Main problem: they don't know what they don't know — true monthly ownership costs, inspection concerns, insurance, neighborhood tradeoffs, long-term financial decisions.
+
+Biggest concerns: "What if I make a huge mistake?" (wrong home, hidden problems, unexpected repairs) · "Can I actually afford this?" (down payment, monthly payment, insurance, HOA, maintenance) · "Am I ready?"
+
+What they need: step-by-step education, honest cost breakdowns, reassurance without pressure.
+
+Content topics: first-time buyer process education, true cost of ownership, inspection education, financing basics.`},
+
+{category:'voice', section:'Audience: Move-Up / Future Homeowners', title:'Move-Up Buyers & Future Homeowners', body:
+`MOVE-UP BUYERS — current homeowners needing a home that better fits their life (growing family, lifestyle change, more space, different neighborhood). Main problem: they need strategy — balancing selling their current home, buying the next one, timing, and financial planning. Biggest concerns: buying before selling, missing opportunities, making the wrong financial move, losing equity. What they need: equity analysis, timing guidance, market context, a clear strategy. Content: sell-before-buy planning, equity education, market timing, moving strategies. Primary CTA: Get a Personalized Move-Up Strategy.
+
+FUTURE HOMEOWNERS — renters or long-term planners 6–18 months from buying. What they need: a plan, not a rush. Position as a planning process. Primary CTA: Create Your Future Home Plan / Start Your Future Home Plan.`},
+
+{category:'voice', section:'Audience: Homeowners Considering Selling', title:'Sellers (lower current priority, long-term pipeline)', body:
+`Priority: Lower immediate priority but important long-term pipeline. Who they are: homeowners curious about their home's value, their next move, whether selling makes sense.
+
+Main problem: they don't know if now is the right time. Biggest concerns: selling too soon, not getting enough value, finding their next home, market uncertainty.
+
+What they need: an advisor, not a salesperson — honest valuation, options, market education, planning support.
+
+Content topics: home value education, neighborhood market updates, preparing before selling, equity planning.
+
+Primary CTA: Get Your Home Selling Strategy. Avoid "Find out what your home is worth!" — overused, attracts valuation-only leads.`},
+
+{category:'voice', section:'Audience: Healthcare Professionals', title:'Strategic Partner Audience — Healthcare', body:
+`Their problem: healthcare professionals (Memorial Healthcare, HCA Healthcare — physicians, nurses, residents, specialists, administrators) often relocate quickly and need trustworthy local guidance. Housing uncertainty can affect job acceptance and relocation stress.
+
+What they need: hospital commute guides, living-near-healthcare-facilities guides, first-time buyer resources, relocation education.
+
+Target contacts (partnership angle): physician recruiters, nurse recruiters, HR managers, residency coordinators, talent acquisition teams — not "contact the hospital" generically.`},
+
+{category:'voice', section:'Audience: Military Families', title:'Strategic Partner Audience — Military & Government', body:
+`Their problem: PCS moves require fast decisions with limited local knowledge and short timelines. Important audiences: SOUTHCOM personnel, VA buyers, relocating families.
+
+What they need: VA loan education, BAH considerations, commute planning, schools, neighborhood differences, remote/virtual buying support.
+
+Useful resources: PCS relocation guide, VA buyer education, Southwest Broward area comparisons. Target contacts: military relocation contacts, veteran organizations, government employee groups.`},
+
+{category:'voice', section:'Audience: Employers & Recruiters', title:'Strategic Partner Audience — Employers, Recruiters, Corporate HR', body:
+`Their problem: relocation creates stress for employees; housing uncertainty makes transitions harder. Many relocations happen because of employment — employees need to know where to live, commute reality, affordability, and which neighborhoods fit their family.
+
+Messaging to partners: "I help make Southwest Broward relocation easier by providing employees with accurate neighborhood information, realistic costs, and housing education."
+
+Target contacts: HR managers, talent acquisition, recruiters, employee experience teams, relocation coordinators. Value you provide: employee relocation guides, neighborhood comparison tools, virtual neighborhood tours, housing education sessions.`},
+
+/* ============ 13 — CTA LIBRARY ============ */
+{category:'cta', section:'CTA Philosophy', title:'CTA Style Rules & Framework', body:
+`Every CTA should make someone feel: "This will help me." "This person understands what I'm dealing with." "This feels easy to take the next step." CTAs move people forward based on where they are in their decision journey — the goal is not to force conversion, it's to create the next logical step.
+
+Use: helpful language, specific outcomes, education-focused wording, low-pressure invitations, clear next steps, "before you make a decision" positioning.
+
+Avoid: "Let's get you sold!" · "Let's find your dream home!" · "Act now!" · "Don't miss out!" · "Your dream home awaits!" · "The market won't wait!" · "Call me today!" · "I have buyers!" · "Ready to make a move?"
+
+Every CTA should answer: 1) What is the person getting? ("Understand what your monthly payment actually looks like.") 2) Why does it matter? ("Before you fall in love with a home, make sure the numbers actually work.") 3) What is the easiest next step? ("Download the guide.")
+
+Core philosophy: the purpose of every CTA is to help people make better decisions before they are ready to make a transaction.`},
+
+{category:'cta', section:'Stage 1 — Awareness', title:'Relocation / First-Time Buyer / Future Homeowner CTAs', body:
+`RELOCATION — Primary: "Get the Southwest Broward Relocation Guide." Alternatives: "Explore Cooper City, Pembroke Pines, and Plantation before you move." "See what life is actually like in Southwest Broward." "Start planning your move with local insight." "Get the guide to choosing the right Broward community for you."
+
+FIRST-TIME BUYERS — Primary: "Get the First-Time Buyer Guide." Alternatives: "Learn what Florida buyers need to know before making an offer." "Understand the process before you start touring homes." "Get prepared before you start your search."
+
+FUTURE HOMEOWNERS — Primary: "Start Your Future Home Plan." Alternatives: "Know what to do before you're ready to buy." "Create your roadmap from renting to owning." "Plan your next move before the pressure starts."`},
+
+{category:'cta', section:'Stage 2 — Engagement', title:'Address Verification / Community Comparison / Market Intelligence CTAs', body:
+`ADDRESS / SCHOOL VERIFICATION — Best: "Send me an address — I'll help verify the details." Alternatives: "Before you fall in love with a home, let's make sure the details match." "Not sure about the school zone? Send me the address." "Let's check the details before you make a decision."
+
+COMMUNITY COMPARISON — Best: "Compare Southwest Broward communities based on what actually matters to you." Alternatives: "Not sure which city fits your lifestyle? Let's narrow it down." "See how Cooper City, Pembroke Pines, and Plantation compare." "Find out which community matches your priorities."
+
+MARKET INTELLIGENCE — Best: "Get the monthly Southwest Broward Intelligence Report." Alternatives: "Stay informed on what's changing in your local market." "Understand what's happening before making your next move." "Get local insights beyond the listing data."`},
+
+{category:'cta', section:'Stage 3 — Consideration', title:'Future Home Plan / Buyer & Relocation Consultation / Video Tour CTAs', body:
+`FUTURE HOME PLAN SESSION — Best: "Create your Future Home Plan." Alternatives: "Let's map out your path to buying." "Build a realistic plan for your timeline and budget." "Know what needs to happen before you're ready."
+
+BUYER CONSULTATION — Best: "Let's create your home buying strategy." Alternatives: "Schedule a buyer planning session." "Let's figure out what actually fits your goals." "Create a plan before you start touring homes."
+
+RELOCATION CONSULTATION — Best: "Plan your Southwest Broward move." Alternatives: "Let's compare communities based on your lifestyle." "Create your relocation game plan." "Get local guidance before you arrive."
+
+VIDEO NEIGHBORHOOD TOURS — Best: "See Southwest Broward from anywhere." Alternatives: "Explore neighborhoods before your scouting trip." "Get a local perspective before you visit." "Tour communities virtually before making the trip."`},
+
+{category:'cta', section:'Stage 4 — Conversion', title:'Buyer & Seller Conversion CTAs', body:
+`BUYER — Use: "Schedule your buyer consultation." "Start your home buying plan." "Let's talk through your options." Avoid: "Let's get house hunting!" — too transactional, skips the planning stage.
+
+SELLER (lower priority) — Use: "Create your home selling strategy." "Understand your home's current position." "Get a personalized selling plan." Avoid: "Find out what your home is worth!" — overused, attracts valuation-only leads.`},
+
+{category:'cta', section:'Social Media CTA Library', title:'Educational Posts, Comment Capture, Conversation Starters', body:
+`EDUCATIONAL POSTS — "Save this for when you're ready." "Send this to someone planning a move." "Follow along for more Southwest Broward insights."
+
+COMMENT / DIGITAL LEAD CAPTURE — "Comment 'GUIDE' and I'll send it over." "Comment 'MOVE' and I'll send you the relocation guide." "Comment 'PLAN' and I'll send you the buyer planning resource."
+
+CONVERSATION STARTERS — "Have a question about moving to Broward? Send me a message." "Not sure where to start? Tell me what you're trying to figure out." "Send me your biggest question about buying in Florida."`},
+
+{category:'cta', section:'Website CTA Library', title:'By Page: Homepage, Relocation, Buyer, Future Buyer, Neighborhood', body:
+`HOMEPAGE — Primary: "Start Planning Your Southwest Broward Move." Secondary: "Explore neighborhoods, costs, and options before you decide."
+
+RELOCATION PAGE — Primary: "Get the Southwest Broward Relocation Guide." Secondary: "Compare communities before making your move."
+
+BUYER PAGE — Primary: "Start Your Home Buying Plan." Secondary: "Understand the process before you start touring homes."
+
+FUTURE BUYER PAGE — Primary: "Create Your Future Home Plan." Secondary: "Build your roadmap before you're ready to buy."
+
+NEIGHBORHOOD PAGES — Primary: "Explore This Community." Secondary: "See if this area actually fits your lifestyle."`},
+
+{category:'cta', section:'Partner CTAs', title:'Early Relationship / Active Partnership / Workshop / Recruiter', body:
+`EARLY RELATIONSHIP (goal: make sharing easy) — "Feel free to share this resource with anyone relocating to Southwest Broward."
+
+ACTIVE PARTNERSHIP — "Add this to your relocation resources for incoming employees."
+
+WORKSHOP — "Schedule a housing education session for your team."
+
+RECRUITER / HIRING PARTNERS — "Help your candidates feel confident about relocating."`},
+
+{category:'cta', section:'AI CTA Generation Rules', title:'Rules for Writing New CTAs + Quarterly Maintenance', body:
+`When creating CTAs: 1) Never use stereotypical realtor language. 2) Never create urgency unless there's a legitimate deadline. 3) Focus on education, preparation, confidence. 4) Match CTA intensity to audience stage — early-stage gets learning CTAs, warm audiences get planning CTAs, ready audiences get consultation CTAs. 5) The CTA should sound like an invitation, not a pitch.
+
+Prioritize: understand, explore, compare, plan, prepare, get clarity. Avoid: buy, sell, act, hurry, don't miss.
+
+Quarterly maintenance — review: which CTAs generate downloads / conversations / consultations? Which feel too generic? Retire CTAs that receive clicks but no meaningful engagement, attract poor-fit leads, or feel disconnected from the brand voice.`},
+
+/* ============ 14 — SCRIPT LIBRARY ============ */
+{category:'script', section:'Script Philosophy', title:'Master Conversation Framework: Context → Value → Curiosity → Next Step', body:
+`The goal is not to memorize scripts — it's to remove uncertainty so every conversation feels natural, helpful, and aligned with how you actually communicate. Every interaction should make someone think "She actually understands this process and is trying to help me make a good decision," not "This person is trying to sell me something."
+
+Always: start with context, give value before asking for anything, ask questions before making assumptions, match the person's timeline, make complicated topics easier, leave people feeling helped even if they're not ready.
+
+Avoid: fake familiarity, pressure, artificial urgency, generic follow-ups, sales language, asking for business before trust exists.
+
+MASTER FRAMEWORK — 1) Context: why are you reaching out? (they downloaded something / asked a question / were introduced / you noticed a relevant situation) 2) Value: give them something useful (information, clarification, resource, local insight) 3) Curiosity: ask about their situation (timeline, motivation, concerns, goals) 4) Next Step, only after understanding them (send resource, schedule call, stay connected, create plan).`},
+
+{category:'script', section:'Lead Follow-Up', title:'New Website Lead — Initial + Two Follow-Ups', body:
+`WHEN TO USE: someone fills out a form, downloads a guide, or requests information. They already raised their hand — the mistake is treating them like a cold lead.
+
+INITIAL (text/DM): "Hey [Name]! I saw you grabbed my [guide/resource]. I wanted to make sure you got it and see what sparked your interest in looking into [moving/buying/relocating]? No pressure at all — a lot of people start researching months before they're actually ready. I'm happy to help you figure out what makes sense for your timeline."
+
+FOLLOW-UP IF NO RESPONSE (3–5 days): "Hey [Name]! Just wanted to make sure the guide came through okay. I know moving decisions can feel overwhelming, especially with everything people hear about Florida costs, insurance, neighborhoods, etc. If you have questions while you're researching, I'm always happy to help."
+
+FOLLOW-UP AFTER 2 WEEKS: "Hey [Name]! I was updating some of my local resources and thought about you. Are you still thinking about [moving/buying], or has your timeline changed? Either way is totally fine — I just want to make sure you're getting information that actually fits where you're at."`},
+
+{category:'script', section:'Lead Magnet Scripts', title:'Relocation Guide / Payment Guide / Future Home Plan Downloads', body:
+`RELOCATION GUIDE DOWNLOAD (goal: identify timeline and motivation): "Hey [Name]! Thanks for grabbing my Southwest Broward Relocation Guide. I'm curious — what has you looking into the area? Are you already planning a move, researching possibilities, or just trying to understand what different areas are like?"
+
+PAYMENT GUIDE DOWNLOAD (goal: transition into financial planning): "Hey [Name]! I saw you downloaded the real payment guide. That's actually one of the biggest things I help people figure out because the purchase price is only one piece of the puzzle in Florida. Were you mainly curious about what your budget could look like, or are you starting to seriously plan a move?"
+
+FUTURE HOME PLAN DOWNLOAD (goal: nurture future buyers): "Hey [Name]! Thanks for checking out the Future Home Plan. I actually created that for people who know they want to buy eventually but don't want to feel rushed or unprepared. Where are you currently at — just starting to think about ownership, or do you have a rough timeline in mind?"`},
+
+{category:'script', section:'Sphere Scripts', title:'Reconnecting With Someone / Quarterly Referral Reminder', body:
+`RECONNECTING (goal: restart relationship, conversation first): "Hey [Name]! It's been forever — I was thinking about you and realized we haven't caught up in a while. How have you been?" After reconnecting: "Also, random update — I've been building my real estate business here in Southwest Broward and focusing a lot on helping people understand the moving process before they're actually ready. It's been really interesting learning how much people don't know about buying in Florida until they're already overwhelmed."
+
+QUARTERLY REFERRAL REMINDER (goal: stay top-of-mind without asking constantly): "Hey [Name]! I was putting together my monthly market update and thought you'd find this interesting. [share insight/resource] Also, if you ever hear someone talking about moving to South Florida, I'm always happy to be a resource for them — even if they're just trying to figure out where they want to live."`},
+
+{category:'script', section:'Referral Scripts', title:'Asking for Referrals / After-Closing Referral Ask', body:
+`ASKING FOR REFERRALS: "One thing I'm trying to do is become the person people think of when someone they know is overwhelmed by a move. If someone in your circle starts talking about moving, buying, renting with a future goal of owning, or relocating here, I'd love to be a resource for them."
+
+AFTER CLOSING — avoid "Do you know anyone buying or selling?" Instead: "My favorite part of this job is helping people feel confident through a process that can be really stressful. If someone you know starts talking about moving, I'd really appreciate an introduction. Even if they're months away, I'm happy to help them plan."
+
+Do not say generically: "Do you know anyone buying or selling?" Better, general version: "A lot of my business comes from helping people who are trying to understand their options before they're ready. If you ever hear someone talking about moving to Southwest Broward, I'm always happy to be a resource for them."`},
+
+{category:'script', section:'Buyer Consultation Scripts', title:'Consultation Opening / "We Don\'t Know Where to Live"', body:
+`CONSULTATION OPENING (goal: make client feel understood): "Before we talk houses, I want to understand what you're actually trying to accomplish. A lot of people start with 'we need a house,' but usually there's a bigger reason behind the move — schools, commute, lifestyle, family, finances. So I want to understand what matters most to you first."
+
+WHEN SOMEONE SAYS "WE DON'T KNOW WHERE WE WANT TO LIVE": "Honestly, that's extremely common. Most people don't actually need someone to send them listings first — they need help narrowing down what fits their life. That's usually where comparing areas, commute, budget, and priorities makes the biggest difference."`},
+
+{category:'script', section:'Relocation Scripts', title:'Doesn\'t Know Areas / Out-of-State Insurance Concern', body:
+`RELOCATOR WHO DOESN'T KNOW AREAS: "One thing I always tell people relocating here is that two cities can look close on a map but feel completely different day-to-day. My job is not just to show you houses — it's to help you understand what each area actually feels like so you don't end up somewhere that doesn't fit your lifestyle."
+
+OUT-OF-STATE BUYER CONCERNED ABOUT FLORIDA: "I completely understand why people hesitate. Florida has had a lot of headlines around insurance, storms, and affordability. My goal is not to pretend those things don't exist — it's to help you understand what actually applies to the specific home and area you're considering."`},
+
+{category:'script', section:'Future Buyer / Renter Scripts', title:'"We\'re Not Ready Yet" / Renter Planning to Buy Later', body:
+`"WE'RE NOT READY YET": "Honestly, that's exactly why I created resources for people planning ahead. The people who usually feel the most confident buying are the ones who started learning before they felt pressured. We can treat this as a planning process, not a rush to buy."
+
+RENTER PLANNING TO BUY LATER: "Renting while preparing to buy can actually be a really smart strategy. The biggest thing is making sure your rent, savings, credit, and timeline are moving you toward the goal instead of just waiting. That's what I help people map out."`},
+
+{category:'script', section:'Objection Scripts', title:'"We Can Find Homes Online Ourselves" / "We Want to Wait for Rates"', body:
+`"WE CAN FIND HOMES ONLINE OURSELVES": "Honestly, most buyers can find houses online now. Where I usually help is everything around the house: Is this neighborhood actually a good fit? Are there costs you're not seeing? Are there things about the property you should know before getting attached? The goal is making sure you're making a good decision, not just finding something pretty online."
+
+"WE WANT TO WAIT FOR RATES": "A lot of people are asking that right now. The hard part is nobody knows exactly what rates will do, and waiting can sometimes solve one problem while creating another. I usually help people look at the bigger picture: What does the payment look like? What does inventory look like? What opportunities exist right now? Then you can decide based on your situation."`},
+
+{category:'script', section:'Partner Outreach', title:'Recruiter/HR Introduction Email + Follow-Up', body:
+`RECRUITER/HR INTRODUCTION (goal: position as resource, not salesperson):
+"Hi [Name], I specialize in helping people relocating to Southwest Broward understand their housing options before they make the move. I created resources focused specifically on the questions that tend to create relocation stress: Where should they live? What does their budget actually look like? Which areas fit their commute and lifestyle? I'd love to learn more about what housing questions come up most often for your incoming employees and see if I can create something useful for them."
+
+PARTNER FOLLOW-UP: "I wanted to send this over because I thought it might help your team." [attach relevant resource]`},
+
+{category:'script', section:'Maintenance Rules', title:'When to Add / Remove / Improve Scripts', body:
+`Add scripts when: a conversation happens repeatedly, you find yourself saying the same explanation often, a client question appears more than once, a partner interaction becomes predictable.
+
+Quarterly review — remove scripts that feel unnatural, create low-quality conversations, or sound unlike you. Improve by adding real examples, client language, and objections you actually hear in the market.
+
+Every script entry should ultimately include: exact script, follow-up timing, an alternative version if they respond positively, and an alternative version if they don't respond.`},
+
+/* ============ 15 — PROMPT LIBRARY ============ */
+{category:'prompt', section:'AI Operating Rules', title:'What to Attach Before Using Any Prompt', body:
+`Before using any prompt, attach the relevant context files whenever possible:
+
+Content creation → Voice Guide + Audience Profiles + Content Playbook
+Neighborhood content → Knowledge Base + Neighborhood Database
+Market content → Knowledge Base + Research Workflow
+Lead magnets → Voice Guide + Audience Profiles + Marketing Systems
+Partner materials → Voice Guide + Partnership Playbook
+Client communication → Voice Guide + Client Experience System
+Business decisions → Business Management System + Roadmap
+
+AI should accelerate execution, not replace judgment. The goal is not "generate more content" — it's to create better assets faster, turn knowledge into client value, reduce decision fatigue, maintain consistency, and allow one person to run a multi-system business.`},
+
+{category:'prompt', section:'Brand Voice Block', title:'Paste Into Most Content-Generation Prompts', body:
+`Brand voice: Write as a knowledgeable, approachable Southwest Broward real estate advisor.
+
+The tone should be: conversational, educational, professional, concise, data-driven, storytelling-focused, emotionally intelligent. The reader should feel: "I trust this person. She knows what she's talking about and is going to make this process easier."
+
+Avoid: generic realtor language, overly enthusiastic sales language, "Dream home," "Your home journey starts here," "Don't miss out," "Act now," pushy CTAs, forced luxury language, fake urgency, clichés.
+
+Prioritize: education over persuasion, honest trade-offs over hype, clear explanations over jargon, real numbers when available, helping people make informed decisions. Write like a local expert and trusted guide, not a salesperson.`},
+
+{category:'prompt', section:'P1 — Content Creation', title:'Create a Complete Content Piece', body:
+`Use for: blogs, guides, long-form website content, educational articles.
+
+Input needed: Topic / Audience / Funnel stage / Relevant knowledge files.
+
+Prompt: "You are my real estate content strategist and copywriter. [Insert topic, audience, funnel stage.] Write in Rachelle's brand voice — warm, educational, analytical, direct but approachable. Include an educational opening, real numbers/examples where possible, honest trade-offs, and a low-pressure CTA appropriate to the funnel stage. Avoid realtor clichés and sales language."`},
+
+{category:'prompt', section:'P4 — Social Media Content Generator', title:'Instagram / Facebook / TikTok Scripts', body:
+`Use for: Instagram, Facebook, TikTok scripts.
+
+Prompt: "Create social media content based on: Topic: [insert]. Platform: [Instagram/Facebook/TikTok]. Audience: [insert]. Goal: [Education / Engagement / Lead generation]. Source: [paste information]. Create: 1) Hook 2) Caption/script 3) Supporting points 4) CTA 5) Suggested visual format. Tone: knowledgeable friend + local expert. Avoid: realtor clichés, excessive emojis, fake urgency, sales language. Make the audience think: 'I didn't know that. I need to save this.'"`},
+
+{category:'prompt', section:'P5 — Content Repurposing Waterfall', title:'Turn One Piece Into Multiple Assets', body:
+`Prompt: "Take this primary content: [paste content]. Repurpose it into: 1) Email newsletter 2) Instagram caption 3) Facebook local group post 4) Two short-form video scripts 5) Carousel outline 6) Partner-forwardable version 7) Website FAQ section. Maintain my brand voice, educational positioning, local expertise, no sales pressure. Each version should feel native to the platform."`},
+
+{category:'prompt', section:'P6 — Create a Lead Magnet', title:'Design a New Lead Magnet End to End', body:
+`Prompt: "Act as my marketing strategist. Create a lead magnet for: Audience: [insert]. Problem: [insert]. Desired action after downloading: [insert]. Brand positioning: I am a Southwest Broward real estate advisor focused on education, preparation, and making complex decisions easier. Create: Title / Promise / Outline / Sections / CTA / Landing page copy / Email follow-up ideas. Make this valuable enough that someone would willingly exchange their email for it."`},
+
+{category:'prompt', section:'P7 — Landing Page Creator', title:'Conversion-Focused Landing Page', body:
+`Prompt: "Create a conversion-focused landing page. Offer: [insert]. Audience: [insert]. Pain point: [insert]. Goal: [download/consult/contact]. Brand voice: [paste voice guide block]. Create: SEO title / Meta description / Hero section / Benefits / What they receive / Trust-building section / FAQ / CTA buttons / Thank-you page suggestion. Keep it educational and low-pressure."`},
+
+{category:'prompt', section:'P8 — Write Client Email', title:'Personalized Client Communication', body:
+`Prompt: "Write this client communication: Purpose: [insert]. Client context: [paste CRM notes]. Desired outcome: [insert]. Tone: warm, professional, reassuring. Rules: make the client feel taken care of, explain clearly, avoid sounding scripted, avoid pressure, keep it concise. Provide: Subject line / Email."`},
+
+{category:'prompt', section:'P14 — Humanize AI Content', title:'Make AI Output Sound Less Generic', body:
+`Prompt: "Original: [paste]. Make it: warmer, more human, more conversational, less generic, less 'AI,' more educational, more locally knowledgeable. Remove: realtor clichés, over-selling, empty statements, corporate language. Keep the meaning and important information."`},
+
+{category:'prompt', section:'P15 — Final Content Quality Check', title:'Pre-Publish Review Prompt', body:
+`Prompt: "Review this content before publishing. Evaluate: Brand voice — does this sound like me? Audience — will my target client find this useful? Accuracy — are claims supported? Trust — does this educate or sell? Conversion — is the CTA appropriate? Identify weak sections, generic wording, missing information, potential improvements. Then provide the revised version."`},
+
+{category:'prompt', section:'A1 — Monthly Research Checklist', title:'Run the SW Broward Monthly Research Checklist', body:
+`Use for updating: market report, neighborhood guides, content topics, client education. Provide: Local Intelligence System (02), previous month's report, research checklist.
+
+Prompt: "Run my Southwest Broward monthly research checklist. Research current information for Cooper City, Pembroke Pines, and Plantation, FL. Compare findings against my previous report. Return: 1) What changed 2) Why it matters 3) Whether it impacts my standing market insights 4) Content opportunities created by the changes. Include sources. Do not add filler. Focus on actionable changes." Always verify all public-facing numbers before use.`},
+
+{category:'prompt', section:'A2 — Monthly Intelligence Report', title:'Turn Research Into a Client-Facing Authority Asset', body:
+`Provide: verified research findings, Intelligence Report template, brand positioning guidelines.
+
+Prompt: "Create my Southwest Broward Intelligence Report using this structure. Requirements: education-first, quantified where possible, explain why the information matters, include honest trade-offs, avoid hype or generic real estate language. Include: 1) Market update 2) Development changes 3) Insurance updates 4) School updates 5) Buyer takeaway 6) Seller takeaway." Review for accuracy, tone, clarity before publishing.`},
+
+{category:'prompt', section:'A3 — Content Creation + Repurposing', title:'One Idea Into Multiple Assets (Automation Workflow)', body:
+`Provide: content brief (system 03), relevant market intelligence (02), brand guidelines (01).
+
+Prompt: "Using this content brief and knowledge base, create: 1) Long-form flagship content 2) Database email 3) Two short-form video scripts (hook/stat version + trade-off/explanation version) 4) Facebook group native response 5) Partner-shareable version without sales CTA. Voice requirements: educator first, specific to Southwest Broward, use numbers/examples/trade-offs, no hype, no generic realtor language." Review for accuracy, local specificity, brand alignment.`},
+
+{category:'prompt', section:'A4 — Partner-Specific Guide Creation', title:'Customize Relocation Resources for an Organization', body:
+`Provide: master relocation guide, partner information, audience details (e.g. Memorial Healthcare employees, SOUTHCOM families, Plantation corporate employees).
+
+Prompt: "Adapt my Southwest Broward relocation guide for: Audience: [insert]. Organization: [insert]. Customize: commute information, neighborhood recommendations, housing concerns, rent vs buy considerations, relevant programs, lifestyle factors. Maintain my education-first voice. Keep it concise and useful." Full review required — this represents your brand to a potential referral partner.`},
+
+{category:'prompt', section:'Maintenance Rules', title:'When to Add / Remove Prompts + Success Metrics', body:
+`Add a new prompt when: a task happens more than twice, you find yourself rewriting AI output repeatedly, a workflow becomes predictable, a system needs consistency.
+
+Quarterly review — remove prompts that produce generic output, require heavy rewriting, or no longer match business priorities. Improve prompts by adding better examples, better source material, more specific instructions.
+
+Track: hours saved per week, content created from AI workflows, reduction in repetitive tasks, lead magnets/assets produced, quality of final output after editing.
+
+Final rule: AI creates the first 80%. Your expertise creates the final 20% — relationships, conversations, judgment, negotiation, client care, local expertise.`},
+
+/* ============ 16 — TEMPLATE LIBRARY ============ */
+{category:'template', section:'Template Library Purpose', title:'One Index, Not a Duplicate Copy', body:
+`Purpose: maintain one centralized index of every reusable business asset, template, framework, document, tracker, prompt, and design resource used throughout the BOS. This is not where every template is recreated — it's the map that tells you what exists, where it lives, and when to use it.
+
+Core rule: templates live where they are used. The Template Library only catalogs them — don't duplicate (e.g. the Content Brief Template belongs to system 03, not recreated here).
+
+Use this library when: creating a new asset, looking for an existing framework, updating outdated materials, giving AI context, creating new systems, training future assistants/team members.`},
+
+{category:'template', section:'Lead Profile Tracking', title:'Fields to Capture for Every Lead', body:
+`Capture when available: Name / Category (Lead, Future Client, Active Client, Past Client, Sphere, Partner, Agent Referral) / How we met / Timeline (Now 0–3mo, Soon 3–6mo, Future 6–12mo, Long Term 12+mo) / Source / Last conversation / Important details / Potential next action / Next follow-up date.
+
+NOW (0–3mo) needs: consultation, immediate planning, active follow-up. SOON (3–6mo) needs: education, preparation, financial planning. FUTURE (6–12mo) needs: nurture, market updates, resource sharing. LONG TERM (12mo+) needs: relationship maintenance, occasional value touches.`},
+
+{category:'template', section:'Contact Categories Reference', title:'Lead / Future Client / Active Client / Past Client / Sphere / Partner / Agent Referral', body:
+`LEAD — shown interest, not yet an active client relationship (website inquiries, lead magnet downloads, social DMs, open house contacts). Track: source, timeline, questions, concerns, follow-up plan.
+
+FUTURE CLIENT — may become a client but needs preparation first (renting while saving, relocating in 6–18mo). Goal: stay helpful until timing aligns.
+
+ACTIVE CLIENT — currently working with you (buyer: consultation done, searching; seller: preparing/listing active). Track: goals, criteria, communication preferences, current stage, next milestone.
+
+PAST CLIENT — completed a transaction. Purpose: maintain long-term relationship, create future referrals. Track: closing date, home info, important dates, personal details, service opportunities.
+
+SPHERE — people who already know/like/trust you. Purpose: stay remembered when real estate conversations happen.
+
+PARTNER — professional relationships that may create referrals (recruiters, HR, service providers, community orgs). Track: organization, role, audience, relationship status, last interaction.
+
+AGENT REFERRAL — other agents who may send/receive referrals. Track: market served, referral history, relationship notes.`},
+
+{category:'template', section:'Neighborhood Profile Framework', title:'Standard Fields for Every Community Profile', body:
+`Neighborhood: / City: / Price Range: / Home Styles: / Build Era: / HOA: / Flood Considerations: / Schools Verified: / Commute: / Best Fit: / Not Ideal For: / Common Buyer Concerns: / Honest Summary: / CTA:
+
+Content structure: Overview → Lifestyle → Housing → Pricing → Schools → Commute → Pros → Considerations → Best fit → Not ideal for → CTA. Avoid making it sound like a brochure — every section should answer a question a real buyer is actually asking (what should buyers know before touring, what are the trade-offs, what questions should they ask).`},
+
+{category:'template', section:'Business Improvement Log', title:'Problem / Evidence / Root Cause / Solution / Result', body:
+`Use this whenever something isn't working:
+
+Problem: What is happening?
+Evidence: What data shows this?
+Root Cause: Why is this happening? (Activity problem / Conversion problem / System problem / Priority problem)
+Solution: What change will be made?
+Result: Did the change improve performance?
+
+Diagnosis rules: if activity is low, don't create a new strategy — review calendar, time blocking, accountability, execution habits. If activity is high but results are low, review messaging, offer, follow-up, consultation process, lead quality. If results are improving, document what worked and why, so it can be repeated.`},
+
+{category:'template', section:'Weekly Business Review', title:'Every Friday, 30 Minutes', body:
+`Review Activity — what actions happened? (conversations completed, follow-ups completed, content published, partner activity)
+
+Review Results — what moved forward? (leads created, consultations booked, relationships strengthened)
+
+Review Problems — what created friction? (avoidance, scheduling issues, skill gaps, unclear processes)
+
+Set Priority — what is the single most important focus next week?`},
+
+{category:'template', section:'Monthly Business Review', title:'First Week of the Month, 60–90 Minutes', body:
+`PIPELINE — lead growth, consultations, active opportunities, referral opportunities.
+
+MARKETING — content performance, website activity, lead magnets, audience growth.
+
+RELATIONSHIPS — sphere activity, partner relationships, community involvement.
+
+CLIENT EXPERIENCE — client feedback, reviews, process improvements.
+
+SYSTEMS — what worked? what was ignored? why? (too complicated / not scheduled / low confidence / low priority / needs automation)`},
+
+{category:'template', section:'Email Nurture Sequences', title:'First-Time Buyer (5) & Relocation (5) Topic Outlines', body:
+`FIRST-TIME BUYER SEQUENCE:
+1) Deliver resource — "The number most buyers forget when planning."
+2) Cost education — "What a home actually costs beyond the mortgage."
+3) Home condition education — "Why Florida homes require a different buying approach."
+4) Community education — "Cooper City vs Pembroke Pines vs Plantation: what actually changes?"
+5) Invitation — "Let's create your personalized home plan."
+
+RELOCATION SEQUENCE:
+1) Deliver guide — "The biggest mistake people make when moving to Florida."
+2) Insurance education — "What buyers should understand before shopping."
+3) Community education — "Why Southwest Broward cities feel different."
+4) Neighborhood education — "How to choose an area when you cannot visit yet."
+5) Invitation — "Want help planning your move?"`}
+
+];
+
+async function seedReferenceLibraryIfEmpty(){
+  const user = getCurrentUser();
+  const { count, error } = await supabaseClient
+    .from('reference_library').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+  if(error){ console.error(error); return; }
+  if(count && count > 0) return; // already seeded (or user has their own rows)
+  const rows = SEED_LIBRARY.map(item => ({ ...item, user_id: user.id, is_custom: false }));
+  const { error: insErr } = await supabaseClient.from('reference_library').insert(rows);
+  if(insErr) console.error(insErr);
+}
+
+async function loadRefLibrary(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('reference_library').select('*').eq('user_id', user.id)
+    .order('category', { ascending: true }).order('created_at', { ascending: true });
+  if(error){ console.error(error); return []; }
+  return data;
+}
+async function addRefItem(item){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('reference_library').insert({ ...item, user_id: user.id, is_custom: true });
+  if(error) console.error(error);
+}
+async function deleteRefItem(id){
+  const { error } = await supabaseClient.from('reference_library').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+let refLibraryCache = [];
+let refActiveCategory = 'all';
+
+function filterRefLibrary(){
+  const term = (document.getElementById('ref-search')?.value || '').trim().toLowerCase();
+  return refLibraryCache.filter(item => {
+    if(refActiveCategory !== 'all' && item.category !== refActiveCategory) return false;
+    if(!term) return true;
+    const haystack = (item.title + ' ' + (item.section||'') + ' ' + item.body + ' ' + (item.tags||'')).toLowerCase();
+    return haystack.includes(term);
+  });
+}
+
+function renderRefLibrary(){
+  const list = document.getElementById('ref-list');
+  const countEl = document.getElementById('ref-results-count');
+  if(!list) return;
+  const results = filterRefLibrary();
+  countEl.textContent = results.length + ' entr' + (results.length === 1 ? 'y' : 'ies');
+  list.innerHTML = results.length === 0 ? '<div class="empty-note">No matches — try a different search or filter.</div>' : '';
+  results.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'ref-item';
+    row.innerHTML =
+      '<div class="ref-item-head">' +
+        '<div><b>' + escapeHtml(item.title) + '</b><div class="ref-item-section">' + escapeHtml(REF_CATEGORY_LABEL[item.category] || item.category) + (item.section ? ' · ' + escapeHtml(item.section) : '') + '</div></div>' +
+        '<span class="ref-badge' + (item.is_custom ? ' custom' : '') + '">' + (item.is_custom ? 'Yours' : 'BOS') + '</span>' +
+      '</div>' +
+      '<div class="ref-body">' + escapeHtml(item.body) + '</div>' +
+      '<div class="ref-item-actions" style="display:none;">' +
+        '<button class="ref-copy-btn">Copy text</button>' +
+        (item.is_custom ? '<button class="ref-delete-btn">Delete</button>' : '') +
+      '</div>';
+    const head = row.querySelector('.ref-item-head');
+    const actions = row.querySelector('.ref-item-actions');
+    head.addEventListener('click', () => {
+      row.classList.toggle('open');
+      actions.style.display = row.classList.contains('open') ? 'flex' : 'none';
+    });
+    row.querySelector('.ref-copy-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigator.clipboard?.writeText(item.body);
+      const btn = e.target;
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    });
+    const delBtn = row.querySelector('.ref-delete-btn');
+    if(delBtn){
+      delBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await deleteRefItem(item.id);
+        refLibraryCache = refLibraryCache.filter(i => i.id !== item.id);
+        renderRefLibrary();
+      });
+    }
+    list.appendChild(row);
+  });
+}
+
+async function initReferenceLibraryModule(){
+  await seedReferenceLibraryIfEmpty();
+  refLibraryCache = await loadRefLibrary();
+  document.getElementById('ref-count-hint').textContent = refLibraryCache.length + ' entries';
+  renderRefLibrary();
+
+  document.getElementById('ref-search').addEventListener('input', renderRefLibrary);
+
+  document.getElementById('ref-filters').addEventListener('click', (e) => {
+    const btn = e.target.closest('.ref-filter-btn');
+    if(!btn) return;
+    document.querySelectorAll('.ref-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    refActiveCategory = btn.dataset.cat;
+    renderRefLibrary();
+  });
+
+  document.getElementById('ref-add-btn').addEventListener('click', async () => {
+    const category = document.getElementById('ref-add-category').value;
+    const section = document.getElementById('ref-add-section').value.trim();
+    const title = document.getElementById('ref-add-title').value.trim();
+    const tags = document.getElementById('ref-add-tags').value.trim();
+    const body = document.getElementById('ref-add-body').value.trim();
+    if(!title || !body) return;
+    await addRefItem({ category, section, title, body, tags });
+    ['ref-add-section','ref-add-title','ref-add-tags','ref-add-body'].forEach(id => document.getElementById(id).value = '');
+    refLibraryCache = await loadRefLibrary();
+    document.getElementById('ref-count-hint').textContent = refLibraryCache.length + ' entries';
+    renderRefLibrary();
+  });
+}
+
+
 /* ---- js/business.js ---- */
 /* ---------------------------------------------------------------
    Business KPI dashboard — computed from leads, pipeline_deals,
@@ -1453,6 +2093,7 @@ async function initBusinessModule(){
   await initLeadsModule();
   await initPipelineModule();
   await initContentModule();
+  await initReferenceLibraryModule();
   await renderBusinessKpis();
 }
 
@@ -1745,36 +2386,51 @@ function addInboxItem(){
   renderInbox();
 }
 
-/* ---------------- Appointments ---------------- */
-const APPT_KEY = 'appointments';
-function loadAppts(){
-  const raw = storageGet(APPT_KEY);
-  try{ return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
+/* ---------------- Appointments ----------------
+   Migrated from localStorage to the Supabase "appointments" table
+   (see schema.sql). Same UI/behavior as before — data now persists
+   across devices and is backed up. */
+async function loadAppts(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('appointments').select('*').eq('user_id', user.id)
+    .order('appt_date', { ascending: true })
+    .order('appt_time', { ascending: true, nullsFirst: true });
+  if(error){ console.error(error); return []; }
+  return data;
 }
-function saveAppts(items){ storageSet(APPT_KEY, JSON.stringify(items)); }
-function renderApptsFull(){
-  const items = loadAppts();
-  items.sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+async function addApptRow(appt){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('appointments').insert({ ...appt, user_id: user.id });
+  if(error) console.error(error);
+}
+async function deleteApptRow(id){
+  const { error } = await supabaseClient.from('appointments').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderApptsFull(){
+  const items = await loadAppts();
   const list = document.getElementById('appts-list');
   const empty = document.getElementById('appts-empty');
+  if(!list) return;
   list.innerHTML = '';
   empty.style.display = items.length === 0 ? 'block' : 'none';
   items.forEach((a) => {
     const row = document.createElement('div');
     row.className = 'appt-item';
-    row.innerHTML = '<div class="info"><b>' + escapeHtml(a.title) + '</b><span>' + a.date + (a.time ? ' · ' + a.time : '') + (a.notes ? ' · ' + escapeHtml(a.notes) : '') + '</span></div><button aria-label="Remove">×</button>';
-    row.querySelector('button').addEventListener('click', () => {
-      const cur = loadAppts();
-      saveAppts(cur.filter(x => x.id !== a.id));
+    row.innerHTML = '<div class="info"><b>' + escapeHtml(a.title) + '</b><span>' + a.appt_date + (a.appt_time ? ' · ' + a.appt_time : '') + (a.notes ? ' · ' + escapeHtml(a.notes) : '') + '</span></div><button aria-label="Remove">×</button>';
+    row.querySelector('button').addEventListener('click', async () => {
+      await deleteApptRow(a.id);
       renderApptsFull();
       renderApptsToday();
     });
     list.appendChild(row);
   });
 }
-function renderApptsToday(){
-  const items = loadAppts();
-  const today = items.filter(a => a.date === todayStr()).sort((a,b)=>a.time.localeCompare(b.time));
+async function renderApptsToday(){
+  const items = await loadAppts();
+  const today = items.filter(a => a.appt_date === todayStr());
   ['home-appts-today','dash-appts-today'].forEach(id => {
     const el = document.getElementById(id);
     if(!el) return;
@@ -1782,18 +2438,16 @@ function renderApptsToday(){
       el.innerHTML = '<div class="empty-note">Nothing scheduled today.</div>';
       return;
     }
-    el.innerHTML = today.map(a => '<div class="appt-item"><div class="info"><b>' + escapeHtml(a.title) + '</b><span>' + (a.time || 'All day') + (a.notes ? ' · ' + escapeHtml(a.notes) : '') + '</span></div></div>').join('');
+    el.innerHTML = today.map(a => '<div class="appt-item"><div class="info"><b>' + escapeHtml(a.title) + '</b><span>' + (a.appt_time || 'All day') + (a.notes ? ' · ' + escapeHtml(a.notes) : '') + '</span></div></div>').join('');
   });
 }
-function addAppt(){
+async function addAppt(){
   const title = document.getElementById('appt-title').value.trim();
-  const date = document.getElementById('appt-date').value;
-  const time = document.getElementById('appt-time').value;
+  const appt_date = document.getElementById('appt-date').value;
+  const appt_time = document.getElementById('appt-time').value || null;
   const notes = document.getElementById('appt-notes').value.trim();
-  if(!title || !date) return;
-  const items = loadAppts();
-  items.push({id: Date.now().toString(), title, date, time, notes});
-  saveAppts(items);
+  if(!title || !appt_date) return;
+  await addApptRow({ title, appt_date, appt_time, notes });
   document.getElementById('appt-title').value = '';
   document.getElementById('appt-date').value = '';
   document.getElementById('appt-time').value = '';
@@ -1802,29 +2456,49 @@ function addAppt(){
   renderApptsToday();
 }
 
-/* ---------------- Bills ---------------- */
-const BILLS_KEY = 'bills';
-const BILLS_MARKER_KEY = 'bills-marker';
-function loadBills(){
-  const marker = new Date().toISOString().slice(0,7);
-  const storedMarker = storageGet(BILLS_MARKER_KEY);
-  const raw = storageGet(BILLS_KEY);
-  let bills = [];
-  try{ bills = raw ? JSON.parse(raw) : []; }catch(e){ bills = []; }
-  if(storedMarker !== marker){
-    bills = bills.map(b => ({...b, paid:false}));
-    storageSet(BILLS_KEY, JSON.stringify(bills));
-    storageSet(BILLS_MARKER_KEY, marker);
+/* ---------------- Bills ----------------
+   Migrated from localStorage to the Supabase "bills" table (see
+   schema.sql). "paid_month" replaces the old global reset marker —
+   each bill remembers the month it was last marked paid, and gets
+   lazily flipped back to unpaid once that month has passed. */
+async function loadBills(){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('bills').select('*').eq('user_id', user.id).order('due_day', { ascending: true });
+  if(error){ console.error(error); return []; }
+
+  const currentMonth = new Date().toISOString().slice(0,7);
+  const stale = data.filter(b => b.paid && b.paid_month !== currentMonth);
+  if(stale.length){
+    await Promise.all(stale.map(b =>
+      supabaseClient.from('bills').update({ paid: false }).eq('id', b.id)
+    ));
+    stale.forEach(b => { b.paid = false; });
   }
-  return bills;
+  return data;
 }
-function saveBills(bills){ storageSet(BILLS_KEY, JSON.stringify(bills)); }
-function renderBills(){
-  const bills = loadBills();
-  bills.sort((a,b) => a.dueDay - b.dueDay);
+async function addBillRow(bill){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('bills').insert({ ...bill, user_id: user.id });
+  if(error) console.error(error);
+}
+async function toggleBillPaidRow(id, paid){
+  const currentMonth = new Date().toISOString().slice(0,7);
+  const { error } = await supabaseClient
+    .from('bills').update({ paid, paid_month: paid ? currentMonth : null }).eq('id', id);
+  if(error) console.error(error);
+}
+async function deleteBillRow(id){
+  const { error } = await supabaseClient.from('bills').delete().eq('id', id);
+  if(error) console.error(error);
+}
+
+async function renderBills(){
+  const bills = await loadBills();
   const list = document.getElementById('bills-list');
   const empty = document.getElementById('bills-empty');
   const totalEl = document.getElementById('bills-total');
+  if(!list) return;
   list.innerHTML = '';
   empty.style.display = bills.length === 0 ? 'block' : 'none';
   let total = 0;
@@ -1834,31 +2508,26 @@ function renderBills(){
     row.className = 'bill-item';
     row.innerHTML =
       '<input type="checkbox" ' + (b.paid ? 'checked' : '') + '>' +
-      '<div class="info"><b>' + escapeHtml(b.name) + '</b><span>$' + b.amount + ' · due day ' + b.dueDay + '</span></div>' +
+      '<div class="info"><b>' + escapeHtml(b.name) + '</b><span>$' + b.amount + ' · due day ' + b.due_day + '</span></div>' +
       '<button aria-label="Remove">×</button>';
-    row.querySelector('input').addEventListener('change', e => {
-      const cur = loadBills();
-      const idx = cur.findIndex(x => x.id === b.id);
-      if(idx > -1){ cur[idx].paid = e.target.checked; saveBills(cur); }
+    row.querySelector('input').addEventListener('change', async e => {
+      await toggleBillPaidRow(b.id, e.target.checked);
       renderBills();
     });
-    row.querySelector('button').addEventListener('click', () => {
-      const cur = loadBills();
-      saveBills(cur.filter(x => x.id !== b.id));
+    row.querySelector('button').addEventListener('click', async () => {
+      await deleteBillRow(b.id);
       renderBills();
     });
     list.appendChild(row);
   });
   totalEl.textContent = '$' + total.toFixed(0) + '/mo';
 }
-function addBill(){
+async function addBill(){
   const name = document.getElementById('bill-name').value.trim();
-  const amount = document.getElementById('bill-amount').value;
-  const dueDay = document.getElementById('bill-day').value;
-  if(!name || !amount || !dueDay) return;
-  const bills = loadBills();
-  bills.push({id: Date.now().toString(), name, amount, dueDay: Number(dueDay), paid:false});
-  saveBills(bills);
+  const amount = Number(document.getElementById('bill-amount').value) || 0;
+  const due_day = Number(document.getElementById('bill-day').value) || null;
+  if(!name || !amount || !due_day) return;
+  await addBillRow({ name, amount, due_day, paid: false });
   document.getElementById('bill-name').value = '';
   document.getElementById('bill-amount').value = '';
   document.getElementById('bill-day').value = '';
@@ -1897,36 +2566,67 @@ const DAYS = {
     {id:"finisher", name:"Conditioning Finisher (optional)", target:"8–10 min intervals", sets:1},
   ]}
 };
+/* Exercise definitions (DAYS, above) stay hardcoded client-side — they're
+   app configuration, not user data. What WAS user data (the logged sets/reps
+   history) is migrated below from localStorage to the Supabase "workouts"
+   table (see schema.sql): one row per logged session, exercises stored as
+   jsonb. "Last session" for prefill is simply the most recent row for that
+   day_key. */
+const WORKOUT_DAY_FOCUS = { A: 'Lower/Quad', B: 'Posterior Chain', C: 'Upper Body' };
 let currentWkDay = "A";
-let wkDayLogs = {};
-function loadWkDayLog(dayKey){
-  if(wkDayLogs[dayKey]) return wkDayLogs[dayKey];
-  const raw = storageGet('day-log-' + dayKey);
-  try{ wkDayLogs[dayKey] = raw ? JSON.parse(raw) : {}; }catch(e){ wkDayLogs[dayKey] = {}; }
-  return wkDayLogs[dayKey];
+
+async function loadLastWorkoutSession(dayKey){
+  const user = getCurrentUser();
+  const { data, error } = await supabaseClient
+    .from('workouts')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('day_key', dayKey)
+    .order('workout_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if(error){ console.error(error); return null; }
+  return data;
 }
+async function addWorkoutSessionRow(dayKey, exercises){
+  const user = getCurrentUser();
+  const { error } = await supabaseClient.from('workouts').insert({
+    user_id: user.id,
+    workout_date: todayStr(),
+    day_key: dayKey,
+    focus: WORKOUT_DAY_FOCUS[dayKey] || null,
+    exercises,
+    completed: true
+  });
+  if(error) console.error(error);
+}
+
 function fmtDate(d){ return new Date(d).toLocaleDateString(undefined,{month:'short', day:'numeric'}); }
-function renderWkDay(dayKey){
+
+async function renderWkDay(dayKey){
   currentWkDay = dayKey;
   const day = DAYS[dayKey];
-  const log = loadWkDayLog(dayKey);
   const list = document.getElementById('wk-exercise-list');
   if(!list) return;
+
+  const lastSession = await loadLastWorkoutSession(dayKey);
+  const lastExercises = (lastSession && lastSession.exercises) ? lastSession.exercises : [];
+
   list.innerHTML = '';
   day.exercises.forEach(ex => {
-    const history = log[ex.id] || [];
-    const lastEntry = history.length ? history[history.length-1] : null;
+    const lastEntry = lastExercises.find(e => e.id === ex.id) || null;
     const div = document.createElement('div');
     div.className = 'exercise';
     div.dataset.exId = ex.id;
     let lastText = 'No sessions logged yet';
-    if(lastEntry){
+    if(lastEntry && lastEntry.sets && lastEntry.sets.length){
       const setsStr = lastEntry.sets.map(s => (s.weight||'-') + '×' + (s.reps||'-')).join('  ');
-      lastText = 'Last (' + fmtDate(lastEntry.date) + '): ' + setsStr;
+      lastText = 'Last (' + fmtDate(lastSession.workout_date) + '): ' + setsStr;
     }
     let setsHtml = '';
     for(let i=0;i<ex.sets;i++){
-      const prevSet = lastEntry && lastEntry.sets[i] ? lastEntry.sets[i] : {weight:'',reps:''};
+      const prevSet = lastEntry && lastEntry.sets && lastEntry.sets[i] ? lastEntry.sets[i] : {weight:'',reps:''};
       setsHtml += '<div class="set-input"><span>Set ' + (i+1) + ' lb</span>' +
         '<input type="number" inputmode="decimal" class="w-input" data-set="' + i + '" placeholder="' + (prevSet.weight || '') + '">' +
         '<span>Reps</span>' +
@@ -1937,9 +2637,8 @@ function renderWkDay(dayKey){
     list.appendChild(div);
   });
 }
-function saveWkSession(){
-  const log = loadWkDayLog(currentWkDay);
-  const today = new Date().toISOString();
+async function saveWkSession(){
+  const exercises = [];
   document.querySelectorAll('#wk-exercise-list .exercise').forEach(div => {
     const exId = div.dataset.exId;
     const sets = [];
@@ -1952,13 +2651,12 @@ function saveWkSession(){
       if(weight || reps) sets.push({weight, reps});
     });
     if(sets.length){
-      if(!log[exId]) log[exId] = [];
-      log[exId].push({date: today, sets});
-      if(log[exId].length > 8) log[exId] = log[exId].slice(-8);
+      exercises.push({ id: exId, sets });
     }
   });
-  wkDayLogs[currentWkDay] = log;
-  storageSet('day-log-' + currentWkDay, JSON.stringify(log));
+  if(exercises.length){
+    await addWorkoutSessionRow(currentWkDay, exercises);
+  }
   const msg = document.getElementById('wk-save-msg');
   if(msg){ msg.classList.add('show'); setTimeout(()=>msg.classList.remove('show'), 1800); }
   renderWkDay(currentWkDay);
