@@ -36,11 +36,21 @@ export default function TodayPage() {
   }, []);
 
   async function handleToggleTask(task, done) {
+    // Mark it done first so the checkmark/strikethrough shows briefly —
+    // then it actually disappears from the schedule, not just fades in place.
     setSchedule(prev => prev.map(b => ({
       ...b,
       tasks: b.tasks.map(t => (t.id === task.id ? { ...t, completed: done } : t)),
     })));
     await toggleTaskDone(task.id, done);
+    if (done) {
+      setTimeout(() => {
+        setSchedule(prev => prev.map(b => ({
+          ...b,
+          tasks: b.tasks.filter(t => t.id !== task.id),
+        })));
+      }, 650);
+    }
   }
 
   async function handleToggleMission(mission, done) {
@@ -90,38 +100,40 @@ export default function TodayPage() {
         <AskAIPanel onApplied={refreshSchedule} />
       </div>
 
-      <div className="row-between" style={{ marginTop: 'var(--space-5)', marginBottom: 'var(--space-3)' }}>
-        <div className="section-label">Today's schedule</div>
-        <div className="row" style={{ gap: 'var(--space-2)' }}>
-          <Link to="/today/focus"><Button variant="ghost" size="sm">Focus Mode</Button></Link>
-          <Link to="/today/research"><Button variant="ghost" size="sm">Research Mode</Button></Link>
-        </div>
-      </div>
-
-      <ScheduleView blocks={schedule} onToggleTask={handleToggleTask} />
-
-      <div className="row-between" style={{ marginTop: 'var(--space-6)', marginBottom: 'var(--space-3)' }}>
-        <div className="section-label">Other things today</div>
-      </div>
-
-      <MissionList missions={missions} onToggle={handleToggleMission} onDismiss={handleDismiss} />
-
-      <div className="today-add-custom">
-        {addingCustom ? (
-          <div className="row">
-            <input
-              autoFocus
-              value={customTitle}
-              onChange={e => setCustomTitle(e.target.value)}
-              placeholder="Add something to today..."
-              onKeyDown={e => e.key === 'Enter' && handleAddCustom('personal')}
-            />
-            <Button size="sm" variant="sage" onClick={() => handleAddCustom('personal')}>Personal</Button>
-            <Button size="sm" variant="accent" onClick={() => handleAddCustom('business')}>Business</Button>
+      <div className="today-columns">
+        <div className="today-schedule-col">
+          <div className="row-between" style={{ marginTop: 'var(--space-5)', marginBottom: 'var(--space-3)' }}>
+            <div className="section-label">Today's schedule</div>
+            <div className="row" style={{ gap: 'var(--space-2)' }}>
+              <Link to="/today/focus"><Button variant="ghost" size="sm">Focus Mode</Button></Link>
+              <Link to="/today/research"><Button variant="ghost" size="sm">Research Mode</Button></Link>
+            </div>
           </div>
-        ) : (
-          <Button variant="text" onClick={() => setAddingCustom(true)}>+ Add something to today</Button>
-        )}
+          <ScheduleView blocks={schedule} onToggleTask={handleToggleTask} />
+        </div>
+
+        <div className="today-missions-col">
+          <div className="section-label" style={{ marginTop: 'var(--space-5)', marginBottom: 'var(--space-3)' }}>Other things today</div>
+          <MissionList missions={missions} onToggle={handleToggleMission} onDismiss={handleDismiss} />
+
+          <div className="today-add-custom">
+            {addingCustom ? (
+              <div className="row">
+                <input
+                  autoFocus
+                  value={customTitle}
+                  onChange={e => setCustomTitle(e.target.value)}
+                  placeholder="Add something to today..."
+                  onKeyDown={e => e.key === 'Enter' && handleAddCustom('personal')}
+                />
+                <Button size="sm" variant="sage" onClick={() => handleAddCustom('personal')}>Personal</Button>
+                <Button size="sm" variant="accent" onClick={() => handleAddCustom('business')}>Business</Button>
+              </div>
+            ) : (
+              <Button variant="text" onClick={() => setAddingCustom(true)}>+ Add something to today</Button>
+            )}
+          </div>
+        </div>
       </div>
 
       {duePrompt && (
