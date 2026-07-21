@@ -11,9 +11,9 @@ exports.handler = async (event) => {
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) return { statusCode: 501, body: JSON.stringify({ error: 'GOOGLE_AI_API_KEY not configured' }) };
 
-  let contact;
+  let contact, customInstructions;
   try {
-    ({ contact } = JSON.parse(event.body));
+    ({ contact, customInstructions } = JSON.parse(event.body));
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) };
   }
@@ -23,7 +23,8 @@ exports.handler = async (event) => {
 educational, direct but approachable, protective, never pushy. Under 150 words. One idea, one CTA. Never use "just
 checking in," "touching base," "dream home," "don't miss out," "act now," or generic realtor language. Prefer text
 or email tone over phone-call language — never suggest calling. Respond with ONLY a JSON object:
-{ "message": "the drafted message", "channel": "text" or "email", "reasoning": "one short sentence on the approach" }`;
+{ "message": "the drafted message", "channel": "text" or "email", "reasoning": "one short sentence on the approach" }
+${customInstructions ? `\nAdditional instructions from the user, apply these too: ${customInstructions}` : ''}`;
 
   const userPrompt = `Contact: ${contact.name}
 Category: ${contact.category || 'unknown'}
