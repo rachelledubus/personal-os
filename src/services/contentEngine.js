@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient.js';
+import { getCustomAiInstructions } from './settings.js';
 
 // ============================================================
 // CONTENT ENGINE (System 03)
@@ -66,7 +67,6 @@ export async function markRepurposed(id, notes = null) {
  *  graceful-degrade pattern as every other AI feature in the app. */
 export async function requestRepurposeDrafts(piece) {
   try {
-    const { getCustomAiInstructions } = await import('./settings.js');
     const customInstructions = await getCustomAiInstructions();
     const res = await fetch('/.netlify/functions/repurpose-content', {
       method: 'POST',

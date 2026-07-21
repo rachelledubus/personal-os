@@ -33,7 +33,7 @@ export function getOverrunningBlock(blocks) {
   }) || null;
 }
 
-export default function ScheduleView({ blocks, onToggleTask, onToggleBlock, onToggleStep, onAddStep, onRemoveStep }) {
+export default function ScheduleView({ blocks, onToggleTask, onToggleBlock, onToggleStep, onAddStep, onRemoveStep, onMoveTask }) {
   if (blocks === null) return null;
   if (blocks.length === 0) {
     return <EmptyState icon="calendar" title="No schedule yet" subtitle="Your day will build itself here once your Life Rhythm is set up." />;
@@ -51,6 +51,7 @@ export default function ScheduleView({ blocks, onToggleTask, onToggleBlock, onTo
           onToggleStep={onToggleStep}
           onAddStep={onAddStep}
           onRemoveStep={onRemoveStep}
+          onMoveTask={onMoveTask}
         />
       ))}
     </div>

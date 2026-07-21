@@ -9,7 +9,7 @@ import AskAIPanel from '../../components/intelligence/AskAIPanel.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { getTodayMissions, toggleMission, dismissMission, addCustomMission } from '../../services/missions.js';
-import { getTodaySchedule, toggleTaskDone } from '../../services/dailyExecution.js';
+import { getTodaySchedule, toggleTaskDone, moveTaskToBlock } from '../../services/dailyExecution.js';
 import { toggleBlockCompletion, toggleBlockStep, addTransitionStep } from '../../services/lifeRhythm.js';
 import { getDuePrompt } from '../../services/prompts.js';
 import { getNeglectedPriorities } from '../../services/neglected.js';
@@ -81,6 +81,22 @@ export default function TodayPage() {
         setSchedule(prev => prev.filter(b => b.id !== block.id));
       }, 650);
     }
+  }
+
+  async function handleMoveTask(taskId, newBlockId) {
+    let movedTask = null;
+    setSchedule(prev => {
+      // pull the task out of wherever it currently lives
+      const next = prev.map(b => {
+        const found = b.tasks?.find(t => t.id === taskId);
+        if (found) movedTask = found;
+        return { ...b, tasks: (b.tasks || []).filter(t => t.id !== taskId) };
+      });
+      if (!movedTask) return prev;
+      // drop it into the target block
+      return next.map(b => (b.id === newBlockId ? { ...b, tasks: [...(b.tasks || []), movedTask] } : b));
+    });
+    await moveTaskToBlock(taskId, newBlockId);
   }
 
   async function handleToggleStep(block, stepIndex, done) {
@@ -204,6 +220,7 @@ export default function TodayPage() {
             onToggleBlock={handleToggleBlock}
             onToggleStep={handleToggleStep}
             onAddStep={handleAddStep}
+            onMoveTask={handleMoveTask}
           />
           {scheduleError && (
             <Card style={{ marginTop: 'var(--space-3)', borderLeft: '3px solid var(--danger)' }}>

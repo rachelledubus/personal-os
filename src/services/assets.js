@@ -12,6 +12,7 @@ import { addDevLogEntry } from './devMemory.js';
 
 export const BANNER_SLOTS = [
   { key: 'today_banner', label: 'Today banner', usedIn: 'Today — page header', scene: 'today' },
+  { key: 'inbox_banner', label: 'Inbox banner', usedIn: 'Inbox — page header', scene: 'inbox' },
   { key: 'business_banner', label: 'Business banner', usedIn: 'Business — page header', scene: 'business' },
   { key: 'grow_banner', label: 'Grow banner', usedIn: 'Grow — page header', scene: 'grow' },
   { key: 'plan_banner', label: 'Plan banner', usedIn: 'Plan — page header', scene: 'plan' },

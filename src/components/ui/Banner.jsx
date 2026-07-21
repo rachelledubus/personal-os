@@ -158,12 +158,38 @@ function ReadingNook() {
   );
 }
 
+function CatchBasket() {
+  return (
+    <svg viewBox="0 0 800 220" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="sky-inbox" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#D6E8E0" /><stop offset="100%" stopColor="#F3E4C9" />
+        </linearGradient>
+      </defs>
+      <rect width="800" height="220" fill="url(#sky-inbox)" />
+      <circle cx="120" cy="50" r="28" fill="#FDEBC7" opacity="0.8" />
+      <path d="M0 155 Q220 125 420 150 T800 145 V220 H0 Z" fill="#B7CBA6" opacity="0.5" />
+      {[[300, 30, '#F6C9C4'], [420, 60, '#EAD9E8'], [500, 20, '#D4A24C'], [340, 90, '#8FAE85'], [460, 100, '#F6C9C4']].map(([x, y, c], i) => (
+        <g key={i} transform={`translate(${x},${y}) rotate(${(i * 37) % 40 - 20})`}>
+          <rect x="-8" y="-6" width="16" height="12" rx="2" fill={c} opacity="0.85" />
+        </g>
+      ))}
+      <g transform="translate(420,150)">
+        <path d="M-70 0 L-56 50 L56 50 L70 0 Z" fill="#C0704F" />
+        <path d="M-70 0 L70 0 L60 -14 L-60 -14 Z" fill="#D4895F" />
+        <ellipse cx="0" cy="-14" rx="60" ry="8" fill="#E8A97A" />
+      </g>
+    </svg>
+  );
+}
+
 const SCENES = {
   today: SunriseCottage,
   business: PathAndSignpost,
   grow: GardenRows,
   plan: WindingHillPath,
   library: ReadingNook,
+  inbox: CatchBasket,
 };
 
 export default function Banner({ slotKey, scene = 'today', title }) {

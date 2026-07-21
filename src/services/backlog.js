@@ -16,15 +16,26 @@ async function getUserId() {
 export async function listBacklogIdeas(search = '') {
   const userId = await getUserId();
   const { data, error } = await supabase.from('product_backlog_ideas').select('*')
-    .eq('user_id', userId).order('created_at', { ascending: false });
+    .eq('user_id', userId).order('sort_order', { ascending: true });
   if (error) throw error;
   if (!search) return data;
   return data.filter(i => (i.idea + (i.category || '')).toLowerCase().includes(search.toLowerCase()));
 }
 
+/** Drag-to-reorder — takes the full ordered list of ideas within one
+ *  category after a drop and writes fresh sequential sort_order
+ *  values, so order is durable across reloads, not just a client-side
+ *  sort. */
+export async function reorderBacklogIdeas(orderedIds) {
+  await Promise.all(orderedIds.map((id, i) => supabase.from('product_backlog_ideas').update({ sort_order: i }).eq('id', id)));
+}
+
 export async function addBacklogIdea(idea, category = null) {
   const userId = await getUserId();
-  const { error } = await supabase.from('product_backlog_ideas').insert({ user_id: userId, idea, category });
+  const { data: existing } = await supabase.from('product_backlog_ideas').select('sort_order')
+    .eq('user_id', userId).order('sort_order', { ascending: false }).limit(1);
+  const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
+  const { error } = await supabase.from('product_backlog_ideas').insert({ user_id: userId, idea, category, sort_order: nextOrder });
   if (error) throw error;
 }
 

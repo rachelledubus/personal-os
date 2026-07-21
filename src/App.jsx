@@ -4,7 +4,8 @@ import { useAuth } from './context/AuthContext.jsx';
 import SideNav from './components/nav/SideNav.jsx';
 import GlobalCapture from './components/capture/GlobalCapture.jsx';
 import KawaiiBackdrop from './components/ui/KawaiiBackdrop.jsx';
-import { getFeatureFlag } from './services/settings.js';
+import RunningChibi from './components/ui/RunningChibi.jsx';
+import { getFeatureFlag, getRunningChibiVariant } from './services/settings.js';
 import AuthScreen from './pages/AuthScreen.jsx';
 
 import TodayPage from './pages/Today/TodayPage.jsx';
@@ -27,9 +28,13 @@ import ControlCenterPage from './pages/ControlCenter/ControlCenterPage.jsx';
 export default function App() {
   const { user, loading } = useAuth();
   const [showDecorations, setShowDecorations] = useState(true);
+  const [chibiVariant, setChibiVariant] = useState('bunny');
 
   useEffect(() => {
-    if (user) getFeatureFlag('show_decorations').then(setShowDecorations);
+    if (user) {
+      getFeatureFlag('show_decorations').then(setShowDecorations);
+      getRunningChibiVariant().then(setChibiVariant);
+    }
   }, [user]);
 
   if (loading) return <div className="app-loading">Loading…</div>;
@@ -38,6 +43,7 @@ export default function App() {
   return (
     <div className="app-shell">
       {showDecorations && <KawaiiBackdrop />}
+      {showDecorations && <RunningChibi variant={chibiVariant} />}
       <SideNav />
       <div className="app-content">
         <Routes>

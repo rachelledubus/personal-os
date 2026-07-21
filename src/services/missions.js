@@ -59,6 +59,35 @@ async function fetchWorkoutMission(userId) {
   };
 }
 
+async function fetchMealMissions(userId) {
+  const { data: items } = await supabase.from('meal_plan_items')
+    .select('id, meal_type, eaten, servings, foods(name)')
+    .eq('user_id', userId).eq('plan_date', todayStr());
+  if (!items || items.length === 0) return []; // nothing planned — nothing to show, no nagging to plan
+
+  const byMealType = {};
+  items.forEach(item => { (byMealType[item.meal_type] ||= []).push(item); });
+
+  const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snacks'];
+  const MEAL_LABEL = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks' };
+
+  return MEAL_ORDER.filter(t => byMealType[t]).map(mealType => {
+    const mealItems = byMealType[mealType];
+    const foodNames = mealItems.map(i => i.foods?.name).filter(Boolean).join(', ');
+    return {
+      id: `meal-${mealType}`,
+      sourceTable: 'meal_plan_items',
+      sourceId: mealType, // toggling acts on all items for this meal_type/day at once
+      track: 'personal',
+      icon: 'coffee',
+      title: MEAL_LABEL[mealType],
+      context: foodNames || 'Planned',
+      done: mealItems.every(i => i.eaten),
+      linkTo: '/plan/meals',
+    };
+  });
+}
+
 async function fetchHabitMissions(userId) {
   const { data: habits } = await supabase
     .from('habits').select('*').eq('user_id', userId).eq('archived', false);
@@ -247,7 +276,7 @@ export async function getTodayMissions() {
   if (!userId) return [];
 
   const [
-    workout, habits, priorities, appts, content,
+    workout, habits, priorities, appts, content, meals,
     followUps, roadmap, nudges, maintenance, custom, dismissed,
   ] = await Promise.all([
     fetchWorkoutMission(userId),
@@ -255,6 +284,7 @@ export async function getTodayMissions() {
     fetchPriorityMissions(userId),
     fetchAppointmentMissions(userId),
     fetchContentMission(userId),
+    fetchMealMissions(userId),
     fetchFollowUpMissions(userId),
     fetchRoadmapMission(userId),
     fetchNudgeMissions(userId),
@@ -267,6 +297,7 @@ export async function getTodayMissions() {
     ...appts,
     ...(workout ? [workout] : []),
     ...priorities,
+    ...meals,
     ...followUps,
     ...maintenance,
     ...roadmap,
@@ -295,6 +326,12 @@ export async function toggleMission(mission, done) {
         await supabase.from('habit_logs').delete()
           .eq('habit_id', mission.sourceId).eq('log_date', todayStr());
       }
+      return;
+    }
+    case 'meal_plan_items': {
+      const userId = await getUserId();
+      await supabase.from('meal_plan_items').update({ eaten: done })
+        .eq('user_id', userId).eq('plan_date', todayStr()).eq('meal_type', mission.sourceId);
       return;
     }
     case 'daily_priorities':

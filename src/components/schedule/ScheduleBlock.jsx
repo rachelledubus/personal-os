@@ -33,10 +33,11 @@ function taskLinkTarget(task) {
   return null;
 }
 
-export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggleBlock, onToggleStep, onAddStep, onRemoveStep }) {
+export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggleBlock, onToggleStep, onAddStep, onMoveTask }) {
   const navigate = useNavigate();
   const [addingStep, setAddingStep] = useState(false);
   const [newStep, setNewStep] = useState('');
+  const [dragOver, setDragOver] = useState(false);
   const blockType = block.life_rhythm_blocks?.block_type || 'work';
   const Icon = TYPE_ICON[blockType] || Sparkles;
   const isWorkBlock = block.life_rhythm_blocks?.is_work_block || (block.track === 'business' && !block.auto_generated);
@@ -49,6 +50,24 @@ export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggle
     onAddStep(block, newStep.trim());
     setNewStep('');
     setAddingStep(false);
+  }
+
+  function handleDragStart(e, task) {
+    e.dataTransfer.setData('text/plain', task.id);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOver(true);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    const taskId = e.dataTransfer.getData('text/plain');
+    if (taskId) onMoveTask(taskId, block.id);
   }
 
   return (
@@ -99,14 +118,20 @@ export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggle
         )}
 
         {isWorkBlock && (
-          <div className="schedule-block-tasks">
+          <div
+            className={`schedule-block-tasks ${dragOver ? 'schedule-block-tasks-dragover' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+          >
             {(!block.tasks || block.tasks.length === 0) && (
-              <div className="schedule-block-empty">Nothing assigned — all caught up, or nothing fits this window.</div>
+              <div className="schedule-block-empty">{dragOver ? 'Drop here to move it into this block' : 'Nothing assigned — all caught up, or nothing fits this window.'}</div>
             )}
             {(block.tasks || []).map(task => {
               const linkTarget = taskLinkTarget(task);
               return (
-                <div key={task.id} className={`schedule-task ${task.completed ? 'schedule-task-done' : ''}`}>
+                <div key={task.id} className={`schedule-task ${task.completed ? 'schedule-task-done' : ''}`}
+                  draggable onDragStart={e => handleDragStart(e, task)}>
                   <Checkbox checked={!!task.completed} onChange={(v) => onToggleTask(task, v)} />
                   <div className="schedule-task-body" style={linkTarget ? { cursor: 'pointer' } : undefined} onClick={() => linkTarget && navigate(linkTarget)}>
                     <div className="schedule-task-title">{task.title}{linkTarget && <span className="schedule-task-jump"> →</span>}</div>

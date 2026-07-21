@@ -4,6 +4,7 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
+import Banner from '../../components/ui/Banner.jsx';
 import {
   listUnsorted, archiveCapture, requestSuggestion,
   resolveToTask, resolveToNote, resolveToContentIdea, resolveToContact, resolveToMaintenance, resolveToBuyerQuestion,
@@ -90,6 +91,7 @@ export default function InboxPage() {
 
   return (
     <div>
+      <Banner slotKey="inbox_banner" scene="inbox" />
       <div className="page-title">📥 Inbox</div>
       <p className="muted" style={{ marginBottom: 'var(--space-4)' }}>
         Everything you've captured, unsorted. Organize each into its real home — or archive it.

@@ -109,6 +109,17 @@ export async function setFeatureFlag(flagKey, enabled) {
   await addDevLogEntry('config', `${enabled ? 'Enabled' : 'Disabled'} "${FEATURE_FLAGS[flagKey]?.label || flagKey}"`);
 }
 
+// ---------- Running chibi variant ----------
+export async function getRunningChibiVariant() {
+  const stored = await getPreference('appearance', 'running_chibi_variant');
+  return stored?.variant || 'bunny';
+}
+
+export async function setRunningChibiVariant(variant) {
+  await setPreference('appearance', 'running_chibi_variant', { variant });
+  await addDevLogEntry('config', `Changed the running chibi to "${variant}"`);
+}
+
 // ---------- AI settings ----------
 export async function getCustomAiInstructions() {
   const stored = await getPreference('ai_settings', 'custom_instructions');

@@ -6,7 +6,7 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import MarkdownDoc from '../../components/ui/MarkdownDoc.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { listRecentDecisions } from '../../services/aiOperator.js';
-import { listBacklogIdeas, addBacklogIdea, updateBacklogIdea, deleteBacklogIdea, formatBacklogAsPrompt } from '../../services/backlog.js';
+import { listBacklogIdeas, addBacklogIdea, updateBacklogIdea, deleteBacklogIdea, formatBacklogAsPrompt, reorderBacklogIdeas } from '../../services/backlog.js';
 import { getCategoryList } from '../../services/settings.js';
 import Banner from '../../components/ui/Banner.jsx';
 
@@ -284,6 +284,33 @@ function BacklogTab() {
     setTimeout(() => setCopied(false), 1500);
   }
 
+  const [dragId, setDragId] = useState(null);
+
+  function handleDragStart(id) { setDragId(id); }
+
+  function handleDragOverItem(e, targetId, categoryItems) {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) return;
+    const fromIdx = categoryItems.findIndex(i => i.id === dragId);
+    const toIdx = categoryItems.findIndex(i => i.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    // live-reorder just this category's slice within the flat ideas array
+    const reordered = [...categoryItems];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    setIdeas(prev => {
+      const others = prev.filter(i => !categoryItems.some(c => c.id === i.id));
+      return [...others, ...reordered].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    });
+  }
+
+  async function handleDrop(categoryItems) {
+    if (!dragId) return;
+    setDragId(null);
+    await reorderBacklogIdeas(categoryItems.map(i => i.id));
+    refresh();
+  }
+
   const byCategory = {};
   ideas.forEach(i => { (byCategory[i.category || 'Uncategorized'] ||= []).push(i); });
 
@@ -317,7 +344,14 @@ function BacklogTab() {
             <div className="section-label">{cat}</div>
             <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
               {items.map(i => (
-                <div key={i.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
+                <div key={i.id}
+                  draggable={editingId !== i.id}
+                  onDragStart={() => handleDragStart(i.id)}
+                  onDragOver={e => handleDragOverItem(e, i.id, items)}
+                  onDrop={() => handleDrop(items)}
+                  onDragEnd={() => setDragId(null)}
+                  style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)', cursor: editingId === i.id ? 'default' : 'grab', opacity: dragId === i.id ? 0.4 : 1 }}
+                >
                   {editingId === i.id ? (
                     <div className="row">
                       <input value={editText} onChange={e => setEditText(e.target.value)} autoFocus
@@ -326,7 +360,9 @@ function BacklogTab() {
                     </div>
                   ) : (
                     <div className="row-between">
-                      <span style={{ fontSize: 13, cursor: 'pointer' }} onClick={() => startEdit(i)}>{i.idea}</span>
+                      <span style={{ fontSize: 13, cursor: 'pointer' }} onClick={() => startEdit(i)}>
+                        <span className="muted" style={{ marginRight: 6 }}>⠿</span>{i.idea}
+                      </span>
                       <button className="row-remove-btn" onClick={() => deleteBacklogIdea(i.id).then(refresh)}>×</button>
                     </div>
                   )}

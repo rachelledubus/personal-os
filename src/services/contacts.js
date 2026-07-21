@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient.js';
+import { getCustomAiInstructions } from './settings.js';
 
 // ============================================================
 // CRM — rebuilt to match System_07_CRM_Database.xlsx field-for-field.
@@ -134,7 +135,6 @@ export async function autoTagUntieredContacts() {
  *  every other AI feature: null if the function isn't configured. */
 export async function requestFollowUpDraft(contact) {
   try {
-    const { getCustomAiInstructions } = await import('./settings.js');
     const customInstructions = await getCustomAiInstructions();
     const res = await fetch('/.netlify/functions/draft-followup', {
       method: 'POST',
