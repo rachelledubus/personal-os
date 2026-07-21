@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import MissionList from '../../components/mission/MissionList.jsx';
 import ScheduleView from '../../components/schedule/ScheduleView.jsx';
 import EnergyCheckIn from '../../components/intelligence/EnergyCheckIn.jsx';
+import { getFeatureFlag } from '../../services/settings.js';
 import AskAIPanel from '../../components/intelligence/AskAIPanel.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -19,6 +20,7 @@ export default function TodayPage() {
   const [duePrompt, setDuePrompt] = useState(null);
   const [addingCustom, setAddingCustom] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
+  const [showEnergyCheckin, setShowEnergyCheckin] = useState(true);
 
   async function refreshSchedule() {
     const blocks = await getTodaySchedule();
@@ -34,6 +36,7 @@ export default function TodayPage() {
     refreshSchedule();
     refreshMissions();
     getDuePrompt().then(setDuePrompt);
+    getFeatureFlag('show_energy_checkin').then(setShowEnergyCheckin);
   }, []);
 
   async function handleToggleTask(task, done) {
@@ -106,7 +109,7 @@ export default function TodayPage() {
       </Card>
 
       <div className="row-between" style={{ marginTop: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-        <EnergyCheckIn onReplanned={refreshSchedule} />
+        {showEnergyCheckin && <EnergyCheckIn onReplanned={refreshSchedule} />}
         <AskAIPanel onApplied={refreshSchedule} />
       </div>
 
