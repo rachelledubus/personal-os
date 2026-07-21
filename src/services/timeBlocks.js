@@ -7,7 +7,7 @@ async function getUserId() {
 
 export async function listTimeBlocks(date) {
   const userId = await getUserId();
-  const { data, error } = await supabase.from('time_blocks').select('*, tasks(title, completed)')
+  const { data, error } = await supabase.from('time_blocks').select('*, tasks!time_blocks_task_id_fkey(title, completed)')
     .eq('user_id', userId).eq('block_date', date).order('start_time', { ascending: true, nullsFirst: false });
   if (error) throw error;
   return data;
