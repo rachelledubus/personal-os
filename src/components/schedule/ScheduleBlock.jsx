@@ -23,14 +23,14 @@ function formatRange(start, end) {
   return end ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
 }
 
-export default function ScheduleBlock({ block, isCurrent, onToggleTask }) {
+export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggleBlock }) {
   const blockType = block.life_rhythm_blocks?.block_type || 'work';
   const Icon = TYPE_ICON[blockType] || Sparkles;
   const isWorkBlock = block.life_rhythm_blocks?.is_work_block || (block.track === 'business' && !block.auto_generated);
   const timeLabel = formatRange(block.start_time, block.end_time);
 
   return (
-    <div className={`schedule-block track-${block.track} type-${blockType} ${isCurrent ? 'schedule-block-current' : ''}`}>
+    <div className={`schedule-block track-${block.track} type-${blockType} ${isCurrent ? 'schedule-block-current' : ''} ${block.completed ? 'schedule-block-done' : ''}`}>
       <div className="schedule-block-rail">
         <div className="schedule-block-icon"><Icon size={16} strokeWidth={2} /></div>
         <div className="schedule-block-line" />
@@ -38,7 +38,10 @@ export default function ScheduleBlock({ block, isCurrent, onToggleTask }) {
 
       <div className="schedule-block-body">
         <div className="schedule-block-header">
-          <div className="schedule-block-title">{block.title}</div>
+          <div className="row" style={{ gap: 8 }}>
+            <Checkbox checked={!!block.completed} onChange={(v) => onToggleBlock(block, v)} />
+            <div className="schedule-block-title">{block.title}</div>
+          </div>
           {timeLabel && <div className="schedule-block-time">{timeLabel}</div>}
         </div>
         {block.life_rhythm_blocks?.notes && (
