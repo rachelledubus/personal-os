@@ -19,11 +19,11 @@ import { listDueSoon, completeMaintenanceItem } from './maintenance.js';
 const WEEKDAY_WORKOUT = [
   { label: 'Rest day', context: '' },
   { label: 'Cycle', context: 'Cardio day' },
-  { label: 'Lower Body — Quad Focus', context: 'Lifting day' },
+  { label: 'Upper Body', context: 'Lifting day', dayKey: 'A' },
   { label: 'Pilates', context: 'Mobility & core' },
-  { label: 'Posterior Chain', context: 'Lifting day' },
+  { label: 'Lower Body — Quad Focus', context: 'Lifting day', dayKey: 'B' },
   { label: 'Rest day', context: '' },
-  { label: 'Upper Body', context: 'Lifting day' },
+  { label: 'Posterior Chain', context: 'Lifting day', dayKey: 'C' },
 ];
 
 async function getUserId() {
@@ -45,6 +45,7 @@ async function fetchWorkoutMission(userId) {
     title: wk.label,
     context: wk.context,
     done: false,
+    linkTo: '/grow/workouts',
   };
 }
 
@@ -64,6 +65,7 @@ async function fetchHabitMissions(userId) {
     title: h.name,
     context: 'Daily habit',
     done: doneIds.has(h.id),
+    linkTo: '/grow/habits',
   }));
 }
 
@@ -116,6 +118,7 @@ async function fetchContentMission(userId) {
     title: i.name,
     context: 'Content task',
     done: doneIds.has(i.id),
+    linkTo: '/business/flows/content_creation',
   }));
 }
 
@@ -150,6 +153,7 @@ async function fetchRoadmapMission(userId) {
     title: r.title,
     context: `${r.phase} · this week's build`,
     done: r.status === 'Done',
+    linkTo: '/business/roadmap',
   }));
 }
 
@@ -192,6 +196,7 @@ async function fetchMaintenanceMissions(userId) {
     title: m.title,
     context: m.next_due_date === todayStr() ? 'Due today' : `Due ${m.next_due_date}`,
     done: false,
+    linkTo: '/grow/maintenance',
   }));
 }
 
