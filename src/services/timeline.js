@@ -54,3 +54,6 @@ export async function getThisWeekBuild() {
   if (error) throw error;
   return data;
 }
+export async function syncRoadmapStatuses() {
+  return [];
+}
