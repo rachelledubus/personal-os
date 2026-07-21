@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card.jsx';
+import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import MarkdownDoc from '../../components/ui/MarkdownDoc.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { listRecentDecisions } from '../../services/aiOperator.js';
+import { listBacklogIdeas, addBacklogIdea, updateBacklogIdea, deleteBacklogIdea, formatBacklogAsPrompt } from '../../services/backlog.js';
+import { getCategoryList } from '../../services/settings.js';
+import ChibiAccent from '../../components/ui/ChibiAccent.jsx';
 
-const TABS = ['reference', 'documents', 'finances', 'notes', 'ai-log'];
-const TAB_LABELS = { reference: 'Reference', documents: 'Documents', finances: 'Finances', notes: 'Notes', 'ai-log': 'AI Log' };
+const TABS = ['reference', 'documents', 'notes', 'backlog', 'ai-log'];
+const TAB_LABELS = { reference: 'Reference', documents: 'Documents', notes: 'Notes', backlog: 'Backlog', 'ai-log': 'AI Log' };
 
 export default function LibraryPage() {
   const { tab = 'reference' } = useParams();
@@ -26,8 +30,8 @@ export default function LibraryPage() {
 
       {tab === 'reference' && <ReferenceTab />}
       {tab === 'documents' && <DocumentsTab />}
-      {tab === 'finances' && <FinancesTab />}
       {tab === 'notes' && <NotesTab />}
+      {tab === 'backlog' && <BacklogTab />}
       {tab === 'ai-log' && <AILogTab />}
     </div>
   );
@@ -54,7 +58,7 @@ function ReferenceTab() {
     return (
       <Card>
         <EmptyState icon="leaf" title="Reference library isn't set up yet"
-          subtitle="This tab needs a reference_library table that doesn't exist in your database yet. Your scripts/prompts/CTAs might already live in Documents below instead — check there first." />
+          subtitle="Your scripts/prompts/CTAs live in Business → Library instead — check there first." />
       </Card>
     );
   }
@@ -63,7 +67,7 @@ function ReferenceTab() {
 
   return (
     <Card>
-      <input placeholder="Search scripts, prompts, CTAs..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', marginBottom: 12 }} />
+      <input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', marginBottom: 12 }} />
       {filtered.length === 0 ? <EmptyState icon="leaf" title="No matches" /> : (
         <div className="stack">
           {filtered.slice(0, 30).map(i => (
@@ -78,27 +82,24 @@ function ReferenceTab() {
   );
 }
 
-// Now pulls `body` and renders it as real markdown — headers, bold,
-// tables, and links actually render instead of showing raw ** and |
-// syntax. Clicking a doc-number mention (or a link to another doc)
-// expands and scrolls straight to that document.
+// Pulls `body` and renders it as real markdown, with inline rename —
+// a natural file-management action instead of needing to edit the
+// database directly to fix a title.
 function DocumentsTab() {
   const [docs, setDocs] = useState([]);
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
   const docRefs = useRef({});
 
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data } = await supabase.from('bos_documents').select('*').eq('user_id', user.id).order('category');
-      setDocs(data || []);
-    })();
-  }, []);
+  async function refresh() {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data } = await supabase.from('bos_documents').select('*').eq('user_id', user.id).order('category');
+    setDocs(data || []);
+  }
+  useEffect(() => { refresh(); }, []);
 
-  // Maps "07" -> that doc's id, "04A" -> that doc's id, etc. — what
-  // MarkdownDoc uses to know which bare mentions are real, linkable
-  // documents versus just a number in a sentence.
   const docNumberMap = {};
   docs.forEach(d => { if (d.doc_number) docNumberMap[d.doc_number] = d.id; });
 
@@ -109,12 +110,27 @@ function DocumentsTab() {
     setTimeout(() => docRefs.current[doc.id]?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   }
 
+  function startRename(doc, e) {
+    e.stopPropagation();
+    setRenamingId(doc.id);
+    setRenameValue(doc.title);
+  }
+
+  async function saveRename(docId) {
+    if (renameValue.trim()) {
+      await supabase.from('bos_documents').update({ title: renameValue.trim() }).eq('id', docId);
+    }
+    setRenamingId(null);
+    refresh();
+  }
+
   const filtered = docs.filter(d => !search || (d.title + (d.body || '')).toLowerCase().includes(search.toLowerCase()));
   const byCategory = {};
   filtered.forEach(d => { (byCategory[d.category || 'Uncategorized'] ||= []).push(d); });
 
   return (
     <Card>
+      <ChibiAccent variant="book" corner="top-right" size={34} />
       <div className="section-label">Business manual</div>
       <input placeholder="Search documents..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', margin: '8px 0 16px' }} />
       {filtered.length === 0 ? <EmptyState icon="coffee" title="Nothing here yet" /> : (
@@ -124,16 +140,28 @@ function DocumentsTab() {
             <div className="stack">
               {items.map(d => (
                 <div key={d.id} ref={el => (docRefs.current[d.id] = el)}>
-                  <details open={expandedId === d.id} onToggle={e => e.target.open && setExpandedId(d.id)}>
-                    <summary style={{ fontWeight: 700, cursor: 'pointer' }}>
-                      {d.doc_number ? `${d.doc_number} — ` : ''}{d.title}
-                    </summary>
-                    {d.body ? (
-                      <MarkdownDoc text={d.body} docNumberMap={docNumberMap} onJumpToDoc={jumpToDoc} />
-                    ) : (
-                      <p className="muted" style={{ fontSize: 13 }}>No content stored for this document.</p>
-                    )}
-                  </details>
+                  {renamingId === d.id ? (
+                    <div className="row" style={{ padding: '4px 0' }}>
+                      <input value={renameValue} onChange={e => setRenameValue(e.target.value)} autoFocus
+                        onKeyDown={e => e.key === 'Enter' && saveRename(d.id)} style={{ flex: 1 }} />
+                      <Button size="sm" onClick={() => saveRename(d.id)}>Save</Button>
+                      <Button size="sm" variant="text" onClick={() => setRenamingId(null)}>Cancel</Button>
+                    </div>
+                  ) : (
+                    <details open={expandedId === d.id} onToggle={e => e.target.open && setExpandedId(d.id)}>
+                      <summary style={{ fontWeight: 700, cursor: 'pointer' }}>
+                        <span className="row-between" style={{ display: 'inline-flex', width: 'calc(100% - 20px)' }}>
+                          <span>{d.doc_number ? `${d.doc_number} — ` : ''}{d.title}</span>
+                          <button className="row-remove-btn" style={{ fontSize: 12 }} onClick={e => startRename(d, e)} title="Rename">✎</button>
+                        </span>
+                      </summary>
+                      {d.body ? (
+                        <MarkdownDoc text={d.body} docNumberMap={docNumberMap} onJumpToDoc={jumpToDoc} />
+                      ) : (
+                        <p className="muted" style={{ fontSize: 13 }}>No content stored for this document.</p>
+                      )}
+                    </details>
+                  )}
                 </div>
               ))}
             </div>
@@ -144,41 +172,13 @@ function DocumentsTab() {
   );
 }
 
-function FinancesTab() {
-  const [bills, setBills] = useState([]);
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data } = await supabase.from('bills').select('*').eq('user_id', user.id);
-      setBills(data || []);
-    })();
-  }, []);
-  const total = bills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
-  return (
-    <Card>
-      <div className="row-between">
-        <div className="section-label">Bills</div>
-        <div className="muted">${total.toFixed(0)}/mo</div>
-      </div>
-      <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-        This is moving to Grow → Finance with more than just bills — see the next update.
-      </p>
-      {bills.length === 0 ? <EmptyState icon="leaf" title="No bills added yet" /> : (
-        <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
-          {bills.map(b => (
-            <div key={b.id} className="row-between" style={{ padding: '6px 0' }}>
-              <span>{b.name}</span><span className="muted">${b.amount}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </Card>
-  );
-}
-
+// Real notes now — click one to open it for viewing and editing,
+// instead of a static list next to an unrelated add box.
 function NotesTab() {
   const [notes, setNotes] = useState([]);
   const [content, setContent] = useState('');
+  const [openId, setOpenId] = useState(null);
+  const [editText, setEditText] = useState('');
 
   async function load() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -195,18 +195,149 @@ function NotesTab() {
     load();
   }
 
+  function openNote(note) {
+    setOpenId(note.id);
+    setEditText(note.content);
+  }
+
+  async function saveNote(id) {
+    await supabase.from('notes').update({ content: editText }).eq('id', id);
+    setOpenId(null);
+    load();
+  }
+
+  async function deleteNote(id) {
+    await supabase.from('notes').delete().eq('id', id);
+    setOpenId(null);
+    load();
+  }
+
   return (
     <Card>
       <div className="section-label">Quick note</div>
       <div className="row">
-        <textarea value={content} onChange={e => setContent(e.target.value)} style={{ flex: 1, minHeight: 60 }} />
+        <textarea value={content} onChange={e => setContent(e.target.value)} style={{ flex: 1, minHeight: 60 }} placeholder="Write a new note..." />
       </div>
       <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }} onClick={addNote}>Save</button>
 
       <div className="stack" style={{ marginTop: 'var(--space-5)' }}>
-        {notes.map(n => <div key={n.id} className="muted" style={{ fontSize: 13, borderBottom: '1px solid var(--sand)', padding: '6px 0' }}>{n.content}</div>)}
+        {notes.map(n => (
+          <div key={n.id} style={{ borderBottom: '1px solid var(--sand)', padding: '6px 0' }}>
+            {openId === n.id ? (
+              <div>
+                <textarea value={editText} onChange={e => setEditText(e.target.value)} style={{ width: '100%', minHeight: 70 }} autoFocus />
+                <div className="row" style={{ marginTop: 4, gap: 'var(--space-2)' }}>
+                  <Button size="sm" onClick={() => saveNote(n.id)}>Save</Button>
+                  <Button size="sm" variant="text" onClick={() => setOpenId(null)}>Cancel</Button>
+                  <Button size="sm" variant="text" onClick={() => deleteNote(n.id)}>Delete</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="muted" style={{ fontSize: 13, cursor: 'pointer' }} onClick={() => openNote(n)}>
+                {n.content}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </Card>
+  );
+}
+
+// Future Improvements Workspace — a real backlog for the software
+// itself, quick to add, editable, deletable, searchable, and
+// one-click-copyable as a single prompt for a future dev session.
+function BacklogTab() {
+  const [ideas, setIdeas] = useState([]);
+  const [search, setSearch] = useState('');
+  const [newIdea, setNewIdea] = useState({ idea: '', category: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [suggestedCategories, setSuggestedCategories] = useState([]);
+
+  async function refresh() { setIdeas(await listBacklogIdeas(search)); }
+  useEffect(() => { refresh(); getCategoryList('backlog_categories').then(setSuggestedCategories); }, [search]);
+
+  async function handleAdd() {
+    if (!newIdea.idea.trim()) return;
+    await addBacklogIdea(newIdea.idea.trim(), newIdea.category.trim() || null);
+    setNewIdea({ idea: '', category: '' });
+    refresh();
+  }
+
+  function startEdit(item) {
+    setEditingId(item.id);
+    setEditText(item.idea);
+  }
+
+  async function saveEdit(id) {
+    await updateBacklogIdea(id, { idea: editText });
+    setEditingId(null);
+    refresh();
+  }
+
+  async function handleCopyAll() {
+    const prompt = formatBacklogAsPrompt(ideas);
+    navigator.clipboard?.writeText(prompt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  const byCategory = {};
+  ideas.forEach(i => { (byCategory[i.category || 'Uncategorized'] ||= []).push(i); });
+
+  return (
+    <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <Card>
+        <ChibiAccent variant="cloud" corner="top-right" size={32} />
+        <div className="section-label">Add an idea</div>
+        <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <input placeholder="What should the app do better?" value={newIdea.idea}
+            onChange={e => setNewIdea({ ...newIdea, idea: e.target.value })}
+            onKeyDown={e => e.key === 'Enter' && handleAdd()} style={{ flex: 1, minWidth: 200 }} />
+          <input placeholder="Category (optional)" value={newIdea.category} list="backlog-category-suggestions"
+            onChange={e => setNewIdea({ ...newIdea, category: e.target.value })} style={{ width: 160 }} />
+          <datalist id="backlog-category-suggestions">
+            {suggestedCategories.map(c => <option key={c} value={c} />)}
+          </datalist>
+          <Button size="sm" onClick={handleAdd}>+ Add</Button>
+        </div>
+      </Card>
+
+      <div className="row-between">
+        <input placeholder="Search backlog..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, marginRight: 'var(--space-3)' }} />
+        {ideas.length > 0 && (
+          <Button size="sm" variant="ghost" onClick={handleCopyAll}>{copied ? 'Copied ✓' : '📋 Copy all as prompt'}</Button>
+        )}
+      </div>
+
+      {ideas.length === 0 ? <EmptyState icon="lightbulb" title="Backlog is empty" subtitle="Ideas you capture here accumulate until you're ready to plan the next sprint." /> : (
+        Object.entries(byCategory).map(([cat, items]) => (
+          <Card key={cat}>
+            <div className="section-label">{cat}</div>
+            <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+              {items.map(i => (
+                <div key={i.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
+                  {editingId === i.id ? (
+                    <div className="row">
+                      <input value={editText} onChange={e => setEditText(e.target.value)} autoFocus
+                        onKeyDown={e => e.key === 'Enter' && saveEdit(i.id)} style={{ flex: 1 }} />
+                      <Button size="sm" onClick={() => saveEdit(i.id)}>Save</Button>
+                    </div>
+                  ) : (
+                    <div className="row-between">
+                      <span style={{ fontSize: 13, cursor: 'pointer' }} onClick={() => startEdit(i)}>{i.idea}</span>
+                      <button className="row-remove-btn" onClick={() => deleteBacklogIdea(i.id).then(refresh)}>×</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        ))
+      )}
+    </div>
   );
 }
 
