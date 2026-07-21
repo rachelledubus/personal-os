@@ -178,7 +178,7 @@ export default function TodayPage() {
           <div className="section-label">Might be worth a look</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {neglected.map(item => (
-              <Link key={`${item.type}-${item.id}`} to={item.link} className="row-between" style={{ fontSize: 13, padding: '4px 0' }}>
+              <Link key={`${item.type}-${item.id}`} to={item.link} className="row-between neglected-link" style={{ fontSize: 13, padding: '4px 0' }}>
                 <span>{item.label}</span>
                 <span className="muted" style={{ fontSize: 11 }}>{item.detail}</span>
               </Link>

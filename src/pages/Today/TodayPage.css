@@ -32,3 +32,6 @@
   margin-top: var(--space-3);
   border-left: 3px solid var(--gold);
 }
+
+.neglected-link { transition: color var(--duration-fast, 0.15s) ease; }
+.neglected-link:hover { color: var(--accent); }

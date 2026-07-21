@@ -36,6 +36,16 @@ async function getUserId() {
 async function fetchWorkoutMission(userId) {
   const wk = WEEKDAY_WORKOUT[new Date().getDay()];
   if (!wk.context) return null; // rest day — no mission
+
+  // If today's Life Rhythm schedule already has a workout block, it's
+  // already visible in Today's Schedule — showing it again here would
+  // just be the same workout twice.
+  const { data: existingWorkoutBlock } = await supabase
+    .from('life_rhythm_blocks').select('id')
+    .eq('user_id', userId).eq('day_of_week', new Date().getDay()).eq('block_type', 'workout')
+    .maybeSingle();
+  if (existingWorkoutBlock) return null;
+
   return {
     id: 'workout-today',
     sourceTable: 'fixed_schedule',
