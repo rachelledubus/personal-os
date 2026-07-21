@@ -64,3 +64,29 @@ Real bugs reported and status:
 2. **Floaty smiley face by the capture button — REMOVED, by request.** That was the "companion sprite" — a decorative gold blob with a face, added alongside the capture button in an earlier session. Reverted `GlobalCapture` back to a plain `+` icon, no face, no companion. Also confirmed: this was likely what read as "chibi graphics" too, since it's gold/orange and floats — worth checking after this fix whether real chibi accents (cat/sprout/cloud/book/coin/paw on Business/Grow/Plan/Library cards) are now visible now that #1 is fixed.
 3. **Today's Schedule not showing — hardened, most likely cause identified, not 100% confirmed.** Added real error handling: if this happens again, the page will now show *why* instead of staying silently blank. Most likely cause: `v2_executive_function_layer.sql` (adds `steps` to `life_rhythm_blocks`, which `getTodaySchedule()` now selects) hasn't been run yet — if that column doesn't exist, the whole schedule query fails. **Needs confirmation this migration was actually applied in Supabase.**
 4. **"Might be worth a look" box not displaying correctly — hardened, not diagnosed.** Same error-visibility treatment added. This one I genuinely don't have enough information to fix blindly — "isn't displaying correctly" could mean empty, broken layout, or an error. The next report on this should include what it actually looks like (empty box? overlapping text? something else?).
+
+---
+
+## Kawaii direction correction
+
+Real feedback from reference screenshots: the corner `ChibiAccent` icons were the wrong idea entirely — too small, too literal, nothing like the illustrated banner aesthetic in real Studio Ghibli/kawaii Notion templates.
+
+**What changed:**
+- New `Banner` component — full-width illustrated scene at the top of Today, Business, Grow, Plan, and Library. Each has a themed default SVG scene (sunrise cottage, path & signpost, garden rows, winding hill path, reading nook) that renders when no custom image is assigned — richer and more whimsical than corner doodles, and it's the thing actually carrying the aesthetic now.
+- Real artwork support: Control Center → Appearance → **Banners** category lets you paste an image URL (landscape, ~1600×440px) to override any default scene with real sourced art — e.g. from the Notion template/asset packs in the reference images.
+- **All corner `ChibiAccent` placements removed** from Business, Grow, Plan, and Library — a banner plus clean cards reads more cohesive than a banner plus six competing doodles. The `ChibiAccent` component itself wasn't deleted (still valid, still available) — just pulled back to unused for now.
+- **Found and fixed a dead feature while touching this:** `profile_avatar` and the old mascot slots were assignable in Control Center but nothing ever read them back — `getAssetUrl()` was defined and never called anywhere. Wired `profile_avatar` into SideNav for real; the old single-purpose mascot slots were folded into the new banner system since banners now do that job.
+
+**Explicit boundary, stated once and holding:** I build with SVG + CSS, not image generation, and deliberately did not attempt to generate "Studio Ghibli style" art even stylistically — mimicking a specific studio's distinctive visual style is exactly what the original project brief said not to do. The default scenes take inspiration from the *feeling* (cottage-core, soft gradients, cozy) without copying any specific studio's character design or composition.
+
+---
+
+## Dead-file cleanup
+
+Ran a real orphan-reference check across every JS/JSX file. Deleted (all confirmed zero references before removal):
+- `ChibiAccent.jsx` + `.css` — no longer used anywhere since corner decorations were replaced by zone banners.
+- `preferences.js` — a generic `user_preferences` wrapper, fully superseded by `settings.js`.
+- `futureRoadmap.js` — **worth remembering this one specifically**: real working code for the business "Future Roadmap Log" (System 00D's idea parking lot per Decision Rule 4), but no UI was ever built to use it. Deleted as dead code per request, but if that feature is wanted later, the `future_roadmap_ideas` table still exists in the database — only the service file and a UI page would need rebuilding.
+- `INTEGRATION_GUIDE.md`, `PHASE_2_IMPLEMENTATION_GUIDE.md` — described migration steps completed many sessions ago, fully superseded by this document.
+
+Re-ran the full import validation after deleting — nothing broke.
