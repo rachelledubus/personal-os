@@ -1,0 +1,100 @@
+.global-capture-fab {
+  position: fixed;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  width: 56px;
+  height: 56px;
+  z-index: 40;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--white);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-active);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-standard);
+  animation: fab-breathe 3.5s ease-in-out infinite;
+}
+
+@keyframes fab-breathe {
+  0%, 100% { box-shadow: var(--shadow-active); }
+  50% { box-shadow: 0 6px 28px rgba(192, 112, 79, 0.4); }
+}
+
+.global-capture-fab:hover {
+  transform: scale(1.06);
+}
+
+.global-capture-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 50, 79, 0.35);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+
+@media (min-width: 640px) {
+  .global-capture-overlay {
+    align-items: center;
+  }
+}
+
+.global-capture-modal {
+  background: var(--white);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-modal);
+  padding: var(--space-5);
+  width: 100%;
+  max-width: 480px;
+  animation: capture-modal-in var(--duration-modal) var(--ease-standard);
+}
+
+@media (min-width: 640px) {
+  .global-capture-modal {
+    border-radius: var(--radius-lg);
+  }
+}
+
+@keyframes capture-modal-in {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.global-capture-input {
+  width: 100%;
+  min-height: 90px;
+  margin-top: var(--space-3);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  resize: vertical;
+}
+
+.global-capture-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.capture-type-chip {
+  border: 1px solid var(--sand);
+  background: var(--cream);
+  color: var(--ink-soft);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-size: var(--text-caption);
+  cursor: pointer;
+}
+
+.capture-type-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--white);
+}
