@@ -23,7 +23,7 @@ async function getUserId() {
 async function buildTodaySnapshot() {
   const userId = await getUserId();
   const { data: tasks, error } = await supabase
-    .from('tasks').select('id, title, priority, energy_type, due_date, estimated_minutes, time_blocks(title, block_date)')
+    .from('tasks').select('id, title, priority, energy_type, due_date, estimated_minutes, time_blocks!tasks_time_block_id_fkey(title, block_date)')
     .eq('user_id', userId).eq('completed', false).not('time_block_id', 'is', null);
   if (error) throw error;
 
