@@ -130,6 +130,15 @@ export async function seedDefaultLifeRhythmIfEmpty() {
  *  don't already exist. Idempotent — safe to call every time the app
  *  loads, every tab, every refresh. Returns today's full time_blocks
  *  list (rhythm-generated + any manual ones), ordered by start time. */
+/** Marks a time_block itself done/not-done — independent of any tasks
+ *  assigned inside it. This is what lets a routine/workout/meal
+ *  container (which isn't a task and never had a checkbox before) get
+ *  checked off and disappear from Today, same as a task does. */
+export async function toggleBlockCompletion(blockId, completed) {
+  const { error } = await supabase.from('time_blocks').update({ completed }).eq('id', blockId);
+  if (error) throw error;
+}
+
 export async function generateTodayBlocks() {
   const userId = await getUserId();
   if (!userId) return [];
