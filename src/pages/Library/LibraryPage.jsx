@@ -32,17 +32,31 @@ export default function LibraryPage() {
   );
 }
 
+// reference_library doesn't currently exist as a table in Supabase —
+// this degrades to an honest empty state instead of a silent crash
+// until that's either created or this tab is merged into Documents.
 function ReferenceTab() {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState('');
+  const [tableMissing, setTableMissing] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data } = await supabase.from('reference_library').select('*').eq('user_id', user.id).order('category');
+      const { data, error } = await supabase.from('reference_library').select('*').eq('user_id', user.id).order('category');
+      if (error) { setTableMissing(true); return; }
       setItems(data || []);
     })();
   }, []);
+
+  if (tableMissing) {
+    return (
+      <Card>
+        <EmptyState icon="leaf" title="Reference library isn't set up yet"
+          subtitle="This tab needs a reference_library table that doesn't exist in your database yet. Your scripts/prompts/CTAs might already live in Documents below instead — check there first." />
+      </Card>
+    );
+  }
 
   const filtered = items.filter(i => !search || (i.title + i.body).toLowerCase().includes(search.toLowerCase()));
 
@@ -63,24 +77,43 @@ function ReferenceTab() {
   );
 }
 
+// Now pulls `body` and renders it expandable — clicking a document
+// shows its actual content instead of just a title in a static list.
 function DocumentsTab() {
   const [docs, setDocs] = useState([]);
+  const [search, setSearch] = useState('');
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data } = await supabase.from('bos_documents').select('id, title, category, doc_number').eq('user_id', user.id);
+      const { data } = await supabase.from('bos_documents').select('*').eq('user_id', user.id).order('category');
       setDocs(data || []);
     })();
   }, []);
+
+  const filtered = docs.filter(d => !search || (d.title + (d.body || '')).toLowerCase().includes(search.toLowerCase()));
+  const byCategory = {};
+  filtered.forEach(d => { (byCategory[d.category || 'Uncategorized'] ||= []).push(d); });
+
   return (
     <Card>
       <div className="section-label">Business manual</div>
-      {docs.length === 0 ? <EmptyState icon="coffee" title="Nothing here yet" /> : (
-        <div className="stack">
-          {docs.map(d => (
-            <div key={d.id} style={{ padding: '6px 0' }}>{d.doc_number ? `${d.doc_number} — ` : ''}{d.title}</div>
-          ))}
-        </div>
+      <input placeholder="Search documents..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', margin: '8px 0 16px' }} />
+      {filtered.length === 0 ? <EmptyState icon="coffee" title="Nothing here yet" /> : (
+        Object.entries(byCategory).map(([cat, items]) => (
+          <div key={cat} style={{ marginBottom: 'var(--space-4)' }}>
+            <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{cat}</div>
+            <div className="stack">
+              {items.map(d => (
+                <details key={d.id}>
+                  <summary style={{ fontWeight: 700, cursor: 'pointer' }}>
+                    {d.doc_number ? `${d.doc_number} — ` : ''}{d.title}
+                  </summary>
+                  <p className="muted" style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>{d.body || 'No content stored for this document.'}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        ))
       )}
     </Card>
   );
@@ -102,8 +135,11 @@ function FinancesTab() {
         <div className="section-label">Bills</div>
         <div className="muted">${total.toFixed(0)}/mo</div>
       </div>
+      <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+        This is moving to Grow → Finance with more than just bills — see the next update.
+      </p>
       {bills.length === 0 ? <EmptyState icon="leaf" title="No bills added yet" /> : (
-        <div className="stack">
+        <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
           {bills.map(b => (
             <div key={b.id} className="row-between" style={{ padding: '6px 0' }}>
               <span>{b.name}</span><span className="muted">${b.amount}</span>
@@ -149,10 +185,6 @@ function NotesTab() {
   );
 }
 
-// Every automated decision — a task assignment, a rollover, an
-// applied AI replan — with what was proposed and how it was actually
-// resolved. This is the literal "learns over time" data, made visible
-// rather than left as an invisible table nobody ever looks at.
 function AILogTab() {
   const [decisions, setDecisions] = useState(null);
 
