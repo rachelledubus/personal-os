@@ -53,3 +53,14 @@ Same as every prior handoff — Life Rhythm/Tasks/routines stay separate; CRM is
 - Run the newest migration: `v2_executive_function_layer.sql`.
 - Two env vars: `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` (client), `GOOGLE_AI_API_KEY` (server-only).
 - Deploy verification: push → Netlify build log green → spot-check preview → merge to `main`.
+
+---
+
+## Bug-fix pass (immediately after the Executive Function ZIP)
+
+Real bugs reported and status:
+
+1. **Chibi graphics not displaying — FIXED, root cause confirmed.** The `<svg>` elements inside `ChibiAccent` never had explicit width/height; only their wrapper `<div>` was sized. Browsers default an unsized SVG to 300x150, so they were rendering at the wrong size relative to their container instead of the intended small corner accent. Added `.chibi-accent svg { width: 100%; height: 100%; }`.
+2. **Floaty smiley face by the capture button — REMOVED, by request.** That was the "companion sprite" — a decorative gold blob with a face, added alongside the capture button in an earlier session. Reverted `GlobalCapture` back to a plain `+` icon, no face, no companion. Also confirmed: this was likely what read as "chibi graphics" too, since it's gold/orange and floats — worth checking after this fix whether real chibi accents (cat/sprout/cloud/book/coin/paw on Business/Grow/Plan/Library cards) are now visible now that #1 is fixed.
+3. **Today's Schedule not showing — hardened, most likely cause identified, not 100% confirmed.** Added real error handling: if this happens again, the page will now show *why* instead of staying silently blank. Most likely cause: `v2_executive_function_layer.sql` (adds `steps` to `life_rhythm_blocks`, which `getTodaySchedule()` now selects) hasn't been run yet — if that column doesn't exist, the whole schedule query fails. **Needs confirmation this migration was actually applied in Supabase.**
+4. **"Might be worth a look" box not displaying correctly — hardened, not diagnosed.** Same error-visibility treatment added. This one I genuinely don't have enough information to fix blindly — "isn't displaying correctly" could mean empty, broken layout, or an error. The next report on this should include what it actually looks like (empty box? overlapping text? something else?).
