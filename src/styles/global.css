@@ -4,7 +4,15 @@ html, body, #root { height: 100%; }
 
 body {
   margin: 0;
-  background: var(--sand);
+  /* A soft, sunlit-forest wash instead of a flat color — this is the
+     part that should read as "the whole app feels warmer" even before
+     noticing any individual decoration. */
+  background:
+    radial-gradient(ellipse 900px 500px at 10% -5%, rgba(212, 162, 76, 0.14), transparent 60%),
+    radial-gradient(ellipse 800px 600px at 100% 15%, rgba(143, 165, 138, 0.16), transparent 55%),
+    radial-gradient(ellipse 700px 500px at 15% 100%, rgba(232, 196, 184, 0.14), transparent 55%),
+    var(--sand);
+  background-attachment: fixed;
   font-family: var(--font-body);
   color: var(--navy);
   font-size: var(--text-body);
@@ -20,6 +28,7 @@ input, textarea, select { font-family: var(--font-body); }
 .app-shell {
   display: flex;
   min-height: 100vh;
+  position: relative;
 }
 
 .app-content {
@@ -28,6 +37,8 @@ input, textarea, select { font-family: var(--font-body); }
   padding: var(--space-6) var(--space-6) var(--space-7);
   max-width: 1080px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 900px) {
@@ -45,6 +56,18 @@ input, textarea, select { font-family: var(--font-body); }
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  position: relative;
+}
+.page-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 46px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--gold), var(--sage));
+  opacity: 0.6;
 }
 
 .section-label {
@@ -71,7 +94,9 @@ input, textarea, select { font-family: var(--font-body); }
   background: var(--white); color: var(--navy); border: none;
   border-radius: var(--radius-pill); padding: 8px 14px; margin-right: 6px; margin-bottom: 6px;
   box-shadow: var(--shadow-resting);
+  transition: transform var(--duration-fast) var(--ease-bounce), background var(--duration-base);
 }
+.sub-tab:hover { transform: translateY(-1px) scale(1.03); }
 .sub-tab.active { background: var(--navy); color: var(--white); }
 
 .planner-block { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--cream); border-left: 4px solid var(--sage); }
