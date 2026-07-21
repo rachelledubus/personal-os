@@ -90,3 +90,27 @@ Ran a real orphan-reference check across every JS/JSX file. Deleted (all confirm
 - `INTEGRATION_GUIDE.md`, `PHASE_2_IMPLEMENTATION_GUIDE.md` — described migration steps completed many sessions ago, fully superseded by this document.
 
 Re-ran the full import validation after deleting — nothing broke.
+
+---
+
+## Build warning, missing Inbox header, and the running chibi
+
+**Vite build warning (settings.js mixed import)** — fixed at the source. `contacts.js` and `contentEngine.js` were dynamically importing `settings.js` inside a function while every other file imported it statically at the top — Vite couldn't code-split it either way, hence the warning. Converted both to static imports; the warning is gone, no behavior change (settings.js was never actually going to be a separate chunk regardless).
+
+**Inbox "missing a header"** — real diagnosis: Inbox always had its text title, but it was the only main-zone page without a banner once Today/Business/Grow/Plan/Library all got one. Added a 6th banner scene (`CatchBasket` — a basket catching falling notes, fitting the capture theme) and wired it in.
+
+**Running chibi** — new `RunningChibi` component, four selectable animals (bunny, cat, fox, duck) sharing one animation framework: continuous run-in-place (bob + alternating legs + motion trail), and a CSS breakpoint reposition (top-right → smaller top-right → bottom-left near mobile width) that the browser animates automatically via `transition: top/left`, since both breakpoints are expressed as `top`+`left` rather than mixing in `right`/`bottom`. No JS resize listener needed. Picker lives in Control Center → Appearance, with a live animated preview of each option, gated behind the existing `show_decorations` flag.
+
+**Not addressed, intentionally:** the "chunks larger than 500kB" note is a separate, informational Vite warning about overall bundle size — real code-splitting (route-based `React.lazy`) would address it but wasn't part of what was asked this round. Flagging it as a future backlog item rather than doing unscoped work.
+
+---
+
+## Backlog sprint: meals in Today, drag-and-drop
+
+**Meals in Today** — new Mission Engine fetcher (`fetchMealMissions`) reads today's planned meals (`meal_plan_items` where `plan_date = today`), one mission per meal type present (breakfast/lunch/dinner/snacks), title shows the actual planned foods. Checking it off marks every food item for that meal/day eaten together (new `eaten` column). If nothing's planned for today, nothing shows — no nagging to plan a meal that isn't there.
+
+**Schedule drag-and-drop** — real find: `moveTaskToBlock()` already existed in `dailyExecution.js`, built in an earlier session with a comment literally anticipating "the same function manual drag would use" — it just never had a drag UI. Wired native HTML5 drag-and-drop (no new dependency) onto task rows; dragging a task into a different block's drop zone calls that existing function, with optimistic UI update so it moves instantly rather than waiting on the round-trip. Bonus: moving a task this way also logs as an "edited" AI decision, feeding the same learning-signal system energy-aware planning already reads from.
+
+**Backlog drag-and-drop reordering** — added `sort_order` to `product_backlog_ideas` (didn't exist before), backfilled from creation order. Drag any idea within its category card to reorder; new ideas append to the end rather than jumping to the top.
+
+**Scope note on "drag and drop where it makes sense":** picked these two spots specifically — rearranging your actual day, and prioritizing your own backlog — as the highest-value, lowest-risk fits. Didn't add it everywhere (Roadmap sub-tasks, Pipeline stage-dragging, etc. are plausible future candidates, not done here) since "everywhere" wasn't asked for and would be a much bigger, less-considered pass.
