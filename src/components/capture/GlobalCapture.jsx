@@ -31,7 +31,11 @@ export default function GlobalCapture() {
     setText('');
     setType(null);
     setJustSaved(true);
-    setTimeout(() => setJustSaved(false), 1200);
+    window.dispatchEvent(new CustomEvent('capture:added'));
+    setTimeout(() => {
+      setJustSaved(false);
+      setOpen(false);
+    }, 900);
   }
 
   return (
