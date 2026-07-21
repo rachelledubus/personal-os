@@ -1,10 +1,11 @@
 import React from 'react';
-import { Coffee, Leaf, Sparkles, Calendar, Star, Dumbbell, Map, Phone, Lightbulb, Circle } from 'lucide-react';
+import { Coffee, Leaf, Sparkles, Calendar, Star, Dumbbell, Map, Phone, Lightbulb, Circle, Megaphone } from 'lucide-react';
 import './EmptyState.css';
 
 const ICONS = {
   coffee: Coffee, leaf: Leaf, sparkles: Sparkles, calendar: Calendar,
   star: Star, dumbbell: Dumbbell, map: Map, phone: Phone, lightbulb: Lightbulb, circle: Circle,
+  megaphone: Megaphone,
 };
 
 // A soft, round, Ghibli-soot-sprite-ish little companion — two dot
