@@ -92,7 +92,7 @@ export async function rolloverIncompleteTasks() {
   const date = todayStr();
   const { data: staleTasks, error } = await supabase
     .from('tasks')
-    .select('id, rolled_over_from, rollover_count, time_blocks!inner(block_date)')
+    .select('id, rolled_over_from, rollover_count, time_blocks!tasks_time_block_id_fkey!inner(block_date)')
     .eq('user_id', userId).eq('completed', false)
     .not('time_block_id', 'is', null)
     .lt('time_blocks.block_date', date);
@@ -172,7 +172,7 @@ export async function reassignForEnergyChange() {
 
   const date = todayStr();
   const { data: todayTasks, error } = await supabase
-    .from('tasks').select('id, time_blocks!inner(block_date)')
+    .from('tasks').select('id, time_blocks!tasks_time_block_id_fkey!inner(block_date)')
     .eq('user_id', userId).eq('completed', false)
     .not('time_block_id', 'is', null).eq('time_blocks.block_date', date);
   if (error) throw error;
