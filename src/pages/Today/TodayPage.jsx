@@ -8,6 +8,7 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { getTodayMissions, toggleMission, dismissMission, addCustomMission } from '../../services/missions.js';
 import { getTodaySchedule, toggleTaskDone } from '../../services/dailyExecution.js';
+import { toggleBlockCompletion } from '../../services/lifeRhythm.js';
 import { getDuePrompt } from '../../services/prompts.js';
 import WeeklyResetModal from '../Plan/WeeklyResetModal.jsx';
 import './TodayPage.css';
@@ -53,8 +54,17 @@ export default function TodayPage() {
     }
   }
 
-  async function handleToggleMission(mission, done) {
-    setMissions(prev => prev.map(m => (m.id === mission.id ? { ...m, done } : m)));
+  async function handleToggleBlock(block, done) {
+    setSchedule(prev => prev.map(b => (b.id === block.id ? { ...b, completed: done } : b)));
+    await toggleBlockCompletion(block.id, done);
+    if (done) {
+      setTimeout(() => {
+        setSchedule(prev => prev.filter(b => b.id !== block.id));
+      }, 650);
+    }
+  }
+
+  async function handleToggleMission(mission, done) {    setMissions(prev => prev.map(m => (m.id === mission.id ? { ...m, done } : m)));
     await toggleMission(mission, done);
     setTimeout(refreshMissions, 450);
   }
@@ -109,7 +119,7 @@ export default function TodayPage() {
               <Link to="/today/research"><Button variant="ghost" size="sm">Research Mode</Button></Link>
             </div>
           </div>
-          <ScheduleView blocks={schedule} onToggleTask={handleToggleTask} />
+          <ScheduleView blocks={schedule} onToggleTask={handleToggleTask} onToggleBlock={handleToggleBlock} />
         </div>
 
         <div className="today-missions-col">
