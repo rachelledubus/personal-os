@@ -1,0 +1,23 @@
+.inbox-item-text {
+  font-size: var(--text-body);
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.inbox-suggestion {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption);
+  color: var(--ink-soft);
+}
+
+.inbox-suggestion svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--gold);
+}

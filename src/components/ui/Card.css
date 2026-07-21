@@ -1,0 +1,17 @@
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
+}
+
+.card-resting { box-shadow: var(--shadow-resting); }
+
+.card-active {
+  box-shadow: var(--shadow-active);
+  border: 1px solid var(--sage);
+}
+
+.card-modal { box-shadow: var(--shadow-modal); background: var(--cream); }
+
+.card:hover.card-resting { transform: translateY(-2px); box-shadow: var(--shadow-active); }

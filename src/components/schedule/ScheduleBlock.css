@@ -1,0 +1,111 @@
+.schedule-block {
+  display: flex;
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
+  position: relative;
+}
+
+.schedule-block-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 32px;
+}
+
+.schedule-block-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+  color: var(--track-personal);
+  border: 2px solid var(--sand);
+  z-index: 1;
+}
+
+.track-business .schedule-block-icon {
+  color: var(--track-business);
+}
+
+.schedule-block-current .schedule-block-icon {
+  border-color: var(--gold);
+  box-shadow: var(--shadow-active);
+}
+
+.schedule-block-line {
+  flex: 1;
+  width: 2px;
+  background: var(--sand);
+  margin-top: var(--space-1);
+}
+
+.schedule-block-body {
+  flex: 1;
+  padding-bottom: var(--space-2);
+}
+
+.schedule-block-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.schedule-block-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-card-title);
+  color: var(--navy);
+}
+
+.schedule-block-time {
+  font-size: var(--text-caption);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.schedule-block-notes {
+  font-size: var(--text-caption);
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.schedule-block-tasks {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--cream);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.schedule-block-empty {
+  font-size: var(--text-caption);
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.schedule-task {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.schedule-task-title {
+  font-size: var(--text-body);
+  color: var(--navy);
+}
+
+.schedule-task-done .schedule-task-title {
+  text-decoration: line-through;
+  color: var(--ink-faint);
+}
+
+.schedule-task-meta {
+  font-size: var(--text-caption);
+  color: var(--ink-soft);
+}
