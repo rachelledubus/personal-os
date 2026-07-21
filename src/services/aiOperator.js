@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { getCurrentEnergy } from './energyIntelligence.js';
 import { moveTaskToBlock } from './dailyExecution.js';
+import { addDevLogEntry } from './devMemory.js';
 
 // ============================================================
 // AI OPERATOR (Phase 1: on-demand, propose-then-confirm)
@@ -107,6 +108,10 @@ export async function setAutonomyLevel(level /* 'confirm' | 'auto' */) {
   await supabase.from('user_preferences').upsert({
     user_id: userId, category: 'ai_operator', key: 'autonomy_level', value: { level },
   }, { onConflict: 'user_id,category,key' });
+  await addDevLogEntry('config', `AI autonomy set to "${level}"`,
+    level === 'auto'
+      ? 'Overdue follow-up drafts now generate automatically, and repurposed content auto-marks as published.'
+      : 'AI proposes, waits for confirmation, same as before.');
 }
 
 export async function getAutonomyLevel() {
