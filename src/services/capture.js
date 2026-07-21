@@ -114,6 +114,26 @@ export async function resolveToNote(item, fields = {}) {
 }
 
 /** Content idea — the existing content_items table (Content Engine). */
+/** Content idea — lands in the real Content Engine pipeline
+ *  (content_pieces) as a fresh idea, same as a buyer question but
+ *  without a specific question attached. */
+export async function resolveToContentIdea(item, fields = {}) {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('content_pieces').insert({
+    user_id: userId,
+    title: fields.title || item.raw_text,
+    audience: fields.audience || null,
+    funnel_stage: fields.funnel_stage || 'Awareness',
+    status: 'idea',
+  }).select().single();
+  if (error) throw error;
+  await markResolved(item.id, 'content_pieces', data.id);
+  return data;
+}
+
+/** Legacy path — content_items still powers the Today mission list's
+ *  content nudge, so this stays available even though new captures
+ *  default to the real pipeline above. */
 export async function resolveToContentItem(item, fields = {}) {
   const userId = await getUserId();
   const { data, error } = await supabase.from('content_items').insert({
@@ -126,16 +146,45 @@ export async function resolveToContentItem(item, fields = {}) {
   return data;
 }
 
+/** Buyer question — resolves straight into the real Content Engine
+ *  pipeline (content_pieces), pre-filled as the buyer_question field
+ *  on a new idea. This is the actual "Buyer Question Bank" the
+ *  manual keeps referencing — it just never had anywhere to land. */
+export async function resolveToBuyerQuestion(item, fields = {}) {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('content_pieces').insert({
+    user_id: userId,
+    title: fields.title || item.raw_text,
+    buyer_question: item.raw_text,
+    audience: fields.audience || null,
+    funnel_stage: fields.funnel_stage || 'Awareness',
+    status: 'idea',
+  }).select().single();
+  if (error) throw error;
+  await markResolved(item.id, 'content_pieces', data.id);
+  return data;
+}
+
 /** Opportunity / relationship — the existing CRM. Creates a new
  *  contact, or attaches a follow-up date to an existing one if
  *  contactId is passed (e.g. "Contact local coffee shop about
  *  partnership" -> new contact, category Partnership, next_action set). */
+function defaultFollowUpDate(daysOut = 7) {
+  const d = new Date();
+  d.setDate(d.getDate() + daysOut);
+  return d.toISOString().slice(0, 10);
+}
+
 export async function resolveToContact(item, fields = {}, contactId = null) {
   const userId = await getUserId();
   if (contactId) {
+    const { data: existing } = await supabase.from('contacts').select('relationship_notes').eq('id', contactId).single();
+    const notePrefix = existing?.relationship_notes ? `${existing.relationship_notes}\n` : '';
+    const dateStamp = new Date().toISOString().slice(0, 10);
     const { error } = await supabase.from('contacts').update({
+      relationship_notes: `${notePrefix}[${dateStamp}] ${item.raw_text}`,
       next_action: fields.next_action || item.raw_text,
-      next_follow_up_date: fields.next_follow_up_date || null,
+      next_follow_up_date: fields.next_follow_up_date || defaultFollowUpDate(),
     }).eq('id', contactId);
     if (error) throw error;
     await markResolved(item.id, 'contacts', contactId);

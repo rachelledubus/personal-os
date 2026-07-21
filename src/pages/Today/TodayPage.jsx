@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MissionList from '../../components/mission/MissionList.jsx';
-import ScheduleView from '../../components/schedule/ScheduleView.jsx';
+import ScheduleView, { getOverrunningBlock } from '../../components/schedule/ScheduleView.jsx';
 import EnergyCheckIn from '../../components/intelligence/EnergyCheckIn.jsx';
 import { getFeatureFlag } from '../../services/settings.js';
 import AskAIPanel from '../../components/intelligence/AskAIPanel.jsx';
@@ -9,8 +9,9 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { getTodayMissions, toggleMission, dismissMission, addCustomMission } from '../../services/missions.js';
 import { getTodaySchedule, toggleTaskDone } from '../../services/dailyExecution.js';
-import { toggleBlockCompletion } from '../../services/lifeRhythm.js';
+import { toggleBlockCompletion, toggleBlockStep, addTransitionStep } from '../../services/lifeRhythm.js';
 import { getDuePrompt } from '../../services/prompts.js';
+import { getNeglectedPriorities } from '../../services/neglected.js';
 import WeeklyResetModal from '../Plan/WeeklyResetModal.jsx';
 import './TodayPage.css';
 
@@ -21,6 +22,8 @@ export default function TodayPage() {
   const [addingCustom, setAddingCustom] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [showEnergyCheckin, setShowEnergyCheckin] = useState(true);
+  const [neglected, setNeglected] = useState([]);
+  const [hyperfocusDismissed, setHyperfocusDismissed] = useState(false);
 
   async function refreshSchedule() {
     const blocks = await getTodaySchedule();
@@ -37,11 +40,10 @@ export default function TodayPage() {
     refreshMissions();
     getDuePrompt().then(setDuePrompt);
     getFeatureFlag('show_energy_checkin').then(setShowEnergyCheckin);
+    getNeglectedPriorities().then(setNeglected);
   }, []);
 
   async function handleToggleTask(task, done) {
-    // Mark it done first so the checkmark/strikethrough shows briefly —
-    // then it actually disappears from the schedule, not just fades in place.
     setSchedule(prev => prev.map(b => ({
       ...b,
       tasks: b.tasks.map(t => (t.id === task.id ? { ...t, completed: done } : t)),
@@ -67,7 +69,25 @@ export default function TodayPage() {
     }
   }
 
-  async function handleToggleMission(mission, done) {    setMissions(prev => prev.map(m => (m.id === mission.id ? { ...m, done } : m)));
+  async function handleToggleStep(block, stepIndex, done) {
+    const currentSteps = block.completed_steps || [];
+    setSchedule(prev => prev.map(b => {
+      if (b.id !== block.id) return b;
+      const next = [...(b.completed_steps || [])];
+      next[stepIndex] = done;
+      return { ...b, completed_steps: next };
+    }));
+    await toggleBlockStep(block.id, stepIndex, currentSteps, done);
+  }
+
+  async function handleAddStep(block, stepLabel) {
+    if (!block.source_template_id) return; // manually-added blocks have no template to attach steps to
+    await addTransitionStep(block.source_template_id, stepLabel);
+    refreshSchedule();
+  }
+
+  async function handleToggleMission(mission, done) {
+    setMissions(prev => prev.map(m => (m.id === mission.id ? { ...m, done } : m)));
     await toggleMission(mission, done);
     setTimeout(refreshMissions, 450);
   }
@@ -89,6 +109,7 @@ export default function TodayPage() {
   const doneCount = allScheduledTasks.filter(t => t.completed).length;
   const total = allScheduledTasks.length;
   const nextUp = allScheduledTasks.find(t => !t.completed);
+  const overrunningBlock = !hyperfocusDismissed ? getOverrunningBlock(schedule) : null;
 
   return (
     <div>
@@ -108,10 +129,45 @@ export default function TodayPage() {
         </div>
       </Card>
 
+      {/* Hyperfocus nudge (Area 4) — no timer, no tracking, just the
+          block's own end_time. Supportive framing, not a scold. */}
+      {overrunningBlock && (
+        <Card className="hyperfocus-nudge">
+          <div className="row-between">
+            <div style={{ fontSize: 13 }}>
+              You've been deep in <strong>{overrunningBlock.title}</strong> — it was set to wrap up at{' '}
+              {overrunningBlock.end_time?.slice(0, 5)}. Totally fine to keep going.
+            </div>
+          </div>
+          <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
+            <Button size="sm" variant="ghost" onClick={() => setHyperfocusDismissed(true)}>Keep going</Button>
+            <Button size="sm" variant="text" onClick={() => { setHyperfocusDismissed(true); document.querySelector('.today-schedule-col')?.scrollIntoView({ behavior: 'smooth' }); }}>
+              Show me the rest of today
+            </Button>
+          </div>
+        </Card>
+      )}
+
       <div className="row-between" style={{ marginTop: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         {showEnergyCheckin && <EnergyCheckIn onReplanned={refreshSchedule} />}
         <AskAIPanel onApplied={refreshSchedule} />
       </div>
+
+      {/* Neglected Priorities (Area 1/2) — the one place that looks
+          across goals, relationships, habits, and maintenance at once. */}
+      {neglected.length > 0 && (
+        <Card style={{ marginTop: 'var(--space-4)' }}>
+          <div className="section-label">Might be worth a look</div>
+          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+            {neglected.map(item => (
+              <Link key={`${item.type}-${item.id}`} to={item.link} className="row-between" style={{ fontSize: 13, padding: '4px 0' }}>
+                <span>{item.label}</span>
+                <span className="muted" style={{ fontSize: 11 }}>{item.detail}</span>
+              </Link>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <div className="today-columns">
         <div className="today-schedule-col">
@@ -122,7 +178,13 @@ export default function TodayPage() {
               <Link to="/today/research"><Button variant="ghost" size="sm">Research Mode</Button></Link>
             </div>
           </div>
-          <ScheduleView blocks={schedule} onToggleTask={handleToggleTask} onToggleBlock={handleToggleBlock} />
+          <ScheduleView
+            blocks={schedule}
+            onToggleTask={handleToggleTask}
+            onToggleBlock={handleToggleBlock}
+            onToggleStep={handleToggleStep}
+            onAddStep={handleAddStep}
+          />
         </div>
 
         <div className="today-missions-col">

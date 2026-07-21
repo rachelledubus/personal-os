@@ -17,9 +17,33 @@ const CADENCE_PERIOD = {
   'chores-monthly': () => currentMonthStr(),
 };
 
+// Real seed for a 2BR/2BA townhouse rental with heavy-shedding dogs —
+// not a generic template. "Vacuum every Tuesday" becomes "here's what
+// a home like yours actually needs," pre-loaded instead of built from
+// scratch (Area 5).
+const STARTER_CHORES = {
+  'chores-daily': ['Wipe kitchen counters', 'Quick tidy of living room', 'Sweep high-traffic pet-hair spots', 'Dishes'],
+  'chores-weekly': ['Vacuum all rooms', 'Mop kitchen & bathroom floors', 'Clean pet bowls & bedding', 'Change bed sheets', 'Bathroom deep clean', 'Take out trash & recycling'],
+  'chores-monthly': ['Deep clean baseboards', 'Wash dog bedding/blankets', 'Clean behind furniture', 'Replace air filter (pet hair clogs it faster)', 'Clean windows', 'Declutter one area'],
+};
+
 async function getUserId() {
   const { data: { user } } = await supabase.auth.getUser();
   return user?.id;
+}
+
+export async function seedStarterChoresIfEmpty() {
+  const userId = await getUserId();
+  if (!userId) return;
+  const { count } = await supabase.from('checklist_items').select('id', { count: 'exact', head: true })
+    .eq('user_id', userId).in('list_key', Object.keys(CADENCE_PERIOD));
+  if (count && count > 0) return; // never overwrite an existing list
+
+  const rows = [];
+  Object.entries(STARTER_CHORES).forEach(([listKey, names]) => {
+    names.forEach(name => rows.push({ user_id: userId, list_key: listKey, name, archived: false }));
+  });
+  await supabase.from('checklist_items').insert(rows);
 }
 
 export async function listChores() {
@@ -29,6 +53,24 @@ export async function listChores() {
     .in('list_key', Object.keys(CADENCE_PERIOD));
   if (error) throw error;
   return data;
+}
+
+/** Most-overdue-first within weekly/monthly lists — genuinely useful
+ *  once a period gets missed once or twice, since a flat list doesn't
+ *  tell you WHICH thing has gone longest without attention. Daily
+ *  items don't get this treatment; "overdue" doesn't mean much within
+ *  a single day. */
+export async function getLastCompletedDates() {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('checklist_completions')
+    .select('checklist_item_id, period_marker')
+    .eq('user_id', userId).order('period_marker', { ascending: false });
+  if (error) throw error;
+  const latest = {};
+  (data || []).forEach(row => {
+    if (!latest[row.checklist_item_id]) latest[row.checklist_item_id] = row.period_marker;
+  });
+  return latest;
 }
 
 /** Completion rows for whichever periods are CURRENT right now — one

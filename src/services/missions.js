@@ -118,7 +118,7 @@ async function fetchContentMission(userId) {
     title: i.name,
     context: 'Content task',
     done: doneIds.has(i.id),
-    linkTo: '/business/flows/content_creation',
+    linkTo: '/business/content',
   }));
 }
 
@@ -136,7 +136,7 @@ async function fetchFollowUpMissions(userId) {
     title: `Follow up: ${c.name}`,
     context: c.next_action || c.category,
     done: false,
-    linkTo: `/business/contacts/${c.id}`,
+    linkTo: `/business/pipeline`,
   }));
 }
 

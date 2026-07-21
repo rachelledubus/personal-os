@@ -3,6 +3,7 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Checkbox from '../../components/ui/Checkbox.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
+import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import {
   listGoals, addGoal, listProjects, addProject,
@@ -71,12 +72,20 @@ export default function ProjectsTab() {
         {goals.length === 0 ? <EmptyState icon="star" title="No goals yet" /> : (
           <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
             {goals.map(g => (
-              <div key={g.id} className="row-between" style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>{g.title}</div>
-                  <div className="muted" style={{ fontSize: 12 }}>{g.category} · {g.status}</div>
+              <div key={g.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
+                <div className="row-between">
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{g.title}</div>
+                    <div className="muted" style={{ fontSize: 12 }}>{g.category} · {g.status}</div>
+                  </div>
+                  {g.target_date && <div className="muted" style={{ fontSize: 12 }}>{g.target_date}</div>}
                 </div>
-                {g.target_date && <div className="muted" style={{ fontSize: 12 }}>{g.target_date}</div>}
+                {g.target_value != null && (
+                  <div style={{ marginTop: 6 }}>
+                    <ProgressBar value={g.current_value || 0} max={g.target_value} />
+                    <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{g.current_value || 0} / {g.target_value}</div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

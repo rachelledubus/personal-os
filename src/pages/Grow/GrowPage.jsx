@@ -14,7 +14,7 @@ import {
   seedDefaultWorkoutTemplatesIfEmpty, listTemplateForDay, addTemplateExercise, getLastExerciseEntry,
   logWorkoutSession, generateInsights, requestExerciseSwap,
 } from '../../services/workoutAnalytics.js';
-import { listChores, listCurrentCompletions, toggleChore, addChore } from '../../services/chores.js';
+import { listChores, listCurrentCompletions, toggleChore, addChore, seedStarterChoresIfEmpty, getLastCompletedDates } from '../../services/chores.js';
 import {
   addEntry, deleteEntry, listThisMonthEntries, listLegacyBills, getMonthSummary,
   listBudgets, listSavingsGoals, addToSavingsGoal, addSavingsGoal,
@@ -299,13 +299,15 @@ function WorkoutsTab() {
 function ChoresTab() {
   const [items, setItems] = useState([]);
   const [doneIds, setDoneIds] = useState(new Set());
+  const [lastCompleted, setLastCompleted] = useState({});
   const [newChore, setNewChore] = useState({ 'chores-daily': '', 'chores-weekly': '', 'chores-monthly': '' });
 
   async function refresh() {
     setItems(await listChores());
     setDoneIds(await listCurrentCompletions());
+    setLastCompleted(await getLastCompletedDates());
   }
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { seedStarterChoresIfEmpty().then(refresh); }, []);
 
   async function handleToggle(item, checked) {
     setDoneIds(prev => {
@@ -325,15 +327,23 @@ function ChoresTab() {
 
   const LABELS = { 'chores-daily': 'Daily (resets tomorrow)', 'chores-weekly': 'Weekly (resets Monday)', 'chores-monthly': 'Monthly (resets 1st)' };
 
+  // Most-overdue-first for weekly/monthly — a chore with no completion
+  // on record sorts first (never done beats "done a while ago").
+  function sortedItemsFor(key) {
+    const list = items.filter(i => i.list_key === key);
+    if (key === 'chores-daily') return list;
+    return [...list].sort((a, b) => (lastCompleted[a.id] || '').localeCompare(lastCompleted[b.id] || ''));
+  }
+
   return (
     <div className="stack">
       {Object.keys(LABELS).map(key => (
         <Card key={key}>
           <div className="section-label">{LABELS[key]}</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            {items.filter(i => i.list_key === key).length === 0
+            {sortedItemsFor(key).length === 0
               ? <EmptyState icon="leaf" title="Nothing here yet" />
-              : items.filter(i => i.list_key === key).map(i => (
+              : sortedItemsFor(key).map(i => (
                 <Checkbox key={i.id} checked={doneIds.has(i.id)} onChange={v => handleToggle(i, v)} label={i.name} />
               ))}
           </div>

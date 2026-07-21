@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import Card from '../components/ui/Card.jsx';
-import Button from '../components/ui/Button.jsx';
-import EmptyState from '../components/ui/EmptyState.jsx';
+import Card from '../../components/ui/Card.jsx';
+import Button from '../../components/ui/Button.jsx';
+import EmptyState from '../../components/ui/EmptyState.jsx';
 import {
   CATEGORY_LISTS, getCategoryList, setCategoryList,
   FEATURE_FLAGS, getAllFeatureFlags, setFeatureFlag,
   getCustomAiInstructions, setCustomAiInstructions,
-} from '../services/settings.js';
-import { listAssetSlots, setAssetSlot } from '../services/assets.js';
-import { getAutonomyLevel, setAutonomyLevel } from '../services/aiOperator.js';
-import { listDevLog, listDecisions, addDecision, getSystemStatus, generateHandoff } from '../services/devMemory.js';
-import { exportAllData, downloadAsFile } from '../services/dataExport.js';
+} from '../../services/settings.js';
+import { listAssetSlots, setAssetSlot } from '../../services/assets.js';
+import { getAutonomyLevel, setAutonomyLevel } from '../../services/aiOperator.js';
+import { listDevLog, listDecisions, addDecision, getSystemStatus, generateHandoff } from '../../services/devMemory.js';
+import { exportAllData, downloadAsFile } from '../../services/dataExport.js';
 
 const SECTIONS = ['categories', 'appearance', 'features', 'ai', 'memory', 'data'];
 const SECTION_LABELS = {

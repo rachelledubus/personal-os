@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dumbbell, Coffee, Briefcase, Sunrise, Moon, Sparkles, Home } from 'lucide-react';
 import Checkbox from '../ui/Checkbox.jsx';
 import './ScheduleBlock.css';
@@ -23,11 +24,32 @@ function formatRange(start, end) {
   return end ? `${fmt(start)} – ${fmt(end)}` : fmt(start);
 }
 
-export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggleBlock }) {
+/** Where a task's real context lives, if anywhere — a quick-added
+ *  task with no project has nowhere to jump to, and that's fine, it
+ *  just stays plain text. Anything more specific gets a real link. */
+function taskLinkTarget(task) {
+  if (task.project_id || task.goal_id) return '/plan/goals';
+  if (task.capture_type === 'purchase') return '/grow/finance';
+  return null;
+}
+
+export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggleBlock, onToggleStep, onAddStep, onRemoveStep }) {
+  const navigate = useNavigate();
+  const [addingStep, setAddingStep] = useState(false);
+  const [newStep, setNewStep] = useState('');
   const blockType = block.life_rhythm_blocks?.block_type || 'work';
   const Icon = TYPE_ICON[blockType] || Sparkles;
   const isWorkBlock = block.life_rhythm_blocks?.is_work_block || (block.track === 'business' && !block.auto_generated);
   const timeLabel = formatRange(block.start_time, block.end_time);
+  const steps = block.life_rhythm_blocks?.steps || [];
+  const completedSteps = block.completed_steps || [];
+
+  function handleAddStep() {
+    if (!newStep.trim()) return;
+    onAddStep(block, newStep.trim());
+    setNewStep('');
+    setAddingStep(false);
+  }
 
   return (
     <div className={`schedule-block track-${block.track} type-${blockType} ${isCurrent ? 'schedule-block-current' : ''} ${block.completed ? 'schedule-block-done' : ''}`}>
@@ -48,25 +70,56 @@ export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggle
           <div className="schedule-block-notes">{block.life_rhythm_blocks.notes}</div>
         )}
 
+        {/* Transition steps — Morning Routine, Shutdown, Evening Routine
+            etc. get a real step-by-step sequence instead of just a
+            title, so "start the routine" isn't its own decision. */}
+        {steps.length > 0 && (
+          <div className="schedule-block-steps">
+            {steps.map((step, i) => (
+              <label key={i} className="schedule-step-row">
+                <input type="checkbox" checked={!!completedSteps[i]} onChange={e => onToggleStep(block, i, e.target.checked)} />
+                <span className={completedSteps[i] ? 'schedule-step-done' : ''}>{step}</span>
+              </label>
+            ))}
+          </div>
+        )}
+        {!isWorkBlock && block.life_rhythm_blocks && (
+          addingStep ? (
+            <div className="row" style={{ marginTop: 4, gap: 4 }}>
+              <input placeholder="Add a step..." value={newStep} onChange={e => setNewStep(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddStep()} style={{ fontSize: 12, padding: '4px 8px' }} />
+              <button className="schedule-step-link" onClick={handleAddStep}>Add</button>
+              <button className="schedule-step-link" onClick={() => setAddingStep(false)}>Cancel</button>
+            </div>
+          ) : (
+            <button className="schedule-step-link" onClick={() => setAddingStep(true)}>
+              {steps.length > 0 ? '+ add step' : '+ add steps to this routine'}
+            </button>
+          )
+        )}
+
         {isWorkBlock && (
           <div className="schedule-block-tasks">
             {(!block.tasks || block.tasks.length === 0) && (
               <div className="schedule-block-empty">Nothing assigned — all caught up, or nothing fits this window.</div>
             )}
-            {(block.tasks || []).map(task => (
-              <div key={task.id} className={`schedule-task ${task.completed ? 'schedule-task-done' : ''}`}>
-                <Checkbox checked={!!task.completed} onChange={(v) => onToggleTask(task, v)} />
-                <div className="schedule-task-body">
-                  <div className="schedule-task-title">{task.title}</div>
-                  <div className="schedule-task-meta">
-                    {task.estimated_minutes ? `${task.estimated_minutes} min` : null}
-                    {task.priority && task.priority !== 'Medium' ? ` · ${task.priority}` : null}
-                    {task.energy_type ? ` · ${task.energy_type}` : null}
-                    {task.rolled_over_from ? ` · carried from ${task.rolled_over_from}` : null}
+            {(block.tasks || []).map(task => {
+              const linkTarget = taskLinkTarget(task);
+              return (
+                <div key={task.id} className={`schedule-task ${task.completed ? 'schedule-task-done' : ''}`}>
+                  <Checkbox checked={!!task.completed} onChange={(v) => onToggleTask(task, v)} />
+                  <div className="schedule-task-body" style={linkTarget ? { cursor: 'pointer' } : undefined} onClick={() => linkTarget && navigate(linkTarget)}>
+                    <div className="schedule-task-title">{task.title}{linkTarget && <span className="schedule-task-jump"> →</span>}</div>
+                    <div className="schedule-task-meta">
+                      {task.estimated_minutes ? `${task.estimated_minutes} min` : null}
+                      {task.priority && task.priority !== 'Medium' ? ` · ${task.priority}` : null}
+                      {task.energy_type ? ` · ${task.energy_type}` : null}
+                      {task.rolled_over_from ? ` · carried from ${task.rolled_over_from}` : null}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

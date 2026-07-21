@@ -84,6 +84,15 @@ export async function deleteContact(id) {
   if (error) throw error;
 }
 
+export async function searchContactsByName(query) {
+  if (!query || query.length < 2) return [];
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('contacts').select('id, name, category')
+    .eq('user_id', userId).ilike('name', `%${query}%`).limit(6);
+  if (error) throw error;
+  return data;
+}
+
 export async function listPipelineDeals() {
   const userId = await getUserId();
   const { data, error } = await supabase.from('pipeline_deals').select('*').eq('user_id', userId)

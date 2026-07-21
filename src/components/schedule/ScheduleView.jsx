@@ -16,7 +16,24 @@ function isCurrentBlock(block) {
   return nowMin >= startMin && nowMin < endMin;
 }
 
-export default function ScheduleView({ blocks, onToggleTask, onToggleBlock }) {
+/** Hyperfocus detection (Area 4) — no new tracking infrastructure,
+ *  just the block's own end_time. A work block that ended 30+ minutes
+ *  ago, still isn't marked done, and still has open tasks is the
+ *  actual signal — not a timer running in the background. */
+export function getOverrunningBlock(blocks) {
+  if (!blocks) return null;
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  return blocks.find(b => {
+    if (!b.end_time || b.completed) return false;
+    const [eh, em] = b.end_time.split(':').map(Number);
+    const endMin = eh * 60 + em;
+    const openTasks = (b.tasks || []).some(t => !t.completed);
+    return nowMin - endMin >= 30 && nowMin - endMin < 240 && (openTasks || b.life_rhythm_blocks?.is_work_block);
+  }) || null;
+}
+
+export default function ScheduleView({ blocks, onToggleTask, onToggleBlock, onToggleStep, onAddStep, onRemoveStep }) {
   if (blocks === null) return null;
   if (blocks.length === 0) {
     return <EmptyState icon="calendar" title="No schedule yet" subtitle="Your day will build itself here once your Life Rhythm is set up." />;
@@ -31,6 +48,9 @@ export default function ScheduleView({ blocks, onToggleTask, onToggleBlock }) {
           isCurrent={isCurrentBlock(block)}
           onToggleTask={onToggleTask}
           onToggleBlock={onToggleBlock}
+          onToggleStep={onToggleStep}
+          onAddStep={onAddStep}
+          onRemoveStep={onRemoveStep}
         />
       ))}
     </div>

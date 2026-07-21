@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Inbox, CalendarDays, Sprout, Briefcase, BookOpen, LogOut } from 'lucide-react';
+import { Home, Inbox, CalendarDays, Sprout, Briefcase, BookOpen, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import CozyClock from './CozyClock.jsx';
 import './SideNav.css';
 
 const ZONES = [
@@ -15,8 +16,20 @@ const ZONES = [
 
 export default function SideNav() {
   const { signOut, user } = useAuth();
+  const initial = user?.email?.[0]?.toUpperCase() || '?';
+
   return (
     <nav className="side-nav">
+      <div className="side-nav-avatar-row">
+        <div className="side-nav-avatar" title="Profile">
+          {/* Swap this initial for a real photo any time — just
+              replace this div's contents with an <img>. */}
+          <span>{initial}</span>
+        </div>
+      </div>
+
+      <CozyClock />
+
       <div className="side-nav-brand">
         <div className="side-nav-brand-title">Rachelle's System</div>
         {user && <div className="side-nav-brand-email">{user.email}</div>}
@@ -33,6 +46,9 @@ export default function SideNav() {
           </NavLink>
         ))}
       </div>
+      <NavLink to="/control-center" className={({ isActive }) => `side-nav-link side-nav-link-utility ${isActive ? 'active' : ''}`}>
+        <Settings size={16} strokeWidth={2} /> <span>Control Center</span>
+      </NavLink>
       <button className="side-nav-signout" onClick={signOut}>
         <LogOut size={16} /> <span>Sign out</span>
       </button>

@@ -107,6 +107,16 @@ export async function deleteLifeRhythmBlock(id) {
   if (error) throw error;
 }
 
+// Transition-point default steps (Area 3) — applied by title at seed
+// time so the same steps don't need repeating across every day's
+// entry in DEFAULT_WEEKLY_TEMPLATE above. Editable per-day afterward
+// from the Today page itself (edits the template, not just today).
+const DEFAULT_TRANSITION_STEPS = {
+  'Morning Routine': ['Take meds', 'Splash water on face / get dressed', 'Grab water bottle'],
+  'Shutdown': ['Close laptop', 'Write down one thing for tomorrow', 'Tidy desk'],
+  'Evening Routine': ['Wash face', 'Brush teeth', 'Take meds', 'Set out tomorrow'],
+};
+
 /** Seeds the default weekly template exactly once — only runs if this
  *  user has zero life_rhythm_blocks rows. Safe to call on every app
  *  load; it's a no-op after the first successful run. */
@@ -119,23 +129,49 @@ export async function seedDefaultLifeRhythmIfEmpty() {
   if (countErr) throw countErr;
   if (count && count > 0) return; // already seeded, or user has customized — never overwrite
 
-  const rows = DEFAULT_WEEKLY_TEMPLATE.map(b => ({ ...b, user_id: userId, is_work_block: !!b.is_work_block }));
+  const rows = DEFAULT_WEEKLY_TEMPLATE.map(b => ({
+    ...b, user_id: userId, is_work_block: !!b.is_work_block,
+    steps: DEFAULT_TRANSITION_STEPS[b.title] || [],
+  }));
   const { error } = await supabase.from('life_rhythm_blocks').insert(rows);
   if (error) throw error;
 }
 
 // ---------- The generator: template -> today's real time_blocks ----------
 
-/** Materializes today's recurring containers into time_blocks, if they
- *  don't already exist. Idempotent — safe to call every time the app
- *  loads, every tab, every refresh. Returns today's full time_blocks
- *  list (rhythm-generated + any manual ones), ordered by start time. */
 /** Marks a time_block itself done/not-done — independent of any tasks
  *  assigned inside it. This is what lets a routine/workout/meal
  *  container (which isn't a task and never had a checkbox before) get
  *  checked off and disappear from Today, same as a task does. */
 export async function toggleBlockCompletion(blockId, completed) {
   const { error } = await supabase.from('time_blocks').update({ completed }).eq('id', blockId);
+  if (error) throw error;
+}
+
+/** Toggles one step of today's transition checklist — stored on
+ *  TODAY's time_block (completed_steps), never the template, so
+ *  yesterday's checked steps don't carry over. */
+export async function toggleBlockStep(blockId, stepIndex, currentSteps, done) {
+  const next = [...currentSteps];
+  next[stepIndex] = done;
+  const { error } = await supabase.from('time_blocks').update({ completed_steps: next }).eq('id', blockId);
+  if (error) throw error;
+}
+
+/** Adds a step to the TEMPLATE (source_template_id), so it applies to
+ *  every future occurrence of this block, not just today — this is
+ *  the "editable without a separate settings screen" path. */
+export async function addTransitionStep(templateId, stepLabel) {
+  const { data } = await supabase.from('life_rhythm_blocks').select('steps').eq('id', templateId).single();
+  const steps = [...(data?.steps || []), stepLabel];
+  const { error } = await supabase.from('life_rhythm_blocks').update({ steps }).eq('id', templateId);
+  if (error) throw error;
+}
+
+export async function removeTransitionStep(templateId, stepIndex) {
+  const { data } = await supabase.from('life_rhythm_blocks').select('steps').eq('id', templateId).single();
+  const steps = (data?.steps || []).filter((_, i) => i !== stepIndex);
+  const { error } = await supabase.from('life_rhythm_blocks').update({ steps }).eq('id', templateId);
   if (error) throw error;
 }
 
@@ -180,7 +216,7 @@ export async function generateTodayBlocks() {
 
   const { data: todayBlocks, error: finalErr } = await supabase
     .from('time_blocks')
-    .select('*, life_rhythm_blocks(block_type, is_work_block, notes)')
+    .select('*, life_rhythm_blocks(block_type, is_work_block, notes, steps)')
     .eq('user_id', userId).eq('block_date', date)
     .order('start_time', { ascending: true, nullsFirst: false });
   if (finalErr) throw finalErr;

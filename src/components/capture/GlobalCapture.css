@@ -1,9 +1,40 @@
-.global-capture-fab {
+/* LAYERING RULE for this component (and the pattern any future
+   decorative element should follow): the wrap establishes its own
+   stacking context via z-index + isolation, so nothing outside it —
+   background clouds, page content, anything — can ever render between
+   the companion and the button. Inside the wrap, z-index order is
+   fixed: companion (1) sits behind the button (2), always. */
+.global-capture-wrap {
   position: fixed;
   right: var(--space-6);
   bottom: var(--space-6);
   width: 56px;
   height: 56px;
+  z-index: 40;
+  isolation: isolate;
+}
+
+.global-capture-companion {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  top: -14px;
+  left: -14px;
+  z-index: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(212, 162, 76, 0.4));
+  animation: companion-bob 2.8s ease-in-out infinite;
+}
+
+@keyframes companion-bob {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-5px) rotate(4deg); }
+}
+
+.global-capture-fab {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--white);
@@ -13,7 +44,6 @@
   justify-content: center;
   box-shadow: var(--shadow-active);
   cursor: pointer;
-  z-index: 40;
   transition: transform var(--duration-fast) var(--ease-standard);
   animation: fab-breathe 3.5s ease-in-out infinite;
 }

@@ -8,6 +8,7 @@ import { todayStr } from '../../utils/date.js';
 import { sumMacros, remainingMacros, suggestFoods, pctOfGoal } from '../../utils/macros.js';
 import {
   SLOTS, listFoodsBySlot, tagFoodSlot, sumSelectionMacros, comboName, addComboToGroceryList, saveComboAsTemplate,
+  seedStarterFoodsIfEmpty,
 } from '../../services/mealBuilder.js';
 import {
   weekDates, nextMonday, listWeekPlan, generateWeekGroceryList, listMealTemplates, applyTemplateToSlot,
@@ -21,6 +22,11 @@ const PLAN_TABS = [
   { label: 'Meal Planner', to: '/plan/meals' },
 ];
 
+function formatFullDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
 export default function MealPlannerPage() {
   const [viewMode, setViewMode] = useState('day'); // 'day' | 'week'
   const [foods, setFoods] = useState([]);
@@ -33,7 +39,7 @@ export default function MealPlannerPage() {
     return d.toISOString().slice(0, 10);
   });
 
-  useEffect(() => { loadAll(); }, [planDate]);
+  useEffect(() => { seedStarterFoodsIfEmpty().then(loadAll); }, [planDate]);
 
   async function loadAll() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -261,7 +267,7 @@ function WeekPlanner({ foods }) {
         <div className="row-between" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
           <div className="row" style={{ gap: 'var(--space-2)' }}>
             <Button size="sm" variant="ghost" onClick={() => shiftWeek(-7)}>← Prior week</Button>
-            <div style={{ fontWeight: 700, alignSelf: 'center' }}>Week of {weekStart}</div>
+            <div style={{ fontWeight: 700, alignSelf: 'center' }}>Week of {formatFullDate(weekStart)}</div>
             <Button size="sm" variant="ghost" onClick={() => shiftWeek(7)}>Next week →</Button>
           </div>
           <Button size="sm" variant="primary" onClick={handleGenerateWeekGrocery} disabled={generating}>
@@ -447,17 +453,23 @@ function MealBuilder({ foods, onFoodsChanged }) {
           {managingSlots ? 'Hide' : 'Manage'} food slots
         </Button>
         {managingSlots && (
-          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            {foods.map(f => (
-              <div key={f.id} className="row-between" style={{ fontSize: 13, padding: '4px 0' }}>
-                <span>{f.name}</span>
-                <select value={f.meal_slot || ''} onChange={e => handleTag(f.id, e.target.value)}>
-                  <option value="">No slot</option>
-                  {SLOTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                </select>
-              </div>
-            ))}
-          </div>
+          foods.length === 0 ? (
+            <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>
+              No foods in your database yet — add one from a meal slot above, or below.
+            </div>
+          ) : (
+            <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+              {foods.map(f => (
+                <div key={f.id} className="row-between" style={{ fontSize: 13, padding: '4px 0' }}>
+                  <span>{f.name}</span>
+                  <select value={f.meal_slot || ''} onChange={e => handleTag(f.id, e.target.value)}>
+                    <option value="">No slot</option>
+                    {SLOTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+          )
         )}
       </div>
     </Card>
