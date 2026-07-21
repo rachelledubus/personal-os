@@ -1,7 +1,8 @@
-// netlify/functions/draft-followup.js
-// A5: Email & Client Communication — draft personalized follow-ups
-// from CRM context. Under 150 words, one idea, one CTA, no sales
-// pressure, per the brand voice rules in System 01/14.
+// netlify/functions/repurpose-content.js
+// Same pattern as the other Gemini functions. Turns one flagship
+// content piece into draft copy for email, Instagram, Facebook, a
+// short-form video script, and a partner-shareable version — the
+// System 03 repurposing waterfall, automated instead of manual.
 
 const MODEL = 'gemini-2.5-flash';
 
@@ -11,30 +12,33 @@ exports.handler = async (event) => {
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) return { statusCode: 501, body: JSON.stringify({ error: 'GOOGLE_AI_API_KEY not configured' }) };
 
-  let contact, customInstructions;
+  let title, buyerQuestion, audience, customInstructions;
   try {
-    ({ contact, customInstructions } = JSON.parse(event.body));
+    ({ title, buyerQuestion, audience, customInstructions } = JSON.parse(event.body));
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) };
   }
-  if (!contact?.name) return { statusCode: 400, body: JSON.stringify({ error: 'Missing contact' }) };
+  if (!title) return { statusCode: 400, body: JSON.stringify({ error: 'Missing title' }) };
 
-  const systemPrompt = `You write follow-up messages for a Southwest Broward real estate agent. Brand voice: warm,
-educational, direct but approachable, protective, never pushy. Under 150 words. One idea, one CTA. Never use "just
-checking in," "touching base," "dream home," "don't miss out," "act now," or generic realtor language. Prefer text
-or email tone over phone-call language — never suggest calling. Respond with ONLY a JSON object:
-{ "message": "the drafted message", "channel": "text" or "email", "reasoning": "one short sentence on the approach" }
+  const systemPrompt = `You are a real estate content strategist for an education-first Southwest Broward (Cooper City,
+Pembroke Pines, Plantation) relocation and first-time-buyer specialist. Brand voice: warm, educational, analytical,
+direct but approachable, protective. Never use hype, urgency, or generic realtor language ("dream home," "don't miss
+out," "act now"). Every piece should answer a real question and leave the reader feeling more prepared.
+
+Given one flagship content piece, draft 5 short derivative versions for different channels. Respond with ONLY a JSON
+object, no other text:
+{
+  "email": "one short paragraph, under 120 words, one CTA",
+  "instagram": "a caption with a hook first line, under 150 words",
+  "facebook": "a direct, helpful answer as if replying to someone's question in a local group, under 120 words",
+  "video_script": "a 30-45 second short-form video script, spoken style, under 100 words",
+  "partner_resource": "a neutral, non-sales version suitable for an employer/healthcare partner to share, under 120 words"
+}
 ${customInstructions ? `\nAdditional instructions from the user, apply these too: ${customInstructions}` : ''}`;
 
-  const userPrompt = `Contact: ${contact.name}
-Category: ${contact.category || 'unknown'}
-Timeline: ${contact.timeline || 'unknown'}
-Source: ${contact.source || 'unknown'}
-Next action noted: ${contact.next_action || 'none'}
-Concerns: ${contact.concerns || 'none noted'}
-Goals: ${contact.goals || 'none noted'}
-Relationship notes: ${contact.relationship_notes || 'none'}
-Preferred contact method: ${contact.preferred_contact_method || 'text'}`;
+  const userPrompt = `Flagship piece title: "${title}"
+Buyer question it answers: ${buyerQuestion || 'not specified'}
+Audience: ${audience || 'not specified'}`;
 
   try {
     const response = await fetch(
@@ -45,7 +49,7 @@ Preferred contact method: ${contact.preferred_contact_method || 'text'}`;
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-          generationConfig: { response_mime_type: 'application/json', maxOutputTokens: 300 },
+          generationConfig: { response_mime_type: 'application/json', maxOutputTokens: 900 },
         }),
       }
     );
@@ -58,6 +62,6 @@ Preferred contact method: ${contact.preferred_contact_method || 'text'}`;
     const cleaned = raw.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
     return { statusCode: 200, body: JSON.stringify(JSON.parse(cleaned)) };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'Draft failed', detail: String(err) }) };
+    return { statusCode: 500, body: JSON.stringify({ error: 'Repurpose failed', detail: String(err) }) };
   }
 };
