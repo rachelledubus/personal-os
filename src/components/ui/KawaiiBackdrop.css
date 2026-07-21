@@ -1,0 +1,38 @@
+.kawaii-backdrop {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.kawaii-cloud {
+  position: absolute;
+  fill: var(--sage);
+  opacity: 0.06;
+}
+.kawaii-cloud-1 { width: 180px; top: 8%; left: -10%; animation: kawaii-drift-right 90s linear infinite; }
+.kawaii-cloud-2 { width: 130px; top: 35%; left: -15%; animation: kawaii-drift-right 130s linear infinite; animation-delay: -30s; }
+.kawaii-cloud-3 { width: 220px; top: 68%; left: -20%; animation: kawaii-drift-right 160s linear infinite; animation-delay: -70s; }
+
+.kawaii-leaf {
+  position: absolute;
+  fill: var(--gold);
+  opacity: 0.05;
+}
+.kawaii-leaf-1 { width: 40px; top: 20%; right: 6%; animation: kawaii-sway 8s ease-in-out infinite; }
+.kawaii-leaf-2 { width: 28px; top: 55%; right: 12%; animation: kawaii-sway 10s ease-in-out infinite; animation-delay: -3s; }
+
+@keyframes kawaii-drift-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(140vw); }
+}
+
+@keyframes kawaii-sway {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(10px) rotate(6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kawaii-cloud, .kawaii-leaf { animation: none; }
+}

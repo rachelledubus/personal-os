@@ -3,12 +3,27 @@
   padding: var(--space-6) var(--space-4);
 }
 .empty-state-icon {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  background: var(--cream);
-  color: var(--sage);
+  width: 64px; height: 64px;
+  position: relative;
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto var(--space-3);
+  filter: drop-shadow(0 4px 10px rgba(143, 165, 138, 0.25));
+  animation: empty-state-bob 3.2s ease-in-out infinite;
+}
+.empty-state-blob {
+  width: 64px; height: 64px;
+  position: absolute; top: 0; left: 0;
+}
+.empty-state-icon-glyph {
+  position: relative;
+  color: var(--navy);
+  opacity: 0.55;
+  margin-top: 6px;
 }
 .empty-state-title { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--navy); }
 .empty-state-subtitle { font-size: var(--text-caption); color: var(--ink-soft); margin-top: var(--space-1); }
+
+@keyframes empty-state-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(-2deg); }
+}

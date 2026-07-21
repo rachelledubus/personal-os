@@ -1,0 +1,44 @@
+.markdown-doc { font-size: 13.5px; color: var(--navy); line-height: 1.6; }
+
+.markdown-heading {
+  font-family: var(--font-display);
+  color: var(--navy);
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+.markdown-paragraph { margin: var(--space-2) 0; white-space: pre-wrap; }
+
+.markdown-list { margin: var(--space-2) 0; padding-left: 20px; }
+.markdown-list li { margin: 2px 0; }
+
+.markdown-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--space-3) 0;
+  font-size: 13px;
+}
+.markdown-table th, .markdown-table td {
+  border: 1px solid var(--sand);
+  padding: 6px 10px;
+  text-align: left;
+}
+.markdown-table th {
+  background: var(--cream);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.doc-inline-link {
+  background: var(--cream);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: inherit;
+  cursor: pointer;
+  display: inline;
+}
+.doc-inline-link:hover {
+  background: var(--blush);
+}
