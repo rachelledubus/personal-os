@@ -1,4 +1,4 @@
-# Rachelle's System — V2
+# Rachelle's System — V2 
 
 A rebuilt version of the app: React + Vite (build step) + your existing
 Supabase project, deployed the same way (GitHub → Netlify). Nothing about
