@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import SideNav from './components/nav/SideNav.jsx';
 import GlobalCapture from './components/capture/GlobalCapture.jsx';
+import KawaiiBackdrop from './components/ui/KawaiiBackdrop.jsx';
 import AuthScreen from './pages/AuthScreen.jsx';
 
 import TodayPage from './pages/Today/TodayPage.jsx';
@@ -29,6 +30,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <KawaiiBackdrop />
       <SideNav />
       <div className="app-content">
         <Routes>
