@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button.jsx';
 import { listTimeBlocks, addTimeBlock, deleteTimeBlock } from '../../services/timeBlocks.js';
 import { todayStr } from '../../utils/date.js';
 import EmptyState from '../../components/ui/EmptyState.jsx';
+import ChibiAccent from '../../components/ui/ChibiAccent.jsx';
 import ProjectsTab from './ProjectsTab.jsx';
 
 const TABS = ['blocks', 'goals', 'meals'];
@@ -56,6 +57,7 @@ function TimeBlocksTab() {
 
   return (
     <Card>
+      <ChibiAccent variant="sprout" corner="top-right" size={32} />
       <div className="row-between">
         <div className="section-label">Time blocks</div>
         <input type="date" value={date} onChange={e => setDate(e.target.value)} />
