@@ -78,7 +78,7 @@ export default function TodayPage() {
             <div className="today-headline">
               {schedule === null ? 'Building your day…' : total === 0
                 ? 'Nothing assigned yet'
-                : (nextUp?.title || 'All caught up')}
+                : doneCount === total ? '🎉 All done — go you!' : (nextUp?.title || 'All caught up')}
             </div>
           </div>
           {total > 0 && <div className="today-progress-chip">{doneCount} / {total}</div>}
