@@ -7,16 +7,19 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { FLOWS } from '../../services/flows.js';
 import { listMilestones, addMilestone, toggleMilestone, updateRoadmapLink } from '../../services/goals.js';
+import { getCategoryList } from '../../services/settings.js';
+import ChibiAccent from '../../components/ui/ChibiAccent.jsx';
 import AiSuggestionBox from '../../components/ui/AiSuggestionBox.jsx';
 import {
   listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, requestFollowUpDraft,
   inferDefaultTier, autoTagUntieredContacts,
 } from '../../services/contacts.js';
 import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals } from '../../services/dailyCheckin.js';
-import { seedMasterTimelineIfEmpty, getThisWeekBuild } from '../../services/timeline.js';
+import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses } from '../../services/timeline.js';
 import { listContentPieces, addContentPiece, advanceStatus, initRepurposeSlots, markRepurposed, requestRepurposeDrafts } from '../../services/contentEngine.js';
 import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt } from '../../services/library.js';
 import { listTransactions, addTransaction } from '../../services/transactions.js';
+import { getAutonomyLevel } from '../../services/aiOperator.js';
 
 const TABS = ['dashboard', 'pipeline', 'relationships', 'content', 'library', 'clients', 'roadmap'];
 const TAB_LABELS = { dashboard: 'Dashboard', pipeline: 'Pipeline', relationships: 'Relationships', content: 'Content', library: 'Library', clients: 'Clients', roadmap: 'Roadmap' };
@@ -62,10 +65,11 @@ function DashboardTab() {
   const [health, setHealth] = useState(null);
   const [editingTargets, setEditingTargets] = useState(false);
   const [targetForm, setTargetForm] = useState({ conversations_target: 10, knowledge_items_target: 10, consultations_target: 0, pipeline_moves_target: 0 });
-  const [draft, setDraft] = useState(null);
+  const [draftsByContact, setDraftsByContact] = useState({});
   const [drafting, setDrafting] = useState(null);
+  const [autonomy, setAutonomy] = useState('confirm');
 
-  useEffect(() => { seedMasterTimelineIfEmpty().then(refresh); }, []);
+  useEffect(() => { seedMasterTimelineIfEmpty().then(syncRoadmapStatuses).then(refresh); getAutonomyLevel().then(setAutonomy); }, []);
 
   async function refresh() {
     const [c, wc, t, r, w, ov, h] = await Promise.all([
@@ -75,6 +79,17 @@ function DashboardTab() {
     setCheckin(c); setWeekCheckins(wc); setTargets(t); setRunning(r);
     setThisWeekBuild(w); setOverdue(ov); setHealth(h);
     if (t) setTargetForm(t);
+
+    // Autonomy "auto": overdue follow-ups draft themselves, no click
+    // needed. This is the actual behavior the setting controls — see
+    // Control Center -> AI Settings.
+    const level = await getAutonomyLevel();
+    if (level === 'auto') {
+      ov.forEach(async c2 => {
+        const result = await requestFollowUpDraft(c2);
+        if (result) setDraftsByContact(prev => ({ ...prev, [c2.id]: result }));
+      });
+    }
   }
 
   async function handleToggleBox(box, done) {
@@ -93,7 +108,7 @@ function DashboardTab() {
     setDrafting(contact.id);
     const result = await requestFollowUpDraft(contact);
     setDrafting(null);
-    setDraft(result ? { contactId: contact.id, ...result } : { contactId: contact.id, unavailable: true });
+    setDraftsByContact(prev => ({ ...prev, [contact.id]: result || { unavailable: true } }));
   }
 
   const BOXES = [
@@ -107,6 +122,7 @@ function DashboardTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card className="today-summary-card">
+        <ChibiAccent variant="sprout" corner="top-right" size={36} />
         <div className="section-label">Today's four boxes</div>
         <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-4)', marginTop: 'var(--space-3)' }}>
           {BOXES.map(b => (
@@ -148,7 +164,10 @@ function DashboardTab() {
 
       {overdue.length > 0 && (
         <Card>
-          <div className="section-label">Overdue follow-ups</div>
+          <div className="row-between">
+            <div className="section-label">Overdue follow-ups</div>
+            {autonomy === 'auto' && <span className="muted" style={{ fontSize: 11 }}>✨ Auto-drafting enabled</span>}
+          </div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {overdue.map(c => (
               <div key={c.id} style={{ padding: '4px 0' }}>
@@ -157,14 +176,17 @@ function DashboardTab() {
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{c.name}</div>
                     <div className="muted" style={{ fontSize: 12 }}>{c.next_action}</div>
                   </div>
-                  <Button size="sm" variant="ghost" onClick={() => handleDraftFollowUp(c)} disabled={drafting === c.id}>
-                    {drafting === c.id ? '…' : '✨ Draft'}
-                  </Button>
+                  {autonomy !== 'auto' && (
+                    <Button size="sm" variant="ghost" onClick={() => handleDraftFollowUp(c)} disabled={drafting === c.id}>
+                      {drafting === c.id ? '…' : '✨ Draft'}
+                    </Button>
+                  )}
                 </div>
-                {draft?.contactId === c.id && (
-                  <AiSuggestionBox unavailable={draft.unavailable} onDismiss={() => setDraft(null)}>
-                    <div style={{ fontSize: 13 }}>{draft.message}</div>
-                    <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draft.channel}</div>
+                {draftsByContact[c.id] && (
+                  <AiSuggestionBox unavailable={draftsByContact[c.id].unavailable}
+                    onDismiss={() => setDraftsByContact(prev => { const next = { ...prev }; delete next[c.id]; return next; })}>
+                    <div style={{ fontSize: 13 }}>{draftsByContact[c.id].message}</div>
+                    <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draftsByContact[c.id].channel}</div>
                   </AiSuggestionBox>
                 )}
               </div>
@@ -193,11 +215,11 @@ function DashboardTab() {
 // and AI-drafted follow-ups so a next action never sits empty because
 // writing it felt like a chore.
 // ============================================================
-const CATEGORIES = ['Lead', 'Future Client', 'Active Client', 'Past Client', 'Sphere', 'Partner', 'Agent Referral'];
 const STATUS_TONE = { Overdue: 'var(--danger)', 'Due Soon': 'var(--gold)', 'On Track': 'var(--success)', 'No Next Action': 'var(--ink-faint)', 'No Date Set': 'var(--ink-faint)' };
 
 function PipelineTab() {
   const [contacts, setContacts] = useState([]);
+  const [categories, setCategories] = useState(['Lead']);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text' });
   const [expandedId, setExpandedId] = useState(null);
@@ -205,7 +227,10 @@ function PipelineTab() {
   const [drafting, setDrafting] = useState(null);
   const [filter, setFilter] = useState('All');
 
-  async function refresh() { setContacts(await listContacts()); }
+  async function refresh() {
+    setContacts(await listContacts());
+    setCategories(await getCategoryList('pipeline_categories'));
+  }
   useEffect(() => { refresh(); }, []);
 
   async function handleAdd() {
@@ -230,6 +255,7 @@ function PipelineTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card>
+        <ChibiAccent variant="cat" corner="top-right" size={34} />
         <div className="row-between">
           <div className="section-label">Pipeline</div>
           <Button size="sm" variant="ghost" onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : '+ Add contact'}</Button>
@@ -239,7 +265,7 @@ function PipelineTab() {
           <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
             <input placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
             <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <input placeholder="Organization (optional)" value={form.organization} onChange={e => setForm({ ...form, organization: e.target.value })} />
             <select value={form.preferred_contact_method} onChange={e => setForm({ ...form, preferred_contact_method: e.target.value })}>
@@ -252,7 +278,7 @@ function PipelineTab() {
         )}
 
         <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 4 }}>
-          {['All', ...CATEGORIES].map(c => (
+          {['All', ...categories].map(c => (
             <button key={c} className={`sub-tab ${filter === c ? 'active' : ''}`} style={{ fontSize: 11 }} onClick={() => setFilter(c)}>{c}</button>
           ))}
         </div>
@@ -348,8 +374,9 @@ function RelationshipsTab() {
         </Card>
       )}
 
-      {TIERS.map(t => (
+      {TIERS.map((t, i) => (
         <Card key={t.key}>
+          {i === 0 && <ChibiAccent variant="paw" corner="top-left" size={32} />}
           <div className="row-between">
             <div className="section-label">{t.label}</div>
             <span className="muted" style={{ fontSize: 11 }}>{t.cadence}</span>
@@ -381,9 +408,10 @@ function ContentTab() {
   const [expandedId, setExpandedId] = useState(null);
   const [drafts, setDrafts] = useState(null);
   const [draftingFor, setDraftingFor] = useState(null);
+  const [autonomy, setAutonomy] = useState('confirm');
 
   async function refresh() { setPieces(await listContentPieces()); }
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh(); getAutonomyLevel().then(setAutonomy); }, []);
 
   async function handleAdd() {
     if (!form.title.trim()) return;
@@ -399,16 +427,30 @@ function ContentTab() {
       await initRepurposeSlots(piece.id);
       // Don't make the person ask for this separately — the moment
       // something publishes is exactly when repurposing is useful.
-      handleRepurpose({ ...piece, status: 'published' });
+      await handleRepurpose({ ...piece, status: 'published' }, true);
     }
     refresh();
   }
 
-  async function handleRepurpose(piece) {
+  async function handleRepurpose(piece, isFirstPass = false) {
     setDraftingFor(piece.id);
     const result = await requestRepurposeDrafts(piece);
     setDraftingFor(null);
     setDrafts(result ? { pieceId: piece.id, ...result } : { pieceId: piece.id, unavailable: true });
+
+    // Autonomy "auto": drafts don't just generate — they're considered
+    // done. Confirm mode leaves each format for a manual publish click.
+    if (result && autonomy === 'auto') {
+      const freshPiece = await listContentPieces();
+      const match = freshPiece.find(p => p.id === piece.id);
+      await Promise.all((match?.content_repurpose_items || []).map(item => markRepurposed(item.id)));
+      refresh();
+    }
+  }
+
+  async function handleMarkPublished(itemId) {
+    await markRepurposed(itemId);
+    refresh();
   }
 
   const NEXT_STATUS = { idea: 'drafting', drafting: 'published' };
@@ -416,10 +458,12 @@ function ContentTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card>
+        <ChibiAccent variant="cloud" corner="top-right" size={34} />
         <div className="row-between">
           <div className="section-label">Content pipeline</div>
           <Button size="sm" variant="ghost" onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : '+ New idea'}</Button>
         </div>
+        {autonomy === 'auto' && <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>✨ Auto-repurposing enabled — publishing marks all formats done automatically</div>}
         {adding && (
           <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
             <input placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
@@ -461,6 +505,18 @@ function ContentTab() {
                       {draftingFor === p.id ? 'Drafting…' : '✨ Regenerate drafts'}
                     </Button>
                   </div>
+
+                  <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+                    {(p.content_repurpose_items || []).map(item => (
+                      <div key={item.id} className="row-between" style={{ fontSize: 12 }}>
+                        <span className="muted" style={{ textTransform: 'uppercase' }}>{item.format.replace('_', ' ')}</span>
+                        {item.published ? <span style={{ color: 'var(--success)' }}>✓ Published</span> : (
+                          <Button size="sm" variant="text" onClick={() => handleMarkPublished(item.id)}>Mark published</Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
                   {drafts?.pieceId === p.id && (
                     <AiSuggestionBox unavailable={drafts.unavailable}>
                       <div className="stack" style={{ gap: 'var(--space-2)' }}>
@@ -522,6 +578,7 @@ function CtaLibrary() {
 
   return (
     <Card>
+      <ChibiAccent variant="book" corner="top-right" size={32} />
       <input placeholder="Search CTAs..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', marginBottom: 12 }} />
       <div className="stack">
         {items.map(c => (
@@ -643,6 +700,7 @@ function ClientsTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card>
+        <ChibiAccent variant="coin" corner="top-right" size={32} />
         <div className="row-between">
           <div className="section-label">Log a closing</div>
           <Button size="sm" variant="ghost" onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : '+ New closing'}</Button>
@@ -721,7 +779,11 @@ const LINK_OPTIONS = [
 function RoadmapTab() {
   const [items, setItems] = useState([]);
   const [expanded, setExpanded] = useState(null);
-  useEffect(() => { load(); }, []);
+  const [phases, setPhases] = useState(['Foundation', 'Growth', 'Expansion']);
+  useEffect(() => {
+    syncRoadmapStatuses().then(load);
+    getCategoryList('roadmap_phases').then(setPhases);
+  }, []);
 
   async function load() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -729,9 +791,9 @@ function RoadmapTab() {
     setItems(data || []);
   }
 
-  const phases = ['Foundation', 'Growth', 'Expansion'];
   return (
     <div className="stack">
+      <ChibiAccent variant="sprout" corner="top-left" size={30} />
       {phases.map(phase => (
         <Card key={phase}>
           <div className="section-label">{phase}</div>
