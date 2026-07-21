@@ -92,6 +92,35 @@ export async function listPipelineDeals() {
   return data;
 }
 
+// ---------- Relationship tier: inferred, not manually decided ----------
+// Category already tells you most of what tier means — asking for
+// both is asking twice for the same signal. This is a default, always
+// visible and overridable, never silently forced.
+const TIER_DEFAULT_BY_CATEGORY = {
+  Sphere: 'Tier 2 - Developing',
+  Partner: 'Tier 3 - Strategic',
+  'Agent Referral': 'Tier 3 - Strategic',
+};
+
+export function inferDefaultTier(category) {
+  return TIER_DEFAULT_BY_CATEGORY[category] || null;
+}
+
+/** Tags every untiered Sphere/Partner/Agent Referral contact with its
+ *  inferred default in one call — the "why am I doing this one at a
+ *  time" fix for what used to be a manual per-contact decision. */
+export async function autoTagUntieredContacts() {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('contacts').select('id, category')
+    .eq('user_id', userId).is('relationship_tier', null).in('category', Object.keys(TIER_DEFAULT_BY_CATEGORY));
+  if (error) throw error;
+  const updates = (data || [])
+    .map(c => ({ id: c.id, tier: inferDefaultTier(c.category) }))
+    .filter(u => u.tier);
+  await Promise.all(updates.map(u => supabase.from('contacts').update({ relationship_tier: u.tier }).eq('id', u.id)));
+  return updates.length;
+}
+
 /** AI-drafted follow-up from CRM context — A5. Graceful-degrade like
  *  every other AI feature: null if the function isn't configured. */
 export async function requestFollowUpDraft(contact) {
