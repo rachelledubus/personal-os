@@ -125,10 +125,12 @@ export async function autoTagUntieredContacts() {
  *  every other AI feature: null if the function isn't configured. */
 export async function requestFollowUpDraft(contact) {
   try {
+    const { getCustomAiInstructions } = await import('./settings.js');
+    const customInstructions = await getCustomAiInstructions();
     const res = await fetch('/.netlify/functions/draft-followup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contact }),
+      body: JSON.stringify({ contact, customInstructions }),
     });
     if (!res.ok) return null;
     return await res.json();
