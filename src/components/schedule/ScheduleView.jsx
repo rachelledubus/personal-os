@@ -16,7 +16,7 @@ function isCurrentBlock(block) {
   return nowMin >= startMin && nowMin < endMin;
 }
 
-export default function ScheduleView({ blocks, onToggleTask }) {
+export default function ScheduleView({ blocks, onToggleTask, onToggleBlock }) {
   if (blocks === null) return null;
   if (blocks.length === 0) {
     return <EmptyState icon="calendar" title="No schedule yet" subtitle="Your day will build itself here once your Life Rhythm is set up." />;
@@ -30,6 +30,7 @@ export default function ScheduleView({ blocks, onToggleTask }) {
           block={block}
           isCurrent={isCurrentBlock(block)}
           onToggleTask={onToggleTask}
+          onToggleBlock={onToggleBlock}
         />
       ))}
     </div>
