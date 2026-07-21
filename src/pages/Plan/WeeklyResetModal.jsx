@@ -5,39 +5,24 @@ import { supabase } from '../../lib/supabaseClient.js';
 import { markPromptShown, markPromptCompleted } from '../../services/prompts.js';
 
 const COPY = {
-  weekly_reset: {
-    title: 'Monday Reset',
-    subtitle: "Set this week's targets before the week gets away from you.",
-  },
-  weekly_closeout: {
-    title: 'Friday Close-Out',
-    subtitle: 'Quick review before the weekend — this becomes your Weekly Review.',
-  },
-  monthly_snapshot: {
-    title: 'Monthly Snapshot',
-    subtitle: 'A one-glance summary of last month, auto-filled from your data.',
-  },
+  weekly_reset: { title: 'Monday Reset', subtitle: "Set this week's targets before the week gets away from you." },
+  weekly_closeout: { title: 'Friday Close-Out', subtitle: 'Quick review before the weekend — this becomes your Weekly Review.' },
+  monthly_snapshot: { title: 'Monthly Snapshot', subtitle: 'A one-glance summary of last month, auto-filled from your data.' },
 };
 
 export default function WeeklyResetModal({ promptType, marker, onClose }) {
   const [fields, setFields] = useState({});
 
-  useEffect(() => {
-    markPromptShown(promptType, marker);
-  }, [promptType, marker]);
+  useEffect(() => { markPromptShown(promptType, marker); }, [promptType, marker]);
 
-  function set(key, value) {
-    setFields(prev => ({ ...prev, [key]: value }));
-  }
+  function set(key, value) { setFields(prev => ({ ...prev, [key]: value })); }
 
   async function handleSave() {
     if (promptType === 'weekly_closeout') {
       const { data: { user } } = await supabase.auth.getUser();
       await supabase.from('weekly_reviews').upsert({
-        user_id: user.id,
-        week_start: marker,
-        wins: fields.wins || '',
-        challenges: fields.challenges || '',
+        user_id: user.id, week_start: marker,
+        wins: fields.wins || '', challenges: fields.challenges || '',
         next_week_priorities: fields.priorities || '',
       }, { onConflict: 'user_id,week_start' });
     }
@@ -66,18 +51,9 @@ export default function WeeklyResetModal({ promptType, marker, onClose }) {
 
       {promptType === 'weekly_closeout' && (
         <div className="stack">
-          <label className="reset-field">
-            <span>Wins this week</span>
-            <textarea onChange={e => set('wins', e.target.value)} />
-          </label>
-          <label className="reset-field">
-            <span>Challenges</span>
-            <textarea onChange={e => set('challenges', e.target.value)} />
-          </label>
-          <label className="reset-field">
-            <span>Next week's priorities</span>
-            <textarea onChange={e => set('priorities', e.target.value)} />
-          </label>
+          <label className="reset-field"><span>Wins this week</span><textarea onChange={e => set('wins', e.target.value)} /></label>
+          <label className="reset-field"><span>Challenges</span><textarea onChange={e => set('challenges', e.target.value)} /></label>
+          <label className="reset-field"><span>Next week's priorities</span><textarea onChange={e => set('priorities', e.target.value)} /></label>
         </div>
       )}
 
@@ -85,7 +61,7 @@ export default function WeeklyResetModal({ promptType, marker, onClose }) {
         <p>Your business KPIs and pipeline snapshot are ready in Business → Overview.</p>
       )}
 
-      <div className="row" style={{ justifyContent: 'flex-end', marginTop: 'var(--space-5)' }}>
+      <div className="row" style={{ justifyContent: 'flex-end', marginTop: 'var(--space-5)', flexWrap: 'wrap' }}>
         <Button variant="ghost" onClick={onClose}>Skip for now</Button>
         <Button variant="primary" onClick={handleSave}>Save & continue</Button>
       </div>

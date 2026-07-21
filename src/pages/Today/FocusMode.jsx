@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
+import TimerWidget from '../../components/timer/TimerWidget.jsx';
 import { getTodayMissions, toggleMission } from '../../services/missions.js';
+import { useTimerContext } from '../../context/TimerContext.jsx';
 import './FocusMode.css';
 
 export default function FocusMode() {
   const navigate = useNavigate();
+  const timer = useTimerContext();
   const [mission, setMission] = useState(null);
-  const [seconds, setSeconds] = useState(0);
-  const [running, setRunning] = useState(false);
 
   useEffect(() => {
     getTodayMissions().then(list => {
@@ -17,19 +18,13 @@ export default function FocusMode() {
     });
   }, []);
 
-  useEffect(() => {
-    if (!running) return;
-    const id = setInterval(() => setSeconds(s => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [running]);
-
   async function handleComplete() {
     if (mission) await toggleMission(mission, true);
+    if (timer.isActive) timer.skip(true);
     navigate('/today');
   }
 
-  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
-  const ss = String(seconds % 60).padStart(2, '0');
+  const missionRef = mission ? { sourceTable: mission.sourceTable, sourceId: mission.sourceId, title: mission.title } : null;
 
   return (
     <div className="focus-shell">
@@ -45,9 +40,11 @@ export default function FocusMode() {
           <h1 className="focus-title">{mission.title}</h1>
           {mission.context && <p className="focus-context">{mission.context}</p>}
 
-          <div className="focus-timer">{mm}:{ss}</div>
-          <div className="row" style={{ justifyContent: 'center', gap: 'var(--space-3)' }}>
-            <Button variant="ghost" onClick={() => setRunning(r => !r)}>{running ? 'Pause' : 'Start timer'}</Button>
+          <div className="focus-timer-slot">
+            <TimerWidget mission={missionRef} />
+          </div>
+
+          <div className="row" style={{ justifyContent: 'center', gap: 'var(--space-3)', marginTop: 'var(--space-5)' }}>
             <Button variant="primary" onClick={handleComplete}>Mark complete</Button>
           </div>
         </div>

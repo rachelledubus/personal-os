@@ -1,6 +1,3 @@
-// Pure functions — no Supabase calls here, just the math the Meal Planner
-// needs to compute live totals and "remaining" macros as meals are built.
-
 export function sumMacros(entries) {
   return entries.reduce(
     (acc, e) => ({
@@ -22,17 +19,11 @@ export function remainingMacros(goals, consumed) {
   };
 }
 
-// Given the remaining macros and a food database, suggest foods whose
-// per-serving macros fit within what's left — simple, transparent scoring,
-// not a black box: prioritizes protein-per-calorie efficiency when protein
-// is the tightest remaining constraint, otherwise just filters by fit.
 export function suggestFoods(foods, remaining, count = 5) {
   const proteinIsTight = remaining.protein > 0 && remaining.calories > 0
     && (remaining.protein / (remaining.calories || 1)) > 0.08;
 
-  const fitting = foods.filter(f =>
-    (Number(f.calories) || 0) <= remaining.calories + 50 // small buffer
-  );
+  const fitting = foods.filter(f => (Number(f.calories) || 0) <= remaining.calories + 50);
 
   const scored = fitting.map(f => {
     const cals = Number(f.calories) || 1;

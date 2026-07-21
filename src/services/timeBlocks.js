@@ -7,7 +7,7 @@ async function getUserId() {
 
 export async function listTimeBlocks(date) {
   const userId = await getUserId();
-  const { data, error } = await supabase.from('time_blocks').select('*, tasks!time_blocks_task_id_fkey(title, completed)')
+  const { data, error } = await supabase.from('time_blocks').select('*, tasks(title, completed)')
     .eq('user_id', userId).eq('block_date', date).order('start_time', { ascending: true, nullsFirst: false });
   if (error) throw error;
   return data;
@@ -29,9 +29,6 @@ export async function deleteTimeBlock(id) {
   if (error) throw error;
 }
 
-/** Schedules an existing task onto the calendar by creating a linked
- *  time block — the task itself (and its completion state) still
- *  lives in `tasks`; this just gives it a slot on a given day. */
 export async function scheduleTask(task, date, startTime, endTime) {
   const userId = await getUserId();
   const { error } = await supabase.from('time_blocks').insert({

@@ -1,14 +1,11 @@
 .card {
   background: var(--white);
-  background-image: linear-gradient(180deg, rgba(251, 248, 242, 0.6) 0%, rgba(255, 255, 255, 0) 40%);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
-  position: relative;
-  z-index: 1;
   transition: box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
 }
 
-.card-resting { box-shadow: var(--shadow-resting), 0 1px 0 rgba(212, 162, 76, 0.08) inset; }
+.card-resting { box-shadow: var(--shadow-resting); }
 
 .card-active {
   box-shadow: var(--shadow-active);
@@ -18,3 +15,7 @@
 .card-modal { box-shadow: var(--shadow-modal); background: var(--cream); }
 
 .card:hover.card-resting { transform: translateY(-2px); box-shadow: var(--shadow-active); }
+
+@media (max-width: 480px) {
+  .card { padding: var(--space-4); border-radius: var(--radius-md); }
+}

@@ -14,10 +14,10 @@
   --accent: #C0704F;
 
   /* --- Color: new, extends the palette --- */
-  --cream: #FBF8F2;      /* elevated surface, between white and sand */
-  --blush: #E8C4B8;      /* completion / soft highlight */
-  --gold: #D4A24C;       /* streaks, achievements, sparkles */
-  --ink-soft: rgba(22, 50, 79, 0.55); /* muted text — replaces ad-hoc opacity values */
+  --cream: #FBF8F2;
+  --blush: #E8C4B8;
+  --gold: #D4A24C;
+  --ink-soft: rgba(22, 50, 79, 0.55);
   --ink-faint: rgba(22, 50, 79, 0.35);
 
   /* --- Track colors (Mission Engine) --- */
@@ -67,4 +67,7 @@
   --duration-modal: 250ms;
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* --- New: minimum touch target, referenced by mobile fixes --- */
+  --touch-target-min: 44px;
 }

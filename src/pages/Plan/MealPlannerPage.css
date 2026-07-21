@@ -1,11 +1,20 @@
 .macro-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
 .macro-cell { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
 
-.meal-plan-row { padding: 6px 0; border-bottom: 1px solid var(--sand); font-size: 14px; }
-.row-remove-btn { background: none; border: none; color: var(--ink-faint); font-size: 16px; }
+.meal-plan-row { padding: 8px 0; border-bottom: 1px solid var(--sand); font-size: 14px; }
 
+.food-quick-add-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--space-3); }
 .food-quick-add {
   background: var(--cream); border: none; border-radius: var(--radius-pill);
-  padding: 6px 12px; font-size: 12px; color: var(--navy); margin: 3px;
+  padding: 9px 14px; font-size: 12.5px; color: var(--navy);
+  min-height: 40px;
 }
 .food-quick-add.suggestion { background: var(--blush); }
+
+.meal-planner-actions { flex-wrap: wrap; }
+
+@media (max-width: 480px) {
+  .macro-grid { grid-template-columns: 1fr; gap: var(--space-3); }
+  .meal-planner-actions { flex-direction: column; align-items: stretch; }
+  .meal-planner-actions .btn { width: 100%; }
+}

@@ -5,7 +5,7 @@
   gap: var(--space-3);
   background: var(--white);
   border-radius: var(--radius-md);
-  padding: 14px 16px 14px 20px;
+  padding: 14px 8px 14px 20px;
   box-shadow: var(--shadow-resting);
   overflow: hidden;
   transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base), opacity var(--duration-slow);
@@ -37,7 +37,9 @@
 .mission-context { font-size: var(--text-caption); color: var(--ink-soft); margin-top: 2px; }
 
 .mission-dismiss {
-  background: none; border: none; color: var(--ink-faint); font-size: 18px; line-height: 1; padding: 4px;
+  background: none; border: none; color: var(--ink-faint); font-size: 18px; line-height: 1;
+  width: 40px; height: 40px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
 }
 
 .mission-done {
@@ -45,6 +47,7 @@
   transform: translateX(4px);
 }
 
-/* When a mission is checked off, it fades and slides out — the list
-   above re-flows to promote the next item. Handled at the list level
-   via a CSS transition on removal (see MissionList.css). */
+@media (max-width: 480px) {
+  .mission-card { padding: 12px 4px 12px 16px; gap: var(--space-2); }
+  .mission-title { font-size: 14.5px; }
+}

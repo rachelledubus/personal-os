@@ -3,27 +3,12 @@
   padding: var(--space-6) var(--space-4);
 }
 .empty-state-icon {
-  width: 84px; height: 84px;
-  position: relative;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--cream);
+  color: var(--sage);
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto var(--space-3);
-  filter: drop-shadow(0 6px 14px rgba(143, 165, 138, 0.35));
-  animation: empty-state-bob 3.2s ease-in-out infinite;
-}
-.empty-state-blob {
-  width: 84px; height: 84px;
-  position: absolute; top: 0; left: 0;
-}
-.empty-state-icon-glyph {
-  position: relative;
-  color: var(--navy);
-  opacity: 0.6;
-  margin-top: 8px;
 }
 .empty-state-title { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--navy); }
 .empty-state-subtitle { font-size: var(--text-caption); color: var(--ink-soft); margin-top: var(--space-1); }
-
-@keyframes empty-state-bob {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-4px) rotate(-2deg); }
-}
