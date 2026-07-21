@@ -7,8 +7,10 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { FLOWS } from '../../services/flows.js';
 import { listMilestones, addMilestone, toggleMilestone, updateRoadmapLink } from '../../services/goals.js';
+import AiSuggestionBox from '../../components/ui/AiSuggestionBox.jsx';
 import {
   listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, requestFollowUpDraft,
+  inferDefaultTier, autoTagUntieredContacts,
 } from '../../services/contacts.js';
 import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals } from '../../services/dailyCheckin.js';
 import { seedMasterTimelineIfEmpty, getThisWeekBuild } from '../../services/timeline.js';
@@ -60,6 +62,8 @@ function DashboardTab() {
   const [health, setHealth] = useState(null);
   const [editingTargets, setEditingTargets] = useState(false);
   const [targetForm, setTargetForm] = useState({ conversations_target: 10, knowledge_items_target: 10, consultations_target: 0, pipeline_moves_target: 0 });
+  const [draft, setDraft] = useState(null);
+  const [drafting, setDrafting] = useState(null);
 
   useEffect(() => { seedMasterTimelineIfEmpty().then(refresh); }, []);
 
@@ -83,6 +87,13 @@ function DashboardTab() {
     await setWeeklyTargets(targetForm);
     setEditingTargets(false);
     refresh();
+  }
+
+  async function handleDraftFollowUp(contact) {
+    setDrafting(contact.id);
+    const result = await requestFollowUpDraft(contact);
+    setDrafting(null);
+    setDraft(result ? { contactId: contact.id, ...result } : { contactId: contact.id, unavailable: true });
   }
 
   const BOXES = [
@@ -140,9 +151,23 @@ function DashboardTab() {
           <div className="section-label">Overdue follow-ups</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {overdue.map(c => (
-              <Link key={c.id} to={`/business/pipeline`} className="row-between" style={{ fontSize: 13, padding: '4px 0' }}>
-                <span>{c.name}</span><span className="muted">{c.next_action}</span>
-              </Link>
+              <div key={c.id} style={{ padding: '4px 0' }}>
+                <div className="row-between">
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{c.name}</div>
+                    <div className="muted" style={{ fontSize: 12 }}>{c.next_action}</div>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => handleDraftFollowUp(c)} disabled={drafting === c.id}>
+                    {drafting === c.id ? '…' : '✨ Draft'}
+                  </Button>
+                </div>
+                {draft?.contactId === c.id && (
+                  <AiSuggestionBox unavailable={draft.unavailable} onDismiss={() => setDraft(null)}>
+                    <div style={{ fontSize: 13 }}>{draft.message}</div>
+                    <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draft.channel}</div>
+                  </AiSuggestionBox>
+                )}
+              </div>
             ))}
           </div>
         </Card>
@@ -185,7 +210,7 @@ function PipelineTab() {
 
   async function handleAdd() {
     if (!form.name.trim()) return;
-    await addContact(form);
+    await addContact({ ...form, relationship_tier: inferDefaultTier(form.category) });
     setForm({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text' });
     setAdding(false);
     refresh();
@@ -262,16 +287,10 @@ function PipelineTab() {
                         </Button>
                       </div>
                       {draft?.contactId === c.id && (
-                        <div className="inbox-suggestion" style={{ marginTop: 'var(--space-2)' }}>
-                          {draft.unavailable ? (
-                            <span>AI drafting isn't set up yet (needs GOOGLE_AI_API_KEY on Netlify).</span>
-                          ) : (
-                            <>
-                              <div style={{ fontSize: 13 }}>{draft.message}</div>
-                              <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draft.channel} · {draft.reasoning}</div>
-                            </>
-                          )}
-                        </div>
+                        <AiSuggestionBox unavailable={draft.unavailable} onDismiss={() => setDraft(null)}>
+                          <div style={{ fontSize: 13 }}>{draft.message}</div>
+                          <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draft.channel} · {draft.reasoning}</div>
+                        </AiSuggestionBox>
                       )}
                     </div>
                   )}
@@ -300,6 +319,7 @@ const TIERS = [
 function RelationshipsTab() {
   const [byTier, setByTier] = useState({});
   const [untiered, setUntiered] = useState([]);
+  const [tagging, setTagging] = useState(false);
 
   async function refresh() {
     const [t1, t2, t3, all] = await Promise.all([
@@ -310,8 +330,24 @@ function RelationshipsTab() {
   }
   useEffect(() => { refresh(); }, []);
 
+  async function handleAutoTag() {
+    setTagging(true);
+    await autoTagUntieredContacts();
+    setTagging(false);
+    refresh();
+  }
+
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      {untiered.length > 0 && (
+        <Card className="track-personal">
+          <div className="row-between">
+            <div style={{ fontSize: 13 }}>{untiered.length} contact{untiered.length === 1 ? '' : 's'} without a relationship tier — Sphere defaults to Tier 2, Partner/Agent Referral default to Tier 3.</div>
+            <Button size="sm" onClick={handleAutoTag} disabled={tagging}>{tagging ? 'Tagging…' : 'Auto-tag all'}</Button>
+          </div>
+        </Card>
+      )}
+
       {TIERS.map(t => (
         <Card key={t.key}>
           <div className="row-between">
@@ -330,16 +366,6 @@ function RelationshipsTab() {
           )}
         </Card>
       ))}
-
-      {untiered.length > 0 && (
-        <Card>
-          <div className="section-label">Not yet tagged with a tier</div>
-          <p className="muted" style={{ fontSize: 12 }}>Sphere/Partner contacts without a relationship tier — tag them from Pipeline to see them here.</p>
-          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            {untiered.map(c => <div key={c.id} style={{ fontSize: 13, padding: '2px 0' }}>{c.name} <span className="muted">({c.category})</span></div>)}
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
@@ -369,7 +395,12 @@ function ContentTab() {
 
   async function handleAdvance(piece, status) {
     await advanceStatus(piece.id, status);
-    if (status === 'published') await initRepurposeSlots(piece.id);
+    if (status === 'published') {
+      await initRepurposeSlots(piece.id);
+      // Don't make the person ask for this separately — the moment
+      // something publishes is exactly when repurposing is useful.
+      handleRepurpose({ ...piece, status: 'published' });
+    }
     refresh();
   }
 
@@ -380,8 +411,7 @@ function ContentTab() {
     setDrafts(result ? { pieceId: piece.id, ...result } : { pieceId: piece.id, unavailable: true });
   }
 
-  const STATUS_ORDER = ['idea', 'brief', 'draft', 'fact_check', 'published', 'repurposed'];
-  const NEXT_STATUS = { idea: 'brief', brief: 'draft', draft: 'fact_check', fact_check: 'published' };
+  const NEXT_STATUS = { idea: 'drafting', drafting: 'published' };
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
@@ -428,21 +458,20 @@ function ContentTab() {
                   <div className="row-between">
                     <span className="muted" style={{ fontSize: 12 }}>Repurposed: {(p.content_repurpose_items || []).filter(r => r.published).length} / {(p.content_repurpose_items || []).length}</span>
                     <Button size="sm" variant="ghost" onClick={() => handleRepurpose(p)} disabled={draftingFor === p.id}>
-                      {draftingFor === p.id ? 'Drafting…' : '✨ AI: draft all formats'}
+                      {draftingFor === p.id ? 'Drafting…' : '✨ Regenerate drafts'}
                     </Button>
                   </div>
-                  {drafts?.pieceId === p.id && !drafts.unavailable && (
-                    <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
-                      {Object.entries(drafts).filter(([k]) => k !== 'pieceId').map(([format, text]) => (
-                        <div key={format} className="inbox-suggestion">
-                          <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase' }}>{format.replace('_', ' ')}</div>
-                          <div style={{ fontSize: 13 }}>{text}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {drafts?.pieceId === p.id && drafts.unavailable && (
-                    <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>AI repurposing isn't set up yet (needs GOOGLE_AI_API_KEY on Netlify).</div>
+                  {drafts?.pieceId === p.id && (
+                    <AiSuggestionBox unavailable={drafts.unavailable}>
+                      <div className="stack" style={{ gap: 'var(--space-2)' }}>
+                        {Object.entries(drafts).filter(([k]) => k !== 'pieceId' && k !== 'unavailable').map(([format, text]) => (
+                          <div key={format}>
+                            <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase' }}>{format.replace('_', ' ')}</div>
+                            <div style={{ fontSize: 13 }}>{text}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </AiSuggestionBox>
                   )}
                 </div>
               )}
@@ -528,7 +557,7 @@ function ScriptLibrary() {
       <input placeholder="Search scripts..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', marginBottom: 12 }} />
       <div className="stack">
         {items.map(s => (
-          <details key={s.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
+          <details key={s.id} open={!!search} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
             <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>{s.section} — {s.situation}</summary>
             <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>{s.script_text}</p>
             <Button size="sm" variant="ghost" onClick={() => copy(s)}>{copiedId === s.id ? 'Copied ✓' : 'Copy'}</Button>
@@ -558,7 +587,7 @@ function PromptLibrary() {
       <input placeholder="Search prompts..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', marginBottom: 12 }} />
       <div className="stack">
         {items.map(p => (
-          <details key={p.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
+          <details key={p.id} open={!!search} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
             <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>{p.code ? `${p.code} — ` : ''}{p.title}</summary>
             <div className="muted" style={{ fontSize: 11 }}>{p.category} · {p.use_for}</div>
             <p style={{ fontSize: 13, marginTop: 4, whiteSpace: 'pre-wrap' }}>{p.prompt_text}</p>
@@ -581,7 +610,7 @@ function ClientsTab() {
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({
     contact_id: '', buyer_or_seller: 'Buyer', property_area: '', closing_date: '',
-    lesson_learned: '', content_idea_added: false, added_to_past_client_plan: true, testimonial_requested: false,
+    lesson_learned: '', content_idea_added: false, added_to_past_client_plan: true, testimonial_requested: true,
   });
 
   async function refresh() {
@@ -591,11 +620,22 @@ function ClientsTab() {
   }
   useEffect(() => { refresh(); }, []);
 
+  function handleSelectContact(contactId) {
+    const contact = contacts.find(c => c.id === contactId);
+    setForm(prev => ({
+      ...prev,
+      contact_id: contactId,
+      // Both already exist on the CRM record — no reason to ask twice.
+      buyer_or_seller: contact?.buyer_seller && contact.buyer_seller !== 'Both' ? contact.buyer_seller : prev.buyer_or_seller,
+      property_area: contact?.location_interest || prev.property_area,
+    }));
+  }
+
   async function handleAdd() {
     if (!form.contact_id || !form.closing_date) return;
     const contact = contacts.find(c => c.id === form.contact_id);
     await addTransaction({ ...form, contacts_name: contact?.name });
-    setForm({ contact_id: '', buyer_or_seller: 'Buyer', property_area: '', closing_date: '', lesson_learned: '', content_idea_added: false, added_to_past_client_plan: true, testimonial_requested: false });
+    setForm({ contact_id: '', buyer_or_seller: 'Buyer', property_area: '', closing_date: '', lesson_learned: '', content_idea_added: false, added_to_past_client_plan: true, testimonial_requested: true });
     setAdding(false);
     refresh();
   }
@@ -610,7 +650,7 @@ function ClientsTab() {
         {adding && (
           <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
             <div className="row" style={{ flexWrap: 'wrap' }}>
-              <select value={form.contact_id} onChange={e => setForm({ ...form, contact_id: e.target.value })}>
+              <select value={form.contact_id} onChange={e => handleSelectContact(e.target.value)}>
                 <option value="">Select client...</option>
                 {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>

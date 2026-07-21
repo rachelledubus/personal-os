@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
+import MarkdownDoc from '../../components/ui/MarkdownDoc.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { listRecentDecisions } from '../../services/aiOperator.js';
 
@@ -77,11 +78,16 @@ function ReferenceTab() {
   );
 }
 
-// Now pulls `body` and renders it expandable — clicking a document
-// shows its actual content instead of just a title in a static list.
+// Now pulls `body` and renders it as real markdown — headers, bold,
+// tables, and links actually render instead of showing raw ** and |
+// syntax. Clicking a doc-number mention (or a link to another doc)
+// expands and scrolls straight to that document.
 function DocumentsTab() {
   const [docs, setDocs] = useState([]);
   const [search, setSearch] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
+  const docRefs = useRef({});
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -89,6 +95,19 @@ function DocumentsTab() {
       setDocs(data || []);
     })();
   }, []);
+
+  // Maps "07" -> that doc's id, "04A" -> that doc's id, etc. — what
+  // MarkdownDoc uses to know which bare mentions are real, linkable
+  // documents versus just a number in a sentence.
+  const docNumberMap = {};
+  docs.forEach(d => { if (d.doc_number) docNumberMap[d.doc_number] = d.id; });
+
+  function jumpToDoc(target, isDocId = false) {
+    const doc = isDocId ? docs.find(d => d.id === target) : docs.find(d => d.doc_number === target || d.link_to === target);
+    if (!doc) return;
+    setExpandedId(doc.id);
+    setTimeout(() => docRefs.current[doc.id]?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
 
   const filtered = docs.filter(d => !search || (d.title + (d.body || '')).toLowerCase().includes(search.toLowerCase()));
   const byCategory = {};
@@ -104,12 +123,18 @@ function DocumentsTab() {
             <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{cat}</div>
             <div className="stack">
               {items.map(d => (
-                <details key={d.id}>
-                  <summary style={{ fontWeight: 700, cursor: 'pointer' }}>
-                    {d.doc_number ? `${d.doc_number} — ` : ''}{d.title}
-                  </summary>
-                  <p className="muted" style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>{d.body || 'No content stored for this document.'}</p>
-                </details>
+                <div key={d.id} ref={el => (docRefs.current[d.id] = el)}>
+                  <details open={expandedId === d.id} onToggle={e => e.target.open && setExpandedId(d.id)}>
+                    <summary style={{ fontWeight: 700, cursor: 'pointer' }}>
+                      {d.doc_number ? `${d.doc_number} — ` : ''}{d.title}
+                    </summary>
+                    {d.body ? (
+                      <MarkdownDoc text={d.body} docNumberMap={docNumberMap} onJumpToDoc={jumpToDoc} />
+                    ) : (
+                      <p className="muted" style={{ fontSize: 13 }}>No content stored for this document.</p>
+                    )}
+                  </details>
+                </div>
               ))}
             </div>
           </div>
