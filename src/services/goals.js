@@ -57,11 +57,15 @@ export async function listProjectTasks(projectId) {
 }
 
 // ---------- Milestones ----------
-export async function listMilestones({ projectId, goalId }) {
+// Also doubles as roadmap sub-tasks (roadmapId) — same table, same
+// checkbox pattern, just a third optional parent alongside
+// project_id/goal_id.
+export async function listMilestones({ projectId, goalId, roadmapId }) {
   const userId = await getUserId();
   let q = supabase.from('milestones').select('*').eq('user_id', userId).order('sort_order');
   if (projectId) q = q.eq('project_id', projectId);
   if (goalId) q = q.eq('goal_id', goalId);
+  if (roadmapId) q = q.eq('roadmap_item_id', roadmapId);
   const { data, error } = await q;
   if (error) throw error;
   return data;
@@ -77,6 +81,13 @@ export async function toggleMilestone(id, completed) {
   const { error } = await supabase.from('milestones')
     .update({ completed, completed_date: completed ? new Date().toISOString().slice(0, 10) : null })
     .eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Roadmap items (link_to only — status/phase already
+// managed inline where roadmap items are listed) ----------
+export async function updateRoadmapLink(id, linkTo) {
+  const { error } = await supabase.from('roadmap_items').update({ link_to: linkTo }).eq('id', id);
   if (error) throw error;
 }
 
