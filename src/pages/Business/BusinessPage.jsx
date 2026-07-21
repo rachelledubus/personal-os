@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabaseClient.js';
 import { FLOWS } from '../../services/flows.js';
 import { listMilestones, addMilestone, toggleMilestone, updateRoadmapLink } from '../../services/goals.js';
 import { getCategoryList } from '../../services/settings.js';
-import ChibiAccent from '../../components/ui/ChibiAccent.jsx';
+import Banner from '../../components/ui/Banner.jsx';
 import AiSuggestionBox from '../../components/ui/AiSuggestionBox.jsx';
 import {
   listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, requestFollowUpDraft,
@@ -30,6 +30,7 @@ export default function BusinessPage() {
 
   return (
     <div>
+      <Banner slotKey="business_banner" scene="business" />
       <div className="page-title">💼 Business</div>
 
       <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
@@ -122,7 +123,6 @@ function DashboardTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card className="today-summary-card">
-        <ChibiAccent variant="sprout" corner="top-right" size={36} />
         <div className="section-label">Today's four boxes</div>
         <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-4)', marginTop: 'var(--space-3)' }}>
           {BOXES.map(b => (
@@ -255,7 +255,6 @@ function PipelineTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card>
-        <ChibiAccent variant="cat" corner="top-right" size={34} />
         <div className="row-between">
           <div className="section-label">Pipeline</div>
           <Button size="sm" variant="ghost" onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : '+ Add contact'}</Button>
@@ -376,7 +375,6 @@ function RelationshipsTab() {
 
       {TIERS.map((t, i) => (
         <Card key={t.key}>
-          {i === 0 && <ChibiAccent variant="paw" corner="top-left" size={32} />}
           <div className="row-between">
             <div className="section-label">{t.label}</div>
             <span className="muted" style={{ fontSize: 11 }}>{t.cadence}</span>
@@ -458,7 +456,6 @@ function ContentTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card>
-        <ChibiAccent variant="cloud" corner="top-right" size={34} />
         <div className="row-between">
           <div className="section-label">Content pipeline</div>
           <Button size="sm" variant="ghost" onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : '+ New idea'}</Button>
@@ -578,7 +575,6 @@ function CtaLibrary() {
 
   return (
     <Card>
-      <ChibiAccent variant="book" corner="top-right" size={32} />
       <input placeholder="Search CTAs..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', marginBottom: 12 }} />
       <div className="stack">
         {items.map(c => (
@@ -700,7 +696,6 @@ function ClientsTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card>
-        <ChibiAccent variant="coin" corner="top-right" size={32} />
         <div className="row-between">
           <div className="section-label">Log a closing</div>
           <Button size="sm" variant="ghost" onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : '+ New closing'}</Button>
@@ -793,7 +788,6 @@ function RoadmapTab() {
 
   return (
     <div className="stack">
-      <ChibiAccent variant="sprout" corner="top-left" size={30} />
       {phases.map(phase => (
         <Card key={phase}>
           <div className="section-label">{phase}</div>

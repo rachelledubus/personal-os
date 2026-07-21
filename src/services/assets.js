@@ -10,14 +10,16 @@ import { addDevLogEntry } from './devMemory.js';
 // built-in SVG when nothing's assigned.
 // ============================================================
 
+export const BANNER_SLOTS = [
+  { key: 'today_banner', label: 'Today banner', usedIn: 'Today — page header', scene: 'today' },
+  { key: 'business_banner', label: 'Business banner', usedIn: 'Business — page header', scene: 'business' },
+  { key: 'grow_banner', label: 'Grow banner', usedIn: 'Grow — page header', scene: 'grow' },
+  { key: 'plan_banner', label: 'Plan banner', usedIn: 'Plan — page header', scene: 'plan' },
+  { key: 'library_banner', label: 'Library banner', usedIn: 'Library — page header', scene: 'library' },
+];
+
 export const ASSET_SLOTS = [
   { key: 'profile_avatar', label: 'Profile avatar (SideNav)', usedIn: 'Every page — top of the sidebar' },
-  { key: 'today_mascot', label: 'Today page mascot', usedIn: 'Today — empty states' },
-  { key: 'business_mascot', label: 'Business page mascot', usedIn: 'Business — Dashboard card' },
-  { key: 'grow_mascot', label: 'Grow page mascot', usedIn: 'Grow — empty states' },
-  { key: 'meal_planner_graphic', label: 'Meal Planner graphic', usedIn: 'Plan — Meal Planner' },
-  { key: 'workout_graphic', label: 'Workout graphic', usedIn: 'Grow — Workouts' },
-  { key: 'library_graphic', label: 'Library graphic', usedIn: 'Library' },
 ];
 
 async function getUserId() {
@@ -30,7 +32,9 @@ export async function listAssetSlots() {
   const { data, error } = await supabase.from('asset_slots').select('*').eq('user_id', userId);
   if (error) throw error;
   const byKey = Object.fromEntries((data || []).map(a => [a.slot_key, a]));
-  return ASSET_SLOTS.map(slot => ({ ...slot, image_url: byKey[slot.key]?.image_url || null }));
+  const banners = BANNER_SLOTS.map(slot => ({ ...slot, category: 'Banners', image_url: byKey[slot.key]?.image_url || null }));
+  const other = ASSET_SLOTS.map(slot => ({ ...slot, category: 'Other', image_url: byKey[slot.key]?.image_url || null }));
+  return [...banners, ...other];
 }
 
 export async function setAssetSlot(slotKey, imageUrl) {
@@ -39,7 +43,7 @@ export async function setAssetSlot(slotKey, imageUrl) {
     user_id: userId, slot_key: slotKey, image_url: imageUrl || null, updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id,slot_key' });
   if (error) throw error;
-  const label = ASSET_SLOTS.find(s => s.key === slotKey)?.label || slotKey;
+  const label = [...BANNER_SLOTS, ...ASSET_SLOTS].find(s => s.key === slotKey)?.label || slotKey;
   await addDevLogEntry('config', imageUrl ? `Assigned a custom image to "${label}"` : `Reset "${label}" to the built-in artwork`);
 }
 

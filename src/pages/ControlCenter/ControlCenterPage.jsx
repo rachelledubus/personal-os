@@ -120,31 +120,48 @@ function AppearanceSection() {
     refresh();
   }
 
+  const grouped = {};
+  slots.forEach(s => { (grouped[s.category] ||= []).push(s); });
+
   return (
-    <div className="stack" style={{ gap: 'var(--space-3)' }}>
+    <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <p className="muted" style={{ fontSize: 12 }}>
         Paste a link to an image you've already got hosted somewhere (Google Drive share link, Imgur, etc.) to
-        swap a decorative graphic. Leave blank to use the built-in artwork.
+        swap a decorative graphic. Leave blank to use the built-in illustrated scene. Banners work best around
+        1600×440px, landscape.
       </p>
-      {slots.map(slot => (
-        <Card key={slot.key}>
-          <div className="row-between">
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 13 }}>{slot.label}</div>
-              <div className="muted" style={{ fontSize: 11 }}>{slot.usedIn}</div>
-            </div>
-            {slot.image_url && !editing && <img src={slot.image_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />}
-          </div>
-          {editing === slot.key ? (
-            <div className="row" style={{ marginTop: 'var(--space-2)' }}>
-              <input placeholder="Image URL" value={urlValue} onChange={e => setUrlValue(e.target.value)} style={{ flex: 1 }} />
-              <Button size="sm" onClick={() => save(slot.key)}>Save</Button>
-              <Button size="sm" variant="text" onClick={() => setEditing(null)}>Cancel</Button>
-            </div>
-          ) : (
+      {Object.entries(grouped).map(([category, items]) => (
+        <div key={category}>
+          <div className="section-label" style={{ marginBottom: 'var(--space-2)' }}>{category}</div>
+          <div className="stack" style={{ gap: 'var(--space-2)' }}>
+            {items.map(slot => (
+              <Card key={slot.key}>
+                <div className="row-between">
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{slot.label}</div>
+                    <div className="muted" style={{ fontSize: 11 }}>{slot.usedIn}</div>
+                  </div>
+                  {slot.image_url && !editing && (
+                    <img src={slot.image_url} alt="" style={
+                      category === 'Banners'
+                        ? { width: 80, height: 22, borderRadius: 4, objectFit: 'cover' }
+                        : { width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }
+                    } />
+                  )}
+                </div>
+                {editing === slot.key ? (
+                  <div className="row" style={{ marginTop: 'var(--space-2)' }}>
+                    <input placeholder="Image URL" value={urlValue} onChange={e => setUrlValue(e.target.value)} style={{ flex: 1 }} />
+                    <Button size="sm" onClick={() => save(slot.key)}>Save</Button>
+                    <Button size="sm" variant="text" onClick={() => setEditing(null)}>Cancel</Button>
+                  </div>
+                ) : (
             <Button size="sm" variant="text" onClick={() => startEdit(slot)}>{slot.image_url ? 'Change image' : '+ Assign image'}</Button>
           )}
-        </Card>
+              </Card>
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );

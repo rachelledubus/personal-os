@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, Inbox, CalendarDays, Sprout, Briefcase, BookOpen, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { getAssetUrl } from '../../services/assets.js';
 import CozyClock from './CozyClock.jsx';
 import './SideNav.css';
 
@@ -17,14 +18,15 @@ const ZONES = [
 export default function SideNav() {
   const { signOut, user } = useAuth();
   const initial = user?.email?.[0]?.toUpperCase() || '?';
+  const [avatarUrl, setAvatarUrl] = useState(null);
+
+  useEffect(() => { getAssetUrl('profile_avatar').then(setAvatarUrl); }, []);
 
   return (
     <nav className="side-nav">
       <div className="side-nav-avatar-row">
         <div className="side-nav-avatar" title="Profile">
-          {/* Swap this initial for a real photo any time — just
-              replace this div's contents with an <img>. */}
-          <span>{initial}</span>
+          {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} /> : <span>{initial}</span>}
         </div>
       </div>
 

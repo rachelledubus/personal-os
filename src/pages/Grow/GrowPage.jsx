@@ -20,7 +20,7 @@ import {
   listBudgets, listSavingsGoals, addToSavingsGoal, addSavingsGoal,
 } from '../../services/finance.js';
 import { getCategoryList } from '../../services/settings.js';
-import ChibiAccent from '../../components/ui/ChibiAccent.jsx';
+import Banner from '../../components/ui/Banner.jsx';
 
 const TABS = ['habits', 'workouts', 'chores', 'maintenance', 'finance'];
 
@@ -37,6 +37,7 @@ export default function GrowPage() {
 
   return (
     <div>
+      <Banner slotKey="grow_banner" scene="grow" />
       <div className="page-title">🌱 Grow</div>
       <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
         {TABS.map(t => (
@@ -100,7 +101,6 @@ function HabitsTab() {
 
   return (
     <Card>
-      <ChibiAccent variant="sprout" corner="top-right" size={34} />
       <div className="section-label">Daily habits</div>
       {habits.length === 0 ? <EmptyState icon="sparkles" title="No habits yet" /> : (
         <div className="stack">
@@ -206,7 +206,6 @@ function WorkoutsTab() {
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       {insights.length > 0 && (
         <Card>
-          <ChibiAccent variant="cat" corner="top-right" size={32} />
           <div className="section-label">Insights</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {insights.map((line, i) => <div key={i} style={{ fontSize: 13 }}>💡 {line}</div>)}
@@ -495,7 +494,6 @@ function FinanceTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card>
-        <ChibiAccent variant="coin" corner="top-right" size={34} />
         <div className="section-label">This month</div>
         <div className="macro-grid" style={{ marginTop: 'var(--space-3)' }}>
           <div className="macro-cell"><span className="muted">Income</span><div style={{ fontSize: 18, fontWeight: 700 }}>${summary.income.toFixed(0)}</div></div>

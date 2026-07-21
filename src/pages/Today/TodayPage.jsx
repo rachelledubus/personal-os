@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MissionList from '../../components/mission/MissionList.jsx';
 import ScheduleView, { getOverrunningBlock } from '../../components/schedule/ScheduleView.jsx';
+import Banner from '../../components/ui/Banner.jsx';
 import EnergyCheckIn from '../../components/intelligence/EnergyCheckIn.jsx';
 import { getFeatureFlag } from '../../services/settings.js';
 import AskAIPanel from '../../components/intelligence/AskAIPanel.jsx';
@@ -126,6 +127,7 @@ export default function TodayPage() {
 
   return (
     <div>
+      <Banner slotKey="today_banner" scene="today" />
       <div className="page-title">🏡 Today</div>
 
       <Card className="today-summary-card">

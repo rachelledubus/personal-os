@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabaseClient.js';
 import { listRecentDecisions } from '../../services/aiOperator.js';
 import { listBacklogIdeas, addBacklogIdea, updateBacklogIdea, deleteBacklogIdea, formatBacklogAsPrompt } from '../../services/backlog.js';
 import { getCategoryList } from '../../services/settings.js';
-import ChibiAccent from '../../components/ui/ChibiAccent.jsx';
+import Banner from '../../components/ui/Banner.jsx';
 
 const TABS = ['reference', 'documents', 'notes', 'backlog', 'ai-log'];
 const TAB_LABELS = { reference: 'Reference', documents: 'Documents', notes: 'Notes', backlog: 'Backlog', 'ai-log': 'AI Log' };
@@ -19,6 +19,7 @@ export default function LibraryPage() {
 
   return (
     <div>
+      <Banner slotKey="library_banner" scene="library" />
       <div className="page-title">📚 Library</div>
       <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
         {TABS.map(t => (
@@ -130,7 +131,6 @@ function DocumentsTab() {
 
   return (
     <Card>
-      <ChibiAccent variant="book" corner="top-right" size={34} />
       <div className="section-label">Business manual</div>
       <input placeholder="Search documents..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', margin: '8px 0 16px' }} />
       {filtered.length === 0 ? <EmptyState icon="coffee" title="Nothing here yet" /> : (
@@ -290,7 +290,6 @@ function BacklogTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card>
-        <ChibiAccent variant="cloud" corner="top-right" size={32} />
         <div className="section-label">Add an idea</div>
         <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
           <input placeholder="What should the app do better?" value={newIdea.idea}
