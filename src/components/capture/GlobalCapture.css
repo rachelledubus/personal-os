@@ -15,6 +15,12 @@
   cursor: pointer;
   z-index: 40;
   transition: transform var(--duration-fast) var(--ease-standard);
+  animation: fab-breathe 3.5s ease-in-out infinite;
+}
+
+@keyframes fab-breathe {
+  0%, 100% { box-shadow: var(--shadow-active); }
+  50% { box-shadow: 0 6px 28px rgba(192, 112, 79, 0.4); }
 }
 
 .global-capture-fab:hover {
