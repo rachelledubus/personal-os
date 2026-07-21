@@ -19,8 +19,10 @@ import {
   addEntry, deleteEntry, listThisMonthEntries, listLegacyBills, getMonthSummary,
   listBudgets, listSavingsGoals, addToSavingsGoal, addSavingsGoal,
 } from '../../services/finance.js';
+import { getCategoryList } from '../../services/settings.js';
+import ChibiAccent from '../../components/ui/ChibiAccent.jsx';
 
-const TABS = ['habits', 'workouts', 'nutrition', 'chores', 'maintenance', 'finance'];
+const TABS = ['habits', 'workouts', 'chores', 'maintenance', 'finance'];
 
 const LIFTING_DAYS = [
   { key: 'A', label: 'Upper Body', weekday: 'Tue' },
@@ -45,7 +47,6 @@ export default function GrowPage() {
       </div>
       {tab === 'habits' && <HabitsTab />}
       {tab === 'workouts' && <WorkoutsTab />}
-      {tab === 'nutrition' && <NutritionTab />}
       {tab === 'chores' && <ChoresTab />}
       {tab === 'maintenance' && <MaintenanceTab />}
       {tab === 'finance' && <FinanceTab />}
@@ -99,6 +100,7 @@ function HabitsTab() {
 
   return (
     <Card>
+      <ChibiAccent variant="sprout" corner="top-right" size={34} />
       <div className="section-label">Daily habits</div>
       {habits.length === 0 ? <EmptyState icon="sparkles" title="No habits yet" /> : (
         <div className="stack">
@@ -204,6 +206,7 @@ function WorkoutsTab() {
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       {insights.length > 0 && (
         <Card>
+          <ChibiAccent variant="cat" corner="top-right" size={32} />
           <div className="section-label">Insights</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {insights.map((line, i) => <div key={i} style={{ fontSize: 13 }}>💡 {line}</div>)}
@@ -290,44 +293,6 @@ function WorkoutsTab() {
         <Button onClick={handleSaveSession}>{saved ? 'Nice work! Saved ✓ 🎉' : `Save ${dayMeta?.label} session`}</Button>
       )}
     </div>
-  );
-}
-
-function NutritionTab() {
-  const [totals, setTotals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-  const [goals, setGoals] = useState({ calorie_goal: 1835, protein_goal: 150, carb_goal: 185, fat_goal: 55 });
-
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: logs } = await supabase.from('meal_logs')
-        .select('servings, foods(calories, protein, carbs, fat)')
-        .eq('user_id', user.id).eq('log_date', todayStr());
-      const t = (logs || []).reduce((acc, l) => ({
-        calories: acc.calories + (l.foods?.calories || 0) * l.servings,
-        protein: acc.protein + (l.foods?.protein || 0) * l.servings,
-        carbs: acc.carbs + (l.foods?.carbs || 0) * l.servings,
-        fat: acc.fat + (l.foods?.fat || 0) * l.servings,
-      }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-      setTotals(t);
-      const { data: settings } = await supabase.from('settings').select('*').eq('user_id', user.id).maybeSingle();
-      if (settings) setGoals(settings);
-    })();
-  }, []);
-
-  return (
-    <Card>
-      <div className="section-label">Today's totals</div>
-      <div className="stack">
-        <div>Calories: {Math.round(totals.calories)} / {goals.calorie_goal}</div>
-        <div>Protein: {Math.round(totals.protein)}g / {goals.protein_goal}g</div>
-        <div>Carbs: {Math.round(totals.carbs)}g / {goals.carb_goal}g</div>
-        <div>Fat: {Math.round(totals.fat)}g / {goals.fat_goal}g</div>
-      </div>
-      <p className="muted" style={{ fontSize: 12, marginTop: 12 }}>
-        Full planning lives in Plan → Meal Planner.
-      </p>
-    </Card>
   );
 }
 
@@ -460,15 +425,14 @@ function MaintenanceTab() {
   );
 }
 
-const EXPENSE_CATEGORIES = ['Housing', 'Utilities', 'Groceries', 'Transportation', 'Subscriptions', 'Insurance', 'Debt', 'Personal', 'Business', 'Other'];
-const INCOME_CATEGORIES = ['Salary', 'Commission', 'Side Income', 'Other'];
-
 function FinanceTab() {
   const [summary, setSummary] = useState(null);
   const [entries, setEntries] = useState([]);
   const [legacyBills, setLegacyBills] = useState([]);
   const [budgets, setBudgets] = useState([]);
   const [savingsGoals, setSavingsGoals] = useState([]);
+  const [expenseCategories, setExpenseCategories] = useState(['Other']);
+  const [incomeCategories, setIncomeCategories] = useState(['Other']);
   const [form, setForm] = useState({ entry_type: 'expense', category: 'Other', amount: '', notes: '', is_recurring: false });
   const [addingGoal, setAddingGoal] = useState(false);
   const [newGoal, setNewGoal] = useState({ title: '', target_value: '' });
@@ -480,10 +444,12 @@ function FinanceTab() {
     setLegacyBills(await listLegacyBills());
     setBudgets(await listBudgets());
     setSavingsGoals(await listSavingsGoals());
+    setExpenseCategories(await getCategoryList('finance_expense_categories'));
+    setIncomeCategories(await getCategoryList('finance_income_categories'));
   }
   useEffect(() => { refresh(); }, []);
 
-  const categories = form.entry_type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  const categories = form.entry_type === 'income' ? incomeCategories : expenseCategories;
 
   async function handleQuickAdd() {
     if (!form.amount) return;
@@ -519,6 +485,7 @@ function FinanceTab() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <Card>
+        <ChibiAccent variant="coin" corner="top-right" size={34} />
         <div className="section-label">This month</div>
         <div className="macro-grid" style={{ marginTop: 'var(--space-3)' }}>
           <div className="macro-cell"><span className="muted">Income</span><div style={{ fontSize: 18, fontWeight: 700 }}>${summary.income.toFixed(0)}</div></div>
@@ -530,7 +497,7 @@ function FinanceTab() {
       <Card>
         <div className="section-label">Quick add</div>
         <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
-          <select value={form.entry_type} onChange={e => setForm({ ...form, entry_type: e.target.value, category: e.target.value === 'income' ? INCOME_CATEGORIES[0] : EXPENSE_CATEGORIES[0] })}>
+          <select value={form.entry_type} onChange={e => setForm({ ...form, entry_type: e.target.value, category: e.target.value === 'income' ? incomeCategories[0] : expenseCategories[0] })}>
             <option value="expense">Expense</option>
             <option value="bill">Bill</option>
             <option value="income">Income</option>
