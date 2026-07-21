@@ -35,6 +35,14 @@
   box-shadow: var(--shadow-active);
 }
 
+.schedule-block-done {
+  opacity: 0.45;
+  transition: opacity 0.4s ease;
+}
+.schedule-block-done .schedule-block-title {
+  text-decoration: line-through;
+}
+
 .schedule-block-line {
   flex: 1;
   width: 2px;
