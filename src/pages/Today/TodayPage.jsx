@@ -23,11 +23,21 @@ export default function TodayPage() {
   const [customTitle, setCustomTitle] = useState('');
   const [showEnergyCheckin, setShowEnergyCheckin] = useState(true);
   const [neglected, setNeglected] = useState([]);
+  const [neglectedError, setNeglectedError] = useState(null);
   const [hyperfocusDismissed, setHyperfocusDismissed] = useState(false);
 
+  const [scheduleError, setScheduleError] = useState(null);
+
   async function refreshSchedule() {
-    const blocks = await getTodaySchedule();
-    setSchedule(blocks);
+    try {
+      setScheduleError(null);
+      const blocks = await getTodaySchedule();
+      setSchedule(blocks);
+    } catch (err) {
+      console.error('Failed to load today\'s schedule:', err);
+      setScheduleError(err.message || 'Something went wrong loading the schedule.');
+      setSchedule([]);
+    }
   }
 
   async function refreshMissions() {
@@ -40,7 +50,10 @@ export default function TodayPage() {
     refreshMissions();
     getDuePrompt().then(setDuePrompt);
     getFeatureFlag('show_energy_checkin').then(setShowEnergyCheckin);
-    getNeglectedPriorities().then(setNeglected);
+    getNeglectedPriorities().then(setNeglected).catch(err => {
+      console.error('Failed to load neglected priorities:', err);
+      setNeglectedError(err.message || 'Something went wrong.');
+    });
   }, []);
 
   async function handleToggleTask(task, done) {
@@ -155,6 +168,11 @@ export default function TodayPage() {
 
       {/* Neglected Priorities (Area 1/2) — the one place that looks
           across goals, relationships, habits, and maintenance at once. */}
+      {neglectedError && (
+        <Card style={{ marginTop: 'var(--space-4)', borderLeft: '3px solid var(--danger)' }}>
+          <div style={{ fontSize: 13 }}>"Might be worth a look" couldn't load: {neglectedError}</div>
+        </Card>
+      )}
       {neglected.length > 0 && (
         <Card style={{ marginTop: 'var(--space-4)' }}>
           <div className="section-label">Might be worth a look</div>
@@ -185,6 +203,14 @@ export default function TodayPage() {
             onToggleStep={handleToggleStep}
             onAddStep={handleAddStep}
           />
+          {scheduleError && (
+            <Card style={{ marginTop: 'var(--space-3)', borderLeft: '3px solid var(--danger)' }}>
+              <div style={{ fontSize: 13 }}>Schedule couldn't load: {scheduleError}</div>
+              <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+                Most likely cause: the newest database migration (v2_executive_function_layer.sql) hasn't been run yet in Supabase.
+              </div>
+            </Card>
+          )}
         </div>
 
         <div className="today-missions-col">

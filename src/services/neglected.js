@@ -15,7 +15,7 @@ async function getUserId() {
 }
 
 function daysSince(dateStr) {
-  if (!dateStr) return Infinity;
+  if (!dateStr) return 9999;
   return Math.floor((new Date() - new Date(dateStr)) / 86400000);
 }
 
