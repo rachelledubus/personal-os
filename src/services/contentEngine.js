@@ -66,6 +66,8 @@ export async function markRepurposed(id, notes = null) {
  *  graceful-degrade pattern as every other AI feature in the app. */
 export async function requestRepurposeDrafts(piece) {
   try {
+    const { getCustomAiInstructions } = await import('./settings.js');
+    const customInstructions = await getCustomAiInstructions();
     const res = await fetch('/.netlify/functions/repurpose-content', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -73,6 +75,7 @@ export async function requestRepurposeDrafts(piece) {
         title: piece.title,
         buyerQuestion: piece.buyer_question,
         audience: piece.audience,
+        customInstructions,
       }),
     });
     if (!res.ok) return null;
