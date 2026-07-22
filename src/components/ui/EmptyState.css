@@ -10,7 +10,7 @@
   filter: drop-shadow(0 6px 14px rgba(143, 165, 138, 0.35));
   animation: empty-state-bob 3.2s ease-in-out infinite;
 }
-.empty-state-blob {
+.empty-state-sketch-circle {
   width: 84px; height: 84px;
   position: absolute; top: 0; left: 0;
 }
@@ -20,10 +20,15 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: var(--navy);
-  opacity: 0.6;
+  opacity: 0.65;
 }
 .empty-state-title { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--navy); }
-.empty-state-subtitle { font-size: var(--text-caption); color: var(--ink-soft); margin-top: var(--space-1); }
+.empty-state-scribble-underline {
+  width: 64px; height: 6px;
+  display: block;
+  margin: 4px auto 0;
+}
+.empty-state-subtitle { font-size: var(--text-caption); color: var(--ink-soft); margin-top: var(--space-2); }
 
 @keyframes empty-state-bob {
   0%, 100% { transform: translateY(0) rotate(0deg); }

@@ -7,9 +7,10 @@ import { todayStr } from '../../utils/date.js';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Banner from '../../components/ui/Banner.jsx';
 import ProjectsTab from './ProjectsTab.jsx';
+import JournalTab from './JournalTab.jsx';
 
-const TABS = ['blocks', 'goals', 'meals'];
-const TAB_LABELS = { blocks: 'Time Blocks', goals: 'Goals & Projects', meals: 'Meal Planner' };
+const TABS = ['blocks', 'goals', 'journal', 'meals'];
+const TAB_LABELS = { blocks: 'Time Blocks', goals: 'Goals & Projects', journal: 'Journal', meals: 'Meal Planner' };
 
 export default function PlannerPage() {
   const { tab = 'blocks' } = useParams();
@@ -34,6 +35,7 @@ export default function PlannerPage() {
 
       {tab === 'blocks' && <TimeBlocksTab />}
       {tab === 'goals' && <ProjectsTab />}
+      {tab === 'journal' && <JournalTab />}
     </div>
   );
 }

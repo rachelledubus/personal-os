@@ -1,0 +1,45 @@
+.month-grid-wrap { margin-bottom: var(--space-4); }
+.month-grid-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  max-width: 280px;
+}
+.month-grid-weekday {
+  font-size: 10px;
+  text-align: center;
+  color: var(--ink-faint);
+  padding-bottom: 2px;
+}
+.month-grid-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  border: 1.5px solid rgba(22, 50, 79, 0.12);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  /* Every square is very slightly rotated by a different tiny amount —
+     hand-drawn graph paper, not a machine-perfect grid. */
+}
+.month-grid-cell:nth-child(7n+1) { transform: rotate(-0.6deg); }
+.month-grid-cell:nth-child(7n+2) { transform: rotate(0.4deg); }
+.month-grid-cell:nth-child(7n+3) { transform: rotate(-0.3deg); }
+.month-grid-cell:nth-child(7n+4) { transform: rotate(0.5deg); }
+.month-grid-cell:nth-child(7n+5) { transform: rotate(-0.4deg); }
+.month-grid-cell:nth-child(7n+6) { transform: rotate(0.3deg); }
+.month-grid-cell:nth-child(7n) { transform: rotate(-0.5deg); }
+.month-grid-cell-blank { border: none; background: none; }
+.month-grid-daynum {
+  font-size: 8px;
+  color: var(--ink-faint);
+  opacity: 0.55;
+}
