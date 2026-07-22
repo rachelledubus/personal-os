@@ -70,9 +70,12 @@ update life_rhythm_blocks set end_time = '10:00', notes = 'Full session'
 insert into life_rhythm_blocks (user_id, day_of_week, title, block_type, track, start_time, end_time, notes, sort_order)
 select user_id, 6, 'Shower / Recovery', 'routine', 'personal', '10:00', '11:00',
     'Hair: deep conditioner / mask day — most time available this day', 2
-  from life_rhythm_blocks
+  from life_rhythm_blocks src
   where day_of_week = 6 and title = 'Posterior Chain Workout'
-  on conflict do nothing;
+  and not exists (
+    select 1 from life_rhythm_blocks existing
+    where existing.user_id = src.user_id and existing.day_of_week = 6 and existing.title = 'Shower / Recovery'
+  );
 
 -- Existing Saturday "Personal / Life Day" row keeps its sort_order of 2,
 -- which now collides with the new Shower row above — bump it to 3.
