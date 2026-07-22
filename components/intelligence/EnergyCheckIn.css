@@ -1,0 +1,30 @@
+.energy-checkin {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.energy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--sand);
+  background: var(--white);
+  color: var(--ink-soft);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: var(--text-caption);
+  cursor: pointer;
+}
+
+.energy-chip.active {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: var(--white);
+}
+
+.energy-chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
