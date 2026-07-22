@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Button from '../ui/Button.jsx';
-import { listInteractions, addInteraction, deleteInteraction, typeLabel } from '../../services/interactions.js';
+import AiSuggestionBox from '../ui/AiSuggestionBox.jsx';
+import { listInteractions, addInteraction, deleteInteraction, typeLabel, requestRelationshipSummary } from '../../services/interactions.js';
 import './InteractionTimeline.css';
 
 const TYPES = [
@@ -16,11 +17,14 @@ const TYPES = [
  *  contacts.relationship_notes and .last_contact_date in sync
  *  automatically (see interactions.js), so nothing else needs to
  *  change to benefit from this becoming the source of truth. */
-export default function InteractionTimeline({ contactId }) {
+export default function InteractionTimeline({ contact }) {
+  const contactId = contact.id;
   const [interactions, setInteractions] = useState(null);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ type: 'call', notes: '' });
   const [saving, setSaving] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [summarizing, setSummarizing] = useState(false);
 
   async function refresh() {
     setInteractions(await listInteractions(contactId));
@@ -42,14 +46,34 @@ export default function InteractionTimeline({ contactId }) {
     refresh();
   }
 
+  async function handleSummarize() {
+    setSummarizing(true);
+    const result = await requestRelationshipSummary(contact, interactions);
+    setSummarizing(false);
+    setSummary(result ? { ...result } : { unavailable: true });
+  }
+
   return (
     <div className="interaction-timeline">
       <div className="row-between">
         <div className="interaction-timeline-label">Relationship history</div>
-        <Button size="sm" variant="text" onClick={() => setAdding(!adding)}>
-          {adding ? 'Cancel' : '+ Log interaction'}
-        </Button>
+        <div className="row" style={{ gap: 'var(--space-2)' }}>
+          {interactions?.length > 0 && (
+            <Button size="sm" variant="text" onClick={handleSummarize} disabled={summarizing}>
+              {summarizing ? 'Summarizing…' : '✨ Summarize'}
+            </Button>
+          )}
+          <Button size="sm" variant="text" onClick={() => setAdding(!adding)}>
+            {adding ? 'Cancel' : '+ Log interaction'}
+          </Button>
+        </div>
       </div>
+
+      {summary && (
+        <AiSuggestionBox unavailable={summary.unavailable} onDismiss={() => setSummary(null)}>
+          <div style={{ fontSize: 13 }}>{summary.summary}</div>
+        </AiSuggestionBox>
+      )}
 
       {adding && (
         <div className="interaction-add-form">

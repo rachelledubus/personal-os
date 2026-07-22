@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { logActivity } from './goals.js';
+import { getCustomAiInstructions } from './settings.js';
 
 // ============================================================
 // INTERACTIONS — the real system of record for relationship activity.
@@ -64,4 +65,24 @@ export async function addInteraction(contactId, { type = 'note', notes = '', occ
 export async function deleteInteraction(id) {
   const { error } = await supabase.from('interactions').delete().eq('id', id);
   if (error) throw error;
+}
+
+/** AI-generated relationship summary — the "AI summarizes notes"
+ *  Phase 5 gap. Graceful-degrade like every other AI feature here:
+ *  null if the function isn't configured or there's nothing to
+ *  summarize yet, never an error the user has to parse. */
+export async function requestRelationshipSummary(contact, interactions) {
+  if (!interactions || interactions.length === 0) return null;
+  try {
+    const customInstructions = await getCustomAiInstructions();
+    const res = await fetch('/.netlify/functions/summarize-relationship', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contact, interactions, customInstructions }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }

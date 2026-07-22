@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { todayStr } from '../utils/date.js';
 import { listDueSoon, completeMaintenanceItem } from './maintenance.js';
+import { logActivity } from './goals.js';
 
 // ============================================================
 // THE MISSION ENGINE
@@ -322,6 +323,7 @@ export async function toggleMission(mission, done) {
           { user_id: userId, habit_id: mission.sourceId, log_date: todayStr(), completed: true },
           { onConflict: 'habit_id,log_date' }
         );
+        await logActivity('habits', mission.sourceId, 'completed');
       } else {
         await supabase.from('habit_logs').delete()
           .eq('habit_id', mission.sourceId).eq('log_date', todayStr());

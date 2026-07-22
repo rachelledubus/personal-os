@@ -1,0 +1,184 @@
+import { supabase } from '../lib/supabaseClient.js';
+
+// ============================================================
+// GUARDIAN SYSTEM — Technical Foundation (Phase 3, Stage 1 per the
+// Guardian Integration Architecture doc's own sequencing)
+//
+// Scope, deliberately: data model + XP system + event system +
+// progression logic + a minimal reaction framework. NOT in scope yet
+// (by design, matching the doc's own phase order):
+//   - Personality/dialogue content beyond generic, functional names
+//   - Visual expansion (sprites, outfits, environments) — Companion.jsx
+//     stays exactly as-is, untouched
+//   - Unlocks (Phase 4 / Gamification concern)
+//   - Connecting habits/workouts/goals (Guardian doc's own Phase 2 —
+//     "Integration" — comes after this)
+//
+// Guardians observe systems, they don't control them (Constitution
+// §12): nothing in here ever writes to tasks, contacts, or any other
+// system's data. It only reads activity_log-driven events and reacts.
+// ============================================================
+
+// Functional names only, on purpose — see file header. Values for
+// Productivity/Business/Health match the concrete example already
+// given in the Guardian Integration doc. Growth has no example values
+// given anywhere in the docs — these are a reasonable placeholder,
+// same honesty caveat as the others' generic naming.
+const GUARDIAN_DEFINITIONS = [
+  { guardian_key: 'productivity', name: 'Productivity Guardian', role: 'productivity', personality_values: ['consistency', 'focus', 'discipline'] },
+  { guardian_key: 'business', name: 'Business Guardian', role: 'business', personality_values: ['relationships', 'courage', 'communication'] },
+  { guardian_key: 'health', name: 'Health Guardian', role: 'health', personality_values: ['balance', 'energy', 'self-care'] },
+  { guardian_key: 'growth', name: 'Growth Guardian', role: 'growth', personality_values: ['reflection', 'intention', 'self-improvement'] },
+];
+
+// Event -> Guardian XP mapping. Tasks and interactions were the first
+// events flowing into activity_log; habits and workouts were added
+// once their completion paths started logging too (see dailyExecution
+// call sites in GrowPage/missions.js and workoutAnalytics.js).
+//
+// habits map to 'growth', not 'health' — the doc's own Event
+// Categories section lists HABIT_COMPLETED under "Personal Growth
+// Events", separate from "Health Events" (WORKOUT_COMPLETED,
+// MEAL_LOGGED, SLEEP_GOAL_MET). Workouts stay under Health; habits
+// belong to Growth. GOAL_COMPLETED is explicitly listed under
+// "Productivity Events" in the same doc, alongside TASK_COMPLETED.
+const EVENT_XP_MAP = {
+  'tasks:completed': { guardianKey: 'productivity', amount: 10 },
+  'goals:completed': { guardianKey: 'productivity', amount: 25 }, // a finished goal is a bigger deal than one task — matches the doc's "growth should feel earned" principle
+  'interactions:interaction_logged': { guardianKey: 'business', amount: 10 },
+  'habits:completed': { guardianKey: 'growth', amount: 10 },
+  'workouts:logged': { guardianKey: 'health', amount: 10 },
+};
+
+// XP -> level: simple, deliberately not final. 100 XP per level.
+// Adjust here if it feels too fast/slow once real data exists.
+export function getLevelForXp(xp) {
+  return Math.floor(xp / 100) + 1;
+}
+
+// Growth stage is a coarse label derived from level, not stored
+// creative writing — real personality-per-stage content belongs to
+// the later Personality Layer phase, not this one.
+export function getGrowthStageForLevel(level) {
+  if (level >= 10) return 'Flourishing';
+  if (level >= 5) return 'Growing';
+  if (level >= 2) return 'Sprouting';
+  return 'Seedling';
+}
+
+/** XP progress within the current level, for a simple progress bar —
+ *  keeps the "100 XP per level" formula in exactly one place rather
+ *  than letting display code redo the math. */
+export function getXpProgressWithinLevel(xp) {
+  return xp % 100;
+}
+
+async function getUserId() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id;
+}
+
+/** Seeds any Guardian from GUARDIAN_DEFINITIONS the user doesn't
+ *  already have — not just "seed if totally empty." This matters
+ *  because Guardians were added to this list in two passes (3 first,
+ *  Growth added after); anyone already seeded with the first 3 needs
+ *  the new one added without re-seeding or duplicating the others.
+ *  Safe to call on every load either way. */
+export async function seedGuardiansIfEmpty() {
+  const userId = await getUserId();
+  if (!userId) return;
+  const { data: existing } = await supabase.from('guardians').select('guardian_key').eq('user_id', userId);
+  const existingKeys = new Set((existing || []).map(g => g.guardian_key));
+  const missing = GUARDIAN_DEFINITIONS.filter(g => !existingKeys.has(g.guardian_key));
+  if (missing.length === 0) return;
+
+  const rows = missing.map(g => ({ ...g, user_id: userId }));
+  await supabase.from('guardians').insert(rows);
+}
+
+export async function listGuardians() {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('guardians').select('*').eq('user_id', userId).order('guardian_key');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getGuardian(guardianKey) {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('guardians').select('*')
+    .eq('user_id', userId).eq('guardian_key', guardianKey).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** The one real write path for Guardian growth. Records the XP
+ *  transaction (the real audit trail), then updates the Guardian's
+ *  running total, level, growth stage, and a short rolling log of
+ *  recent events — capped at 10 so this stays "a glance," matching
+ *  the Product Vision's "clarity over completeness" principle. */
+async function awardXp(guardianKey, amount, sourceTable, sourceId, eventType) {
+  const guardian = await getGuardian(guardianKey);
+  if (!guardian) return null; // not seeded yet — never throw over a missing Guardian, this is an observer, not a blocker
+
+  const userId = guardian.user_id;
+  await supabase.from('xp_transactions').insert({
+    user_id: userId, guardian_id: guardian.id, amount,
+    source_table: sourceTable, source_id: sourceId, event_type: eventType,
+  });
+
+  const newXp = guardian.experience_points + amount;
+  const newLevel = getLevelForXp(newXp);
+  const leveledUp = newLevel > guardian.level;
+  const newGrowthStage = getGrowthStageForLevel(newLevel);
+  const reaction = getGuardianReaction({ guardian: { ...guardian, level: newLevel, growth_stage: newGrowthStage }, leveledUp });
+
+  const recentEvents = [
+    { eventType, amount, at: new Date().toISOString(), reaction },
+    ...(guardian.recent_events || []),
+  ].slice(0, 10);
+
+  const { data: updated, error } = await supabase.from('guardians').update({
+    experience_points: newXp,
+    level: newLevel,
+    growth_stage: newGrowthStage,
+    recent_events: recentEvents,
+    updated_at: new Date().toISOString(),
+  }).eq('id', guardian.id).select().single();
+  if (error) throw error;
+
+  return { guardian: updated, leveledUp, xpAwarded: amount, reaction };
+}
+
+/** The event system's landing point — called from logActivity() so
+ *  every existing call site (task completion, interaction logging)
+ *  automatically feeds the Guardian system with zero changes needed
+ *  elsewhere. This is a pragmatic stand-in for a real decoupled event
+ *  bus: this build environment can't verify a Supabase Realtime
+ *  subscription actually works end-to-end, so a direct call is the
+ *  most honest thing to ship — a true pub/sub swap is a reasonable
+ *  future upgrade once that can be tested in a real browser.
+ *  Never throws — a Guardian miscalculation should never break the
+ *  real action that triggered it. */
+export async function processActivityEvent(sourceTable, sourceId, eventType) {
+  const mapping = EVENT_XP_MAP[`${sourceTable}:${eventType}`];
+  if (!mapping) return null;
+  try {
+    return await awardXp(mapping.guardianKey, mapping.amount, sourceTable, sourceId, eventType);
+  } catch {
+    return null;
+  }
+}
+
+// ---------- Reaction framework ----------
+// Deliberately generic, supportive phrasing (Brand Voice: warm,
+// encouraging, never shame-based) — not per-Guardian dialogue trees.
+// That richer personality layer is explicitly a later phase; this is
+// the plumbing it will eventually plug into.
+export function getGuardianReaction(result) {
+  if (!result) return null;
+  const { guardian, leveledUp } = result;
+  if (leveledUp) {
+    return `${guardian.name} grew to level ${guardian.level} — ${guardian.growth_stage.toLowerCase()} now.`;
+  }
+  return null; // no reaction on every single XP tick — docs are explicit: too many reactions reduce meaning
+}

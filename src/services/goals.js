@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient.js';
+import { processActivityEvent } from './guardians.js';
 
 async function getUserId() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,6 +25,16 @@ export async function addGoal(fields) {
 export async function updateGoal(id, fields) {
   const { error } = await supabase.from('goals').update({ ...fields, updated_at: new Date().toISOString() }).eq('id', id);
   if (error) throw error;
+}
+
+/** The one real "this goal is done" action — separate from the generic
+ *  updateGoal() so this specific, meaningful transition always logs,
+ *  regardless of what other partial edits updateGoal gets used for. */
+export async function markGoalAchieved(id) {
+  const { error } = await supabase.from('goals')
+    .update({ status: 'Achieved', updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw error;
+  await logActivity('goals', id, 'completed');
 }
 
 // ---------- Projects ----------
@@ -108,4 +119,9 @@ export async function logActivity(sourceTable, sourceId, eventType, metadata = {
   await supabase.from('activity_log').insert({
     user_id: userId, source_table: sourceTable, source_id: sourceId, event_type: eventType, metadata,
   });
+  // Guardian event system's landing point — see guardians.js for why
+  // this is a direct call rather than a real pub/sub. Fire-and-forget:
+  // a Guardian XP hiccup should never surface as an error on whatever
+  // real action (task completion, interaction log) triggered this.
+  processActivityEvent(sourceTable, sourceId, eventType).catch(() => {});
 }

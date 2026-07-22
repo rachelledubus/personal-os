@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
+import { TimerProvider } from './context/TimerContext.jsx';
 import SideNav from './components/nav/SideNav.jsx';
 import GlobalCapture from './components/capture/GlobalCapture.jsx';
 import KawaiiBackdrop from './components/ui/KawaiiBackdrop.jsx';
 import RunningChibi from './components/ui/RunningChibi.jsx';
+import Companion from './components/companion/Companion.jsx';
+import MiniTimerBar from './components/timer/MiniTimerBar.jsx';
 import { getFeatureFlag, getRunningChibiVariant } from './services/settings.js';
 import AuthScreen from './pages/AuthScreen.jsx';
 
@@ -45,34 +48,38 @@ export default function App() {
       {showDecorations && <KawaiiBackdrop />}
       {showDecorations && <RunningChibi variant={chibiVariant} />}
       <SideNav />
-      <div className="app-content">
-        <Routes>
-          <Route path="/" element={<Navigate to="/today" replace />} />
+      <TimerProvider>
+        <div className="app-content">
+          <Routes>
+            <Route path="/" element={<Navigate to="/today" replace />} />
 
-          <Route path="/today" element={<TodayPage />} />
-          <Route path="/today/focus" element={<FocusMode />} />
-          <Route path="/today/research" element={<ResearchMode />} />
+            <Route path="/today" element={<TodayPage />} />
+            <Route path="/today/focus" element={<FocusMode />} />
+            <Route path="/today/research" element={<ResearchMode />} />
 
-          <Route path="/inbox" element={<InboxPage />} />
-          <Route path="/control-center" element={<ControlCenterPage />} />
+            <Route path="/inbox" element={<InboxPage />} />
+            <Route path="/control-center" element={<ControlCenterPage />} />
 
-          <Route path="/plan" element={<PlannerPage />} />
-          <Route path="/plan/:tab" element={<PlannerPage />} />
-          <Route path="/plan/meals" element={<MealPlannerPage />} />
+            <Route path="/plan" element={<PlannerPage />} />
+            <Route path="/plan/:tab" element={<PlannerPage />} />
+            <Route path="/plan/meals" element={<MealPlannerPage />} />
 
-          <Route path="/grow" element={<GrowPage />} />
-          <Route path="/grow/:tab" element={<GrowPage />} />
+            <Route path="/grow" element={<GrowPage />} />
+            <Route path="/grow/:tab" element={<GrowPage />} />
 
-          <Route path="/business" element={<BusinessPage />} />
-          <Route path="/business/:tab" element={<BusinessPage />} />
-          <Route path="/business/flows/:flowKey" element={<GuidedFlow />} />
+            <Route path="/business" element={<BusinessPage />} />
+            <Route path="/business/:tab" element={<BusinessPage />} />
+            <Route path="/business/flows/:flowKey" element={<GuidedFlow />} />
 
-          <Route path="/library" element={<LibraryPage />} />
-          <Route path="/library/:tab" element={<LibraryPage />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/library/:tab" element={<LibraryPage />} />
 
-          <Route path="*" element={<Navigate to="/today" replace />} />
-        </Routes>
-      </div>
+            <Route path="*" element={<Navigate to="/today" replace />} />
+          </Routes>
+        </div>
+        <MiniTimerBar />
+      </TimerProvider>
+      {showDecorations && <Companion />}
       <GlobalCapture />
     </div>
   );

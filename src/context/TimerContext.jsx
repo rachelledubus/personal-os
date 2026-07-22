@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { BUILT_IN_PRESETS, logSession } from '../services/timer.js';
+import { startFocusSession, endFocusSession } from '../services/focusSessions.js';
 
 // ============================================================
 // TimerContext — one timer lives here for the whole app session.
@@ -24,6 +25,7 @@ export function TimerProvider({ children }) {
 
   const intervalRef = useRef(null);
   const plannedSecondsRef = useRef(0);
+  const focusSessionIdRef = useRef(null);
 
   useEffect(() => {
     if (!running) return;
@@ -57,6 +59,14 @@ export function TimerProvider({ children }) {
       missionSourceTable: linkedMission?.sourceTable, missionSourceId: linkedMission?.sourceId,
     });
 
+    // Focus-session tracking (feeds the hyperfocus check) only spans
+    // the FOCUS phase, not breaks — ends here whether a break follows
+    // or not.
+    if (phase === PHASE.FOCUS) {
+      endFocusSession(focusSessionIdRef.current);
+      focusSessionIdRef.current = null;
+    }
+
     if (phase === PHASE.FOCUS && preset?.breakMinutes) {
       setPhase(PHASE.BREAK);
       setSecondsLeft(preset.breakMinutes * 60);
@@ -84,6 +94,9 @@ export function TimerProvider({ children }) {
       plannedSecondsRef.current = 0;
     }
     setRunning(true);
+    // Starting always begins in FOCUS phase (see above) — begin
+    // focus-session tracking here, the one real entry point.
+    startFocusSession().then(id => { focusSessionIdRef.current = id; });
   }, []);
 
   const pause = useCallback(() => setRunning(false), []);
@@ -111,6 +124,13 @@ export function TimerProvider({ children }) {
         completed,
         missionSourceTable: linkedMission?.sourceTable, missionSourceId: linkedMission?.sourceId,
       });
+    }
+    // Only end a session that's actually open — handlePhaseComplete
+    // already closes it out for a natural countdown finish, this
+    // covers the manual "stop early" path (from either phase).
+    if (focusSessionIdRef.current) {
+      endFocusSession(focusSessionIdRef.current);
+      focusSessionIdRef.current = null;
     }
     setPhase(PHASE.IDLE);
     setPreset(null);

@@ -23,6 +23,7 @@ import { getCategoryList } from '../../services/settings.js';
 import {
   getEnvelopeSummary, setStartingAmount, addEnvelope, updateEnvelope, deleteEnvelope,
 } from '../../services/envelopeBudget.js';
+import { logActivity } from '../../services/goals.js';
 import Banner from '../../components/ui/Banner.jsx';
 
 const TABS = ['habits', 'workouts', 'chores', 'maintenance', 'finance'];
@@ -96,6 +97,7 @@ function HabitsTab() {
         { user_id: user.id, habit_id: habitId, log_date: todayStr(), completed: true },
         { onConflict: 'habit_id,log_date' }
       );
+      await logActivity('habits', habitId, 'completed');
     } else {
       await supabase.from('habit_logs').delete().eq('habit_id', habitId).eq('log_date', todayStr());
     }
@@ -570,8 +572,8 @@ function FinanceTab() {
           {envelopeSummary.envelopes.length === 0 ? <EmptyState icon="leaf" title="No envelopes yet — add your first below" /> : (
             envelopeSummary.envelopes.map(env => (
               editingEnvelopeId === env.id ? (
-                <div key={env.id} className="row" style={{ gap: 'var(--space-2)' }}>
-                  <input value={editEnvelope.name} onChange={e => setEditEnvelope({ ...editEnvelope, name: e.target.value })} style={{ flex: 1 }} />
+                <div key={env.id} className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                  <input value={editEnvelope.name} onChange={e => setEditEnvelope({ ...editEnvelope, name: e.target.value })} style={{ flex: 1, minWidth: 100 }} />
                   <input type="number" value={editEnvelope.assigned_amount} onChange={e => setEditEnvelope({ ...editEnvelope, assigned_amount: e.target.value })} style={{ width: 90 }} />
                   <Button size="sm" variant="ghost" onClick={() => handleSaveEnvelope(env.id)}>Save</Button>
                   <Button size="sm" variant="text" onClick={() => setEditingEnvelopeId(null)}>Cancel</Button>

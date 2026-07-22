@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { todayStr } from '../utils/date.js';
+import { logActivity } from './goals.js';
 
 // ============================================================
 // FITNESS INTELLIGENCE
@@ -169,6 +170,7 @@ export async function logWorkoutSession({ workout_date, day_key, workout_type, d
       if (exErr) throw exErr;
     }
   }
+  await logActivity('workouts', workout.id, 'logged');
   return workout;
 }
 

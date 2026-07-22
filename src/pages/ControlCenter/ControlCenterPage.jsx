@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
+import ProgressBar from '../../components/ui/ProgressBar.jsx';
+import ImageUploadField from '../../components/ui/ImageUploadField.jsx';
+import { seedGuardiansIfEmpty, listGuardians, getXpProgressWithinLevel } from '../../services/guardians.js';
 import {
   CATEGORY_LISTS, getCategoryList, setCategoryList,
   FEATURE_FLAGS, getAllFeatureFlags, setFeatureFlag,
@@ -106,8 +109,6 @@ function CategoriesSection() {
 
 function AppearanceSection() {
   const [slots, setSlots] = useState([]);
-  const [editing, setEditing] = useState(null);
-  const [urlValue, setUrlValue] = useState('');
   const [chibiVariant, setChibiVariant] = useState('bunny');
 
   async function refresh() { setSlots(await listAssetSlots()); }
@@ -118,14 +119,8 @@ function AppearanceSection() {
     await setRunningChibiVariant(variant);
   }
 
-  function startEdit(slot) {
-    setEditing(slot.key);
-    setUrlValue(slot.image_url || '');
-  }
-
-  async function save(slotKey) {
-    await setAssetSlot(slotKey, urlValue.trim());
-    setEditing(null);
+  async function handleAssetChange(slotKey, newUrl) {
+    await setAssetSlot(slotKey, newUrl);
     refresh();
   }
 
@@ -161,9 +156,9 @@ function AppearanceSection() {
       </Card>
 
       <p className="muted" style={{ fontSize: 12 }}>
-        Paste a link to an image you've already got hosted somewhere (Google Drive share link, Imgur, etc.) to
-        swap a decorative graphic. Leave blank to use the built-in illustrated scene. Banners work best around
-        1600×440px, landscape.
+        Upload your own image, or paste a link to one you've already got hosted somewhere (Google Drive
+        share link, Imgur, etc.). Leave unset to use the built-in illustrated scene. Banners work best
+        around 1600×440px, landscape.
       </p>
       {Object.entries(grouped).map(([category, items]) => (
         <div key={category}>
@@ -171,28 +166,18 @@ function AppearanceSection() {
           <div className="stack" style={{ gap: 'var(--space-2)' }}>
             {items.map(slot => (
               <Card key={slot.key}>
-                <div className="row-between">
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>{slot.label}</div>
-                    <div className="muted" style={{ fontSize: 11 }}>{slot.usedIn}</div>
-                  </div>
-                  {slot.image_url && !editing && (
-                    <img src={slot.image_url} alt="" style={
-                      category === 'Banners'
-                        ? { width: 80, height: 22, borderRadius: 4, objectFit: 'cover' }
-                        : { width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }
-                    } />
-                  )}
-                </div>
-                {editing === slot.key ? (
-                  <div className="row" style={{ marginTop: 'var(--space-2)' }}>
-                    <input placeholder="Image URL" value={urlValue} onChange={e => setUrlValue(e.target.value)} style={{ flex: 1 }} />
-                    <Button size="sm" onClick={() => save(slot.key)}>Save</Button>
-                    <Button size="sm" variant="text" onClick={() => setEditing(null)}>Cancel</Button>
-                  </div>
-                ) : (
-            <Button size="sm" variant="text" onClick={() => startEdit(slot)}>{slot.image_url ? 'Change image' : '+ Assign image'}</Button>
-          )}
+                <div style={{ fontWeight: 700, fontSize: 13 }}>{slot.label}</div>
+                <div className="muted" style={{ fontSize: 11, marginBottom: 'var(--space-2)' }}>{slot.usedIn}</div>
+                <ImageUploadField
+                  value={slot.image_url}
+                  onChange={url => handleAssetChange(slot.key, url)}
+                  folder={slot.key}
+                  previewStyle={
+                    category === 'Banners'
+                      ? { width: 160, height: 44, borderRadius: 4, objectFit: 'cover' }
+                      : { width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }
+                  }
+                />
               </Card>
             ))}
           </div>
@@ -206,10 +191,13 @@ function FeaturesSection() {
   const [flags, setFlags] = useState({});
   const [sleepTargets, setSleepTargetsState] = useState({ bedtime: '22:30', wake_time: '06:00' });
   const [sleepSaved, setSleepSaved] = useState(false);
+  const [guardians, setGuardians] = useState(null);
 
   async function refresh() {
     setFlags(await getAllFeatureFlags());
     setSleepTargetsState(await getSleepTargets());
+    await seedGuardiansIfEmpty();
+    setGuardians(await listGuardians());
   }
   useEffect(() => { refresh(); }, []);
 
@@ -262,6 +250,32 @@ function FeaturesSection() {
           {sleepSaved ? 'Saved ✓' : 'Save'}
         </Button>
       </div>
+    </Card>
+
+    <Card>
+      <div className="section-label">Guardian progress</div>
+      <p className="muted" style={{ fontSize: 12 }}>
+        Real accomplishments earn XP — completed tasks, logged relationship activity, habits, and workouts.
+        No visuals or personalities built yet on purpose — this is a plain progress readout, not the
+        finished Guardian experience.
+      </p>
+      {guardians === null ? null : (
+        <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-3)' }}>
+          {guardians.map(g => (
+            <div key={g.id}>
+              <div className="row-between" style={{ fontSize: 13 }}>
+                <span style={{ fontWeight: 700 }}>{g.name}</span>
+                <span className="muted">Level {g.level} · {g.growth_stage}</span>
+              </div>
+              <ProgressBar value={getXpProgressWithinLevel(g.experience_points)} max={100} tone="sage" />
+              <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{g.experience_points} total XP</div>
+              {g.recent_events?.[0]?.reaction && (
+                <div style={{ fontSize: 12, marginTop: 4, color: 'var(--sage)' }}>{g.recent_events[0].reaction}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </Card>
     </div>
   );

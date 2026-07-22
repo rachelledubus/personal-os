@@ -7,7 +7,7 @@ import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import {
   listGoals, addGoal, listProjects, addProject,
-  listProjectTasks, listMilestones, addMilestone, toggleMilestone,
+  listProjectTasks, listMilestones, addMilestone, toggleMilestone, markGoalAchieved,
 } from '../../services/goals.js';
 
 async function getUserId() {
@@ -55,6 +55,11 @@ export default function ProjectsTab() {
     refresh();
   }
 
+  async function handleMarkAchieved(goalId) {
+    await markGoalAchieved(goalId);
+    refresh();
+  }
+
   async function handleAddProject() {
     if (!newProjectTitle.trim()) return;
     await addProject({ title: newProjectTitle.trim(), goal_id: newProjectGoal || null });
@@ -73,12 +78,17 @@ export default function ProjectsTab() {
           <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
             {goals.map(g => (
               <div key={g.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
-                <div className="row-between">
+                <div className="row-between" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
                   <div>
                     <div style={{ fontWeight: 700 }}>{g.title}</div>
                     <div className="muted" style={{ fontSize: 12 }}>{g.category} · {g.status}</div>
                   </div>
-                  {g.target_date && <div className="muted" style={{ fontSize: 12 }}>{g.target_date}</div>}
+                  <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
+                    {g.target_date && <div className="muted" style={{ fontSize: 12 }}>{g.target_date}</div>}
+                    {g.status !== 'Achieved' && (
+                      <Button size="sm" variant="ghost" onClick={() => handleMarkAchieved(g.id)}>Mark achieved</Button>
+                    )}
+                  </div>
                 </div>
                 {g.target_value != null && (
                   <div style={{ marginTop: 6 }}>

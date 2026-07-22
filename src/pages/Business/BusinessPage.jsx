@@ -318,7 +318,7 @@ function PipelineTab() {
                           <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draft.channel} · {draft.reasoning}</div>
                         </AiSuggestionBox>
                       )}
-                      <InteractionTimeline contactId={c.id} />
+                      <InteractionTimeline contact={c} />
                     </div>
                   )}
                 </div>
@@ -347,6 +347,7 @@ function RelationshipsTab() {
   const [byTier, setByTier] = useState({});
   const [untiered, setUntiered] = useState([]);
   const [tagging, setTagging] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
 
   async function refresh() {
     const [t1, t2, t3, all] = await Promise.all([
@@ -384,9 +385,13 @@ function RelationshipsTab() {
           {(byTier[t.key] || []).length === 0 ? <EmptyState icon="sparkles" title="Nobody tagged to this tier yet" /> : (
             <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
               {byTier[t.key].map(c => (
-                <div key={c.id} className="row-between" style={{ fontSize: 13, padding: '4px 0' }}>
-                  <span>{c.name}</span>
-                  <span className="muted" style={{ fontSize: 11 }}>{c.last_contact_date ? `Last: ${c.last_contact_date}` : 'No contact logged'}</span>
+                <div key={c.id} style={{ borderBottom: '1px solid var(--sand)', padding: '4px 0' }}>
+                  <div className="row-between" style={{ fontSize: 13, cursor: 'pointer', padding: '4px 0' }}
+                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}>
+                    <span>{c.name}</span>
+                    <span className="muted" style={{ fontSize: 11 }}>{c.last_contact_date ? `Last: ${c.last_contact_date}` : 'No contact logged'}</span>
+                  </div>
+                  {expandedId === c.id && <InteractionTimeline contact={c} />}
                 </div>
               ))}
             </div>
@@ -872,13 +877,13 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
           <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
             {subtasks.map(s => (
               editingId === s.id ? (
-                <div key={s.id} className="row" style={{ gap: 'var(--space-2)' }}>
+                <div key={s.id} className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap' }}>
                   <input
                     autoFocus
                     value={editText}
                     onChange={e => setEditText(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && saveEditSubtask(s.id)}
-                    style={{ flex: 1 }}
+                    style={{ flex: 1, minWidth: 120 }}
                   />
                   <Button size="sm" variant="ghost" onClick={() => saveEditSubtask(s.id)}>Save</Button>
                   <Button size="sm" variant="text" onClick={() => setEditingId(null)}>Cancel</Button>
