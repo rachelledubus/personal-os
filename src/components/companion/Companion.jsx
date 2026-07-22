@@ -10,10 +10,12 @@ import CompanionSpriteFrame from './CompanionSpriteFrame.jsx';
 import { getPreference, setPreference } from '../../services/preferences.js';
 import { getPmRoutineStatus } from '../../services/sleepCountdown.js';
 import { getRecentLevelUp } from '../../services/guardians.js';
+import { getDueReminderHabit, markHabitReminded } from '../../services/habitReminders.js';
 import './Companion.css';
 
 const BUBBLE_CHECK_MS = 5 * 60 * 1000; // check every 5 minutes — this is a light nudge, not a live countdown
 const LEVELUP_CHECK_MS = 20 * 1000; // level-ups should feel snappy, not lag 5 minutes behind the action
+const SORA_CHECK_MS = 5 * 60 * 1000; // check every 5 min — actual reminder cadence is per-habit (reminder_interval_minutes), this is just the polling resolution
 
 /** Mounted once in App.jsx, outside <Routes>, so it persists across
  *  navigation instead of remounting per page. Reacts to viewport size
@@ -31,6 +33,8 @@ export default function Companion() {
   const [bubbleDismissed, setBubbleDismissed] = useState(false);
   const [levelUpMessage, setLevelUpMessage] = useState(null);
   const [levelUpDismissed, setLevelUpDismissed] = useState(false);
+  const [soraMessage, setSoraMessage] = useState(null);
+  const [soraDismissed, setSoraDismissed] = useState(false);
   const shownLevelUpsRef = useRef(new Set());
   const blinkCheckRef = useRef(null);
 
@@ -102,6 +106,32 @@ export default function Companion() {
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
+  // Sora's habit reminders — each flagged habit has its own AI-suggested
+  // interval (reminder_interval_minutes), tracked server-side via
+  // last_reminded_at so it survives page reloads, not a session-only
+  // timer. Polling resolution (SORA_CHECK_MS) is just how often we
+  // check whether any flagged habit's own interval has elapsed —
+  // never overnight, waking hours only.
+  useEffect(() => {
+    let cancelled = false;
+    async function checkSora() {
+      try {
+        const hour = new Date().getHours();
+        if (hour < 8 || hour >= 21) { setSoraMessage(null); return; }
+        const habit = await getDueReminderHabit();
+        if (cancelled || !habit) { setSoraMessage(null); return; }
+        setSoraMessage(`Sora: Has "${habit.name}" happened yet today?`);
+        setSoraDismissed(false);
+        await markHabitReminded(habit.id);
+      } catch {
+        // Same principle as the other nudges — never let this break the companion.
+      }
+    }
+    checkSora();
+    const id = setInterval(checkSora, SORA_CHECK_MS);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
   // Full-screen Focus/Research modes already own the screen — stay out
   // of the way there rather than floating over a distraction-free view.
   const hiddenOnRoute = location.pathname.startsWith('/today/focus') || location.pathname.startsWith('/today/research');
@@ -140,7 +170,13 @@ export default function Companion() {
           <div className="companion-bubble-text">✨ {levelUpMessage}</div>
         </div>
       )}
-      {!levelUpMessage || levelUpDismissed ? (
+      {(!levelUpMessage || levelUpDismissed) && soraMessage && !soraDismissed && !minimized && (
+        <div className="companion-bubble">
+          <button className="companion-bubble-close" onClick={() => setSoraDismissed(true)} aria-label="Dismiss">×</button>
+          <div className="companion-bubble-text">{soraMessage}</div>
+        </div>
+      )}
+      {(!levelUpMessage || levelUpDismissed) && (!soraMessage || soraDismissed) ? (
         bubbleMessage && !bubbleDismissed && !minimized && (
           <div className="companion-bubble">
             <button className="companion-bubble-close" onClick={() => setBubbleDismissed(true)} aria-label="Dismiss">×</button>

@@ -1,65 +1,81 @@
 import { supabase } from '../lib/supabaseClient.js';
 
 // ============================================================
-// GUARDIAN SYSTEM — Technical Foundation (Phase 3, Stage 1 per the
-// Guardian Integration Architecture doc's own sequencing)
+// GUARDIAN SYSTEM — Harmony House (Path 1 adoption of the real
+// Harmony Guardians Bible, replacing the earlier placeholder system
+// that used generic domain names like "Productivity Guardian" before
+// the Bible document was found in the project's own files).
 //
-// Scope, deliberately: data model + XP system + event system +
-// progression logic + a minimal reaction framework. NOT in scope yet
-// (by design, matching the doc's own phase order):
-//   - Personality/dialogue content beyond generic, functional names
-//   - Visual expansion (sprites, outfits, environments) — Companion.jsx
-//     stays exactly as-is, untouched
-//   - Unlocks (Phase 4 / Gamification concern)
-//   - Connecting habits/workouts/goals (Guardian doc's own Phase 2 —
-//     "Integration" — comes after this)
+// Four named Guardians, equals as companions per the Bible's own
+// "The guardians are equals as companions" principle — none of them
+// is a lesser reskin of another. Each earns XP from something real
+// and distinct, matching their actual documented purpose rather than
+// all four being identical domain-XP counters:
+//   Hana (Vitality)  <- habits, chores, workouts — starting, momentum
+//   Rei  (Direction) <- tasks, goals, maintenance, content, transactions,
+//                        business interactions — commitments, follow-through
+//   Mochi (Heart)    <- energy check-ins — "how are we feeling?"
+//   Sora (Balance)   <- weekly resets — sustainability, reflection
 //
 // Guardians observe systems, they don't control them (Constitution
 // §12): nothing in here ever writes to tasks, contacts, or any other
 // system's data. It only reads activity_log-driven events and reacts.
 // ============================================================
 
-// Functional names only, on purpose — see file header. Values for
-// Productivity/Business/Health match the concrete example already
-// given in the Guardian Integration doc. Growth has no example values
-// given anywhere in the docs — these are a reasonable placeholder,
-// same honesty caveat as the others' generic naming.
 const GUARDIAN_DEFINITIONS = [
-  { guardian_key: 'productivity', name: 'Productivity Guardian', role: 'productivity', personality_values: ['consistency', 'focus', 'discipline'] },
-  { guardian_key: 'business', name: 'Business Guardian', role: 'business', personality_values: ['relationships', 'courage', 'communication'] },
-  { guardian_key: 'health', name: 'Health Guardian', role: 'health', personality_values: ['balance', 'energy', 'self-care'] },
-  { guardian_key: 'growth', name: 'Growth Guardian', role: 'growth', personality_values: ['reflection', 'intention', 'self-improvement'] },
+  { guardian_key: 'hana', name: 'Hana', role: 'vitality', personality_values: ['momentum', 'courage', 'beginning'] },
+  { guardian_key: 'rei', name: 'Rei', role: 'direction', personality_values: ['accountability', 'commitment', 'systems'] },
+  { guardian_key: 'mochi', name: 'Mochi', role: 'heart', personality_values: ['warmth', 'joy', 'kindness'] },
+  { guardian_key: 'sora', name: 'Sora', role: 'balance', personality_values: ['sustainability', 'reflection', 'pattern'] },
 ];
 
-// Personality Layer (Guardian Stage 3) — deliberately built FROM the
-// personality_values already defined above, not invented lore. No
-// "Guardian Bible" doc exists yet to define deeper dialogue/worldbuilding,
-// and that's a real creative-direction decision, not a technical one —
-// making that up unilaterally would be overstepping. What's here is
-// honest: each Guardian's reactions actually reflect its own stated
-// values instead of one interchangeable template, several variants per
-// Guardian so it doesn't feel scripted, picked at random per level-up.
+// Personality Layer (Guardian Stage 3) — voice for each of these
+// four is pulled directly from the Harmony Guardians Bible's own
+// character sections (Communication Style, Humor Style, Promise) for
+// level-up moments specifically, which the Bible itself doesn't
+// script verbatim — everything below is written to match each
+// character's documented voice, not invented lore beyond that.
 const REACTION_VARIANTS = {
-  productivity: [
-    (name, level) => `${name} grew to level ${level} — that kind of focus doesn't happen by accident.`,
-    (name, level) => `${name} grew to level ${level} — consistency is starting to show.`,
-    (name, level) => `${name} grew to level ${level} — discipline like that adds up.`,
+  hana: [
+    (name, level) => `${name}: LEVEL ${level}!! Starting counts, and look at you go!`,
+    (name, level) => `${name}: Level ${level} — that's the spark catching!`,
+    (name, level) => `${name}: Level ${level}! Next step, unlocked. Let's keep moving.`,
   ],
-  business: [
-    (name, level) => `${name} grew to level ${level} — those relationships are paying off.`,
-    (name, level) => `${name} grew to level ${level} — that took real courage to keep showing up.`,
-    (name, level) => `${name} grew to level ${level} — clear communication, real results.`,
+  rei: [
+    (name, level) => `${name}: Level ${level} now. The direction is holding.`,
+    (name, level) => `${name}: Level ${level}. This is what consistency of purpose looks like.`,
+    (name, level) => `${name}: Level ${level} — the map is working.`,
   ],
-  health: [
-    (name, level) => `${name} grew to level ${level} — finding that balance.`,
-    (name, level) => `${name} grew to level ${level} — your energy is showing.`,
-    (name, level) => `${name} grew to level ${level} — that's self-care in action.`,
+  mochi: [
+    (name, level) => `${name}: omg level ${level}?? I'm so proud of you!!`,
+    (name, level) => `${name}: Level ${level}! Look at you, taking care of yourself. This matters.`,
+    (name, level) => `${name}: Level ${level} — I noticed. I always notice.`,
   ],
-  growth: [
-    (name, level) => `${name} grew to level ${level} — real reflection, real progress.`,
-    (name, level) => `${name} grew to level ${level} — that intention is showing up in what you're doing.`,
-    (name, level) => `${name} grew to level ${level} — self-improvement, one day at a time.`,
+  sora: [
+    (name, level) => `${name}: Level ${level}. Balance, practiced quietly.`,
+    (name, level) => `${name}: Level ${level} — a season of tending to yourself.`,
+    (name, level) => `${name}: Level ${level}. You're staying connected to what matters.`,
   ],
+};
+
+// Event -> Guardian XP mapping. Split by WHAT KIND OF MOMENT it is
+// (per the Bible's own "Life Core" philosophy — one unified self, not
+// four separate life-domain meters), not by life domain — a business
+// task completion and a personal task completion both go to Rei,
+// because they're both "direction/follow-through" moments regardless
+// of which part of life they're in.
+const EVENT_XP_MAP = {
+  'habits:completed': { guardianKey: 'hana', amount: 10 },
+  'chores:completed': { guardianKey: 'hana', amount: 5 },
+  'workouts:logged': { guardianKey: 'hana', amount: 10 },
+  'tasks:completed': { guardianKey: 'rei', amount: 10 },
+  'goals:completed': { guardianKey: 'rei', amount: 25 },
+  'maintenance:completed': { guardianKey: 'rei', amount: 10 },
+  'content_items:published': { guardianKey: 'rei', amount: 15 },
+  'transactions:closed': { guardianKey: 'rei', amount: 50 },
+  'interactions:interaction_logged': { guardianKey: 'rei', amount: 10 },
+  'energy_checkin:logged': { guardianKey: 'mochi', amount: 10 },
+  'weekly_reset:completed': { guardianKey: 'sora', amount: 15 },
 };
 
 // Mood (Emotional State field, already in the data model) — reflects
@@ -75,29 +91,6 @@ function computeMood(recentEvents) {
   if (recentCount >= 2) return 'content';
   return 'quiet';
 }
-
-// Event -> Guardian XP mapping. Tasks and interactions were the first
-// events flowing into activity_log; habits and workouts were added
-// once their completion paths started logging too (see dailyExecution
-// call sites in GrowPage/todayItems.js and workoutAnalytics.js).
-//
-// habits map to 'growth', not 'health' — the doc's own Event
-// Categories section lists HABIT_COMPLETED under "Personal Growth
-// Events", separate from "Health Events" (WORKOUT_COMPLETED,
-// MEAL_LOGGED, SLEEP_GOAL_MET). Workouts stay under Health; habits
-// belong to Growth. GOAL_COMPLETED is explicitly listed under
-// "Productivity Events" in the same doc, alongside TASK_COMPLETED.
-const EVENT_XP_MAP = {
-  'tasks:completed': { guardianKey: 'productivity', amount: 10 },
-  'goals:completed': { guardianKey: 'productivity', amount: 25 }, // a finished goal is a bigger deal than one task — matches the doc's "growth should feel earned" principle
-  'interactions:interaction_logged': { guardianKey: 'business', amount: 10 },
-  'habits:completed': { guardianKey: 'growth', amount: 10 },
-  'workouts:logged': { guardianKey: 'health', amount: 10 },
-  'chores:completed': { guardianKey: 'growth', amount: 5 }, // small and frequent, same bucket as habits — routine personal upkeep
-  'maintenance:completed': { guardianKey: 'growth', amount: 10 },
-  'content_items:published': { guardianKey: 'business', amount: 15 },
-  'transactions:closed': { guardianKey: 'business', amount: 50 }, // the single biggest real-world business win the app tracks
-};
 
 // XP -> level: simple, deliberately not final. 100 XP per level.
 // Adjust here if it feels too fast/slow once real data exists.
@@ -261,10 +254,9 @@ export async function getRecentLevelUp() {
 }
 
 // ---------- Reaction framework ----------
-// Deliberately generic, supportive phrasing (Brand Voice: warm,
-// encouraging, never shame-based) — not per-Guardian dialogue trees.
-// That richer personality layer is explicitly a later phase; this is
-// the plumbing it will eventually plug into.
+// Per-Guardian dialogue via REACTION_VARIANTS above (Bible-sourced
+// voice, several variants each so it doesn't feel scripted) — no
+// generic one-size-fits-all template anymore.
 export function getGuardianReaction(result) {
   if (!result) return null;
   const { guardian, leveledUp } = result;

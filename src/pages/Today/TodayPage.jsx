@@ -279,7 +279,7 @@ export default function TodayPage() {
   );
 }
 
-const GUARDIAN_EMOJI = { productivity: '⚡', business: '🤝', health: '🌤️', growth: '🌱' };
+const GUARDIAN_EMOJI = { hana: '🌿', rei: '📘', mochi: '🍡', sora: '☁️' };
 
 /** Compact, glance-only — Product Vision's "clarity over completeness"
  *  applies here as much as anywhere else. Full detail still lives in

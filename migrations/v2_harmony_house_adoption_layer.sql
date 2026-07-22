@@ -1,0 +1,23 @@
+-- ============================================================
+-- Migration: Harmony House adoption (Path 1) — clear placeholder Guardians
+-- ============================================================
+-- The old guardian_key values ('productivity', 'business', 'health',
+-- 'growth') don't map cleanly onto the real Guardian Bible's four
+-- characters (Hana, Rei, Mochi, Sora) — they split by life domain,
+-- the Bible splits by kind-of-support instead (see guardians.js header
+-- for the full reasoning). Retroactively "converting" old XP into the
+-- new structure would mean fabricating numbers that were never
+-- actually earned under the new rules, which is worse than an honest
+-- fresh start — this is early-stage data, not months of progress.
+--
+-- xp_transactions rows for the old guardians are NOT deleted — the
+-- historical audit trail stays intact, it just won't have a live
+-- guardian_id to join against anymore. Safe, no data loss, just an
+-- orphaned old record of what used to be there.
+--
+-- New guardians (hana/rei/mochi/sora) are NOT inserted here — they'll
+-- seed automatically on next load via seedGuardiansIfEmpty(), same
+-- "seed if missing" convention every other list in this app uses.
+-- ============================================================
+
+delete from guardians where guardian_key in ('productivity', 'business', 'health', 'growth');

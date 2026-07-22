@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { mondayOfWeek, isMonday, isFriday, isFirstWeekOfMonth, currentMonthStr, todayStr } from '../utils/date.js';
+import { logActivity } from './goals.js';
 
 async function getUserId() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -64,4 +65,7 @@ export async function markPromptCompleted(type, marker) {
   await supabase.from('prompt_log')
     .update({ completed: true })
     .eq('user_id', userId).eq('prompt_type', type).eq('period_marker', marker);
+  // Sora's Guardian (sustainability, reflection) — any of the three
+  // reset/reflection rituals count, not just the weekly one by name.
+  await logActivity('weekly_reset', marker, 'completed');
 }

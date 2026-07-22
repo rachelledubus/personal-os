@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { todayStr } from '../utils/date.js';
+import { logActivity } from './goals.js';
 
 // ============================================================
 // ENERGY INTELLIGENCE
@@ -16,10 +17,13 @@ async function getUserId() {
 
 export async function logEnergy(level, notes = null) {
   const userId = await getUserId();
-  const { error } = await supabase.from('energy_logs').insert({
+  const { data, error } = await supabase.from('energy_logs').insert({
     user_id: userId, log_date: todayStr(), energy_level: level, notes,
-  });
+  }).select().single();
   if (error) throw error;
+  // Mochi's Guardian ("how are we feeling?") — an energy check-in is
+  // literally her whole purpose, not a stretch mapping.
+  await logActivity('energy_checkin', data.id, 'logged');
 }
 
 /** Most recent check-in today, if any — what the assignment engine

@@ -25,6 +25,7 @@ import {
 } from '../../services/envelopeBudget.js';
 import { logActivity } from '../../services/goals.js';
 import { getHabitPatternInsights } from '../../services/habitInsights.js';
+import { suggestInterval, setHabitReminderInterval, setHabitReminderTimes, clearHabitReminder } from '../../services/habitReminders.js';
 import Banner from '../../components/ui/Banner.jsx';
 
 const TABS = ['habits', 'workouts', 'chores', 'maintenance', 'finance'];
@@ -65,6 +66,11 @@ function HabitsTab() {
   const [doneIds, setDoneIds] = useState(new Set());
   const [streaks, setStreaks] = useState({});
   const [insights, setInsights] = useState([]);
+  const [reminderBusyId, setReminderBusyId] = useState(null);
+  const [reminderNote, setReminderNote] = useState({});
+  const [pickingTimesFor, setPickingTimesFor] = useState(null);
+  const [draftTimes, setDraftTimes] = useState([]);
+  const [newTimeInput, setNewTimeInput] = useState('');
 
   useEffect(() => { load(); getHabitPatternInsights().then(setInsights); }, []);
 
@@ -106,15 +112,95 @@ function HabitsTab() {
     load();
   }
 
+  async function handleUseInterval(habit) {
+    setReminderBusyId(habit.id);
+    const suggestion = await suggestInterval(habit.name);
+    setReminderBusyId(null);
+    if (!suggestion) {
+      setReminderNote(prev => ({ ...prev, [habit.id]: 'AI suggestion unavailable right now — try again shortly.' }));
+      return;
+    }
+    await setHabitReminderInterval(habit.id, suggestion.interval_minutes);
+    setReminderNote(prev => ({ ...prev, [habit.id]: `Reminding every ~${Math.round(suggestion.interval_minutes / 60 * 10) / 10}hr. ${suggestion.reasoning || ''}` }));
+    load();
+  }
+
+  function openTimesPicker(habit) {
+    setPickingTimesFor(habit.id);
+    setDraftTimes(habit.reminder_mode === 'times' && habit.reminder_times ? [...habit.reminder_times] : []);
+    setNewTimeInput('');
+  }
+
+  function addDraftTime() {
+    if (!newTimeInput) return;
+    if (!draftTimes.includes(newTimeInput)) {
+      setDraftTimes([...draftTimes, newTimeInput].sort());
+    }
+    setNewTimeInput('');
+  }
+
+  function removeDraftTime(t) {
+    setDraftTimes(draftTimes.filter(x => x !== t));
+  }
+
+  async function handleSaveTimes(habit) {
+    if (draftTimes.length === 0) return;
+    await setHabitReminderTimes(habit.id, draftTimes);
+    setReminderNote(prev => ({ ...prev, [habit.id]: `Reminding at ${draftTimes.join(', ')}.` }));
+    setPickingTimesFor(null);
+    load();
+  }
+
+  async function handleClearReminder(habit) {
+    await clearHabitReminder(habit.id);
+    setReminderNote(prev => ({ ...prev, [habit.id]: null }));
+    setPickingTimesFor(null);
+    load();
+  }
+
   return (
     <Card>
       <div className="section-label">Daily habits</div>
       {habits.length === 0 ? <EmptyState icon="sparkles" title="No habits yet" /> : (
         <div className="stack">
           {habits.map(h => (
-            <div key={h.id} className="row-between">
-              <Checkbox checked={doneIds.has(h.id)} onChange={v => toggle(h.id, v)} label={h.name} />
-              {streaks[h.id] > 1 && <span className="muted" style={{ fontSize: 12 }}>🔥 {streaks[h.id]} day streak</span>}
+            <div key={h.id}>
+              <div className="row-between">
+                <Checkbox checked={doneIds.has(h.id)} onChange={v => toggle(h.id, v)} label={h.name} />
+                <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+                  {streaks[h.id] > 1 && <span className="muted" style={{ fontSize: 12 }}>🔥 {streaks[h.id]} day streak</span>}
+                  {h.remind_periodically ? (
+                    <Button size="sm" variant="accent" onClick={() => handleClearReminder(h)}>🔔 Reminding — turn off</Button>
+                  ) : (
+                    <>
+                      <Button size="sm" variant="text" onClick={() => handleUseInterval(h)} disabled={reminderBusyId === h.id}>
+                        {reminderBusyId === h.id ? '☁️ asking Sora...' : '🔔 AI interval'}
+                      </Button>
+                      <Button size="sm" variant="text" onClick={() => openTimesPicker(h)}>🕐 Specific times</Button>
+                    </>
+                  )}
+                </div>
+              </div>
+              {reminderNote[h.id] && (
+                <div className="muted" style={{ fontSize: 11, marginTop: 2, marginLeft: 2 }}>{reminderNote[h.id]}</div>
+              )}
+              {pickingTimesFor === h.id && (
+                <div style={{ marginTop: 'var(--space-2)', marginLeft: 2, padding: 'var(--space-2)', background: 'var(--cream)', borderRadius: 'var(--radius-sm)' }}>
+                  <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                    {draftTimes.map(t => (
+                      <span key={t} className="muted" style={{ fontSize: 12, background: 'var(--white)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
+                        {t} <button onClick={() => removeDraftTime(t)} style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: 2 }}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
+                    <input type="time" value={newTimeInput} onChange={e => setNewTimeInput(e.target.value)} />
+                    <Button size="sm" variant="ghost" onClick={addDraftTime}>+ Add time</Button>
+                    <Button size="sm" onClick={() => handleSaveTimes(h)} disabled={draftTimes.length === 0}>Save</Button>
+                    <Button size="sm" variant="text" onClick={() => setPickingTimesFor(null)}>Cancel</Button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -130,6 +216,8 @@ function HabitsTab() {
     </Card>
   );
 }
+
+
 
 function WorkoutsTab() {
   const [activeDay, setActiveDay] = useState(TODAY_DAY_KEY);
