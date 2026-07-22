@@ -1,4 +1,12 @@
-# Rachelle's System — V2.1
+# Rachelle's System — V2.4
+
+**What's in V2.4 (Phase 6 — Polish, continued):** a real bug hunt, not just cleanup. Found and fixed the Companion character never actually rendering (it was built but never mounted in `App.jsx`), and the entire Timer system (persistent across navigation, real presets, a mini bar) sitting fully built but disconnected — Focus Mode was silently running a bare-bones local timer instead. Both are wired in and working now. Also: a full orphan-file sweep (removed 2 files already recorded as dead but present again, plus 3 misplaced Netlify-function duplicates that shouldn't have been in `src/services/`), one duplicate migration file removed, and 3 outdated markdown docs deleted (`README_V2.md`, `INTEGRATION_GUIDE.md`, `PHASE_2_IMPLEMENTATION_GUIDE.md` — all superseded). See `WHERE_WE_LEFT_OFF.md` for the full rundown.
+
+**What's in V2.3 (Phase 6 — Polish):** mobile-wrap fixes on every new UI piece built this session (envelope budget editing, sub-task editing, image upload field, goal rows) that could have overflowed on narrow screens; deleted a confirmed byte-for-byte duplicate migration file (`V2 control center layer.sql` — same content as `v2_control_center_layer.sql`, just named differently).
+
+**What's in V2.2:** real image upload (Control Center → Appearance now has an actual upload button, not just paste-a-link) and AI relationship summaries (a "✨ Summarize" button on any contact's interaction history in Business → Pipeline/Relationships). Everything below this point describes earlier work — see `WHERE_WE_LEFT_OFF.md` for the fuller running history across versions.
+
+---
 
 This is your existing V2 app (React + Vite + Supabase) with three additions:
 a productivity timer system, a mobile usability pass, and a companion

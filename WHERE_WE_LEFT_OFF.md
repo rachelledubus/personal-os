@@ -1,6 +1,7 @@
 # Where We're Leaving Off
+### (current as of V2.4)
 
-*Last updated: end of the AuDHD Executive Function sprint, delivered as the first complete-ZIP-only milestone per the new delivery process.*
+*Last updated: end of the Business OS completion + Guardian foundation + real-bug-hunt session (V2.2–V2.4). See the matching section below for the full rundown.*
 
 **Delivery process changed this session:** individual file replacements are done. From here forward, complete ZIP snapshots at milestone completion, validated (imports resolve, routes registered, no orphans, migrations chronological) before packaging.
 
@@ -114,3 +115,46 @@ Re-ran the full import validation after deleting — nothing broke.
 **Backlog drag-and-drop reordering** — added `sort_order` to `product_backlog_ideas` (didn't exist before), backfilled from creation order. Drag any idea within its category card to reorder; new ideas append to the end rather than jumping to the top.
 
 **Scope note on "drag and drop where it makes sense":** picked these two spots specifically — rearranging your actual day, and prioritizing your own backlog — as the highest-value, lowest-risk fits. Didn't add it everywhere (Roadmap sub-tasks, Pipeline stage-dragging, etc. are plausible future candidates, not done here) since "everywhere" wasn't asked for and would be a much bigger, less-considered pass.
+
+---
+
+## V2.2–V2.4 session: Business OS completion, Guardian system, and a real bug hunt
+
+*Everything below is new since the "Backlog sprint" entry above. Delivered as versioned ZIPs (`Personal OS V2.x`) instead of unversioned snapshots from here forward — check `README.md`'s title for the current version.*
+
+**Business OS — real Relationship Tracking (the one gap in an otherwise-complete Business OS).** `relationship_notes` was a single flat text field, easy to accidentally overwrite (the Consultation flow was doing exactly that — running it twice on the same contact silently destroyed the first run's notes). New `interactions` table (call/text/email/meeting/note, dated, per-contact) is the real system of record now; `relationship_notes`/`last_contact_date` stay in sync automatically so nothing that reads them needed to change. Timeline UI lives on any contact in both Pipeline and Relationships tabs. Existing notes were backfilled into the new table, nothing lost. Consultation flow bug is fixed — it logs a new interaction now instead of overwriting.
+
+**Guardian system — the real technical foundation, not just the framework.** 4 Guardians (Productivity, Business, Health, Growth — matching the doc's own 4 event categories, not 3 or 5), real XP ledger (`xp_transactions`), progression logic (100 XP/level, 4 growth stages), and a working reaction framework (level-up messages, stored on the Guardian's own record). Wired into the *existing* `logActivity()` function, so every already-logged event (task completion, interactions, habits, workouts, goal completions) automatically feeds a Guardian with zero changes needed at those call sites. No art, no personality dialogue — deliberately, per the doc's own "system before cosmetics" sequencing. Minimal read-only progress display lives in Control Center → Feature Toggles.
+
+**Budget rebuilt as "every dollar a home."** New envelope system (`budget_envelopes`, `budget_setup`) sits alongside the existing target-based budget rather than replacing it — set a starting amount, add/edit/delete your own categories, assign until $0 unassigned remains. Lives in Grow → Finance.
+
+**Real image upload.** Control Center → Appearance now has an actual upload button (Supabase Storage, one shared bucket) alongside the existing paste-a-link option — kept both rather than removing working functionality. The upload mechanism (`uploadImage()` + `ImageUploadField` component) is generic, not banner-specific — any future feature needing an image slot reuses it without new setup.
+
+**AI relationship summaries.** The one real gap in an otherwise-built AI layer ("AI summarizes notes" per the Constitution's own example list, and nothing did that). New Netlify function reads a contact's real interaction history, produces a 2-4 sentence synthesis — not a chronological recap. Same graceful-degrade pattern as every other AI feature here.
+
+**Schedule fixes.** Tue/Thu/Sat gym blocks were seeded as a 30-minute "arrival window" instead of the real ~2hr session — fixed, with everything downstream cascade-shifted by the same amount so nothing lost its original duration. Added a curly hair routine rotation as notes on shower blocks (best-guess starting point, flagged as needing confirmation, not fact).
+
+**Hyperfocus fix + manual dismiss.** The "you've been deep in X" nudge used to fire on any overrunning block regardless of whether Focus Mode was actually used — now requires a real overlapping `focus_sessions` row. Also added: any block on Today's schedule can be dismissed outright with one click, no Focus Mode required.
+
+**PM routine countdown.** Runs the real Evening Routine block duration against configurable bedtime/wake targets (Control Center → Feature Toggles → Sleep targets), surfaces as a dismissible Companion speech bubble in the evening if starting now would mean under 8 hours of sleep or a late bedtime.
+
+---
+
+### A real bug hunt, not just new features
+
+**The Companion character has never actually been rendering.** Its own file header said "Mounted once in App.jsx" — it wasn't. Same for the entire Timer system (`TimerContext`, `TimerWidget`, `MiniTimerBar`): fully built, complete, well-designed code, never wired into `App.jsx`, so `FocusMode.jsx` was running its own disconnected bare-bones local timer instead of the real persistent one. Both are now actually mounted. Practical effect: the Companion (and this session's bedtime bubble work) is now visible for the first time, and Focus Mode gained a real preset picker, pause/resume/skip, today's focus stats, and — the actual point of the original design — a timer that keeps running when you navigate away, with a mini bar showing it from anywhere. Rewired the hyperfocus `focus_sessions` tracking to key off the timer's actual start/stop lifecycle (in `TimerContext` itself) instead of `FocusMode`'s mount/unmount, since the whole point now is that leaving the screen doesn't end the session.
+
+**Deliberately not touched:** `ResearchMode.jsx` keeps its own simple always-running stopwatch rather than being forced onto the preset-based `TimerWidget` — different, better-suited UX for that specific use case (research shouldn't require picking a Pomodoro preset first).
+
+**Full orphan-file sweep** (per this doc's own stated validation process, which hadn't been run in full since the Executive Function ZIP): found and removed `ChibiAccent.jsx`/`.css` and `futureRoadmap.js` — both already recorded as deleted earlier in this doc but present again in this session's starting ZIP. Also found and removed `ai-replan.js`, `swap-exercise.js`, `repurpose-content.js` sitting misplaced in `src/services/` — these are duplicates of the real Netlify functions correctly living in `netlify/functions/`, never imported by anything. Re-ran the sweep after deleting: zero orphans remain.
+
+**Markdown cleanup.** Deleted `INTEGRATION_GUIDE.md`, `PHASE_2_IMPLEMENTATION_GUIDE.md`, `README_V2.md` — all three either already recorded as dead in this doc or fully superseded by newer content, all confirmed stale before removal. `USER_GUIDE.md`'s decoration section was rewritten (it still described corner chibi accents from before the banner system replaced them).
+
+### Migrations added this session (6, run in any order — no cross-dependencies)
+`v2_schedule_hair_routine_fix.sql`, `v2_envelope_budget_layer.sql`, `v2_focus_and_dismiss_layer.sql`, `v2_relationship_tracking_layer.sql`, `v2_guardian_foundation_layer.sql`, `v2_image_upload_layer.sql`
+
+### What's still genuinely deferred, not forgotten
+- Guardian personality/dialogue content and visual art (sprites, outfits) — explicit "possible later, not developing now" per your own call
+- Achievements/unlocks (Phase 4/Gamification) — same reasoning, the `unlocked_features` column exists empty and ready
+- A full-app mobile audit — only this session's own new UI got checked; a few pre-existing rows elsewhere (e.g. the Resources form in Goals & Projects) are still narrow-screen risks
+- An actual `npm run build` — still never run in this environment; still the first thing to do after extracting
