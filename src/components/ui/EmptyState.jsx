@@ -27,7 +27,7 @@ export default function EmptyState({ icon = 'leaf', title, subtitle }) {
       <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
         <filter id={roughId}>
           <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.1" />
         </filter>
       </svg>
 
@@ -37,10 +37,11 @@ export default function EmptyState({ icon = 'leaf', title, subtitle }) {
             d="M 42 6 C 62 6 78 20 78 42 C 78 63 63 79 41 78 C 21 77 6 62 7 41 C 8 21 22 6 42 6 Z"
             fill="var(--cream)"
             stroke="var(--sage)"
-            strokeWidth="2.5"
+            strokeWidth="1.5"
+            opacity="0.8"
           />
         </svg>
-        <Icon size={20} strokeWidth={1.75} className="empty-state-icon-glyph" style={{ filter: `url(#${roughId})` }} />
+        <Icon size={18} strokeWidth={1.5} className="empty-state-icon-glyph" style={{ filter: `url(#${roughId})` }} />
       </div>
 
       <div className="empty-state-title">{title}</div>

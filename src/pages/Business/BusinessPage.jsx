@@ -6,7 +6,7 @@ import Checkbox from '../../components/ui/Checkbox.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { FLOWS } from '../../services/flows.js';
-import { listMilestones, addMilestone, toggleMilestone, updateMilestone, deleteMilestone, updateRoadmapLink } from '../../services/goals.js';
+import { listMilestones, addMilestone, toggleMilestone, updateMilestone, deleteMilestone, updateRoadmapLink, updateRoadmapTitle } from '../../services/goals.js';
 import { getCategoryList } from '../../services/settings.js';
 import Banner from '../../components/ui/Banner.jsx';
 import AiSuggestionBox from '../../components/ui/AiSuggestionBox.jsx';
@@ -809,12 +809,28 @@ function RoadmapTab() {
   );
 }
 
+/** "Build CRM: contact categories, lead sources, pipeline stages" ->
+ *  { parent: "Build CRM", subs: ["contact categories", "lead sources", "pipeline stages"] }.
+ *  A best-guess parse, never applied automatically — always shown as an
+ *  editable preview first, since a colon in a title doesn't always mean
+ *  "these are sub-tasks" and this touches real content, not just code. */
+function parseCompoundTitle(title) {
+  const colonIndex = title.indexOf(':');
+  if (colonIndex === -1) return null;
+  const parent = title.slice(0, colonIndex).trim();
+  const rest = title.slice(colonIndex + 1).trim();
+  const subs = rest.split(',').map(s => s.trim()).filter(Boolean);
+  if (!parent || subs.length === 0) return null;
+  return { parent, subs };
+}
+
 function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
   const [subtasks, setSubtasks] = useState([]);
   const [newSubtask, setNewSubtask] = useState('');
   const [pickingLink, setPickingLink] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
+  const [splitPreview, setSplitPreview] = useState(null);
 
   useEffect(() => { if (expanded) listMilestones({ roadmapId: item.id }).then(setSubtasks); }, [expanded, item.id]);
 
@@ -848,6 +864,32 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
     onLinked();
   }
 
+  function openSplitPreview() {
+    const parsed = parseCompoundTitle(item.title);
+    if (parsed) setSplitPreview(parsed);
+  }
+
+  function updateSplitSub(index, value) {
+    setSplitPreview(prev => ({ ...prev, subs: prev.subs.map((s, i) => (i === index ? value : s)) }));
+  }
+
+  function removeSplitSub(index) {
+    setSplitPreview(prev => ({ ...prev, subs: prev.subs.filter((_, i) => i !== index) }));
+  }
+
+  async function confirmSplit() {
+    if (!splitPreview.parent.trim() || splitPreview.subs.length === 0) return;
+    await updateRoadmapTitle(item.id, splitPreview.parent.trim());
+    for (let i = 0; i < splitPreview.subs.length; i++) {
+      if (splitPreview.subs[i].trim()) {
+        await addMilestone({ roadmap_item_id: item.id, title: splitPreview.subs[i].trim(), sort_order: i });
+      }
+    }
+    setSplitPreview(null);
+    setSubtasks(await listMilestones({ roadmapId: item.id }));
+    onLinked(); // refreshes the parent list so the shortened title shows immediately
+  }
+
   const doneCount = subtasks.filter(s => s.completed).length;
 
   return (
@@ -873,6 +915,35 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
             </div>
           )}
           {item.link_to && <Button size="sm" variant="text" onClick={() => setPickingLink(true)}>Change link</Button>}
+
+          {subtasks.length === 0 && !splitPreview && parseCompoundTitle(item.title) && (
+            <div style={{ marginTop: 'var(--space-2)' }}>
+              <Button size="sm" variant="text" onClick={openSplitPreview}>🔀 Split into sub-tasks</Button>
+            </div>
+          )}
+
+          {splitPreview && (
+            <div style={{ marginTop: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--cream)', borderRadius: 'var(--radius-sm)' }}>
+              <div className="muted" style={{ fontSize: 11, marginBottom: 6 }}>Review before saving — nothing's changed yet.</div>
+              <label className="stack" style={{ gap: 2 }}>
+                <span style={{ fontSize: 11 }}>Item title</span>
+                <input value={splitPreview.parent} onChange={e => setSplitPreview({ ...splitPreview, parent: e.target.value })} />
+              </label>
+              <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
+                <span style={{ fontSize: 11 }}>Sub-tasks</span>
+                {splitPreview.subs.map((s, i) => (
+                  <div key={i} className="row" style={{ gap: 'var(--space-2)' }}>
+                    <input value={s} onChange={e => updateSplitSub(i, e.target.value)} style={{ flex: 1 }} />
+                    <Button size="sm" variant="text" onClick={() => removeSplitSub(i)}>×</Button>
+                  </div>
+                ))}
+              </div>
+              <div className="row" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-2)' }}>
+                <Button size="sm" onClick={confirmSplit}>Save split</Button>
+                <Button size="sm" variant="text" onClick={() => setSplitPreview(null)}>Cancel</Button>
+              </div>
+            </div>
+          )}
 
           <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
             {subtasks.map(s => (

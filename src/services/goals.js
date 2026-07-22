@@ -112,6 +112,11 @@ export async function updateRoadmapLink(id, linkTo) {
   if (error) throw error;
 }
 
+export async function updateRoadmapTitle(id, title) {
+  const { error } = await supabase.from('roadmap_items').update({ title }).eq('id', id);
+  if (error) throw error;
+}
+
 // ---------- Activity log (generic history — see migration for why) ----------
 export async function logActivity(sourceTable, sourceId, eventType, metadata = {}) {
   const userId = await getUserId();
