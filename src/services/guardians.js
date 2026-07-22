@@ -115,6 +115,21 @@ export async function getGuardian(guardianKey) {
   return data;
 }
 
+// Level-based unlocks (Phase 4/Gamification) — functional, not cosmetic,
+// per the Guardian doc's own "no major art work" principle for anything
+// before the Personality Layer. 'full_history' just means: stop capping
+// the visible event list at 10 — the real data (xp_transactions) was
+// always complete, this only unlocks *seeing* more of it.
+const UNLOCK_THRESHOLDS = [
+  { level: 3, feature: 'full_history' },
+];
+
+function getNewlyUnlockedFeatures(level, alreadyUnlocked) {
+  const unlocked = new Set(alreadyUnlocked || []);
+  UNLOCK_THRESHOLDS.filter(u => level >= u.level).forEach(u => unlocked.add(u.feature));
+  return Array.from(unlocked);
+}
+
 /** The one real write path for Guardian growth. Records the XP
  *  transaction (the real audit trail), then updates the Guardian's
  *  running total, level, growth stage, and a short rolling log of
@@ -135,6 +150,7 @@ async function awardXp(guardianKey, amount, sourceTable, sourceId, eventType) {
   const leveledUp = newLevel > guardian.level;
   const newGrowthStage = getGrowthStageForLevel(newLevel);
   const reaction = getGuardianReaction({ guardian: { ...guardian, level: newLevel, growth_stage: newGrowthStage }, leveledUp });
+  const unlockedFeatures = getNewlyUnlockedFeatures(newLevel, guardian.unlocked_features);
 
   const recentEvents = [
     { eventType, amount, at: new Date().toISOString(), reaction },
@@ -146,6 +162,7 @@ async function awardXp(guardianKey, amount, sourceTable, sourceId, eventType) {
     level: newLevel,
     growth_stage: newGrowthStage,
     recent_events: recentEvents,
+    unlocked_features: unlockedFeatures,
     updated_at: new Date().toISOString(),
   }).eq('id', guardian.id).select().single();
   if (error) throw error;
@@ -205,4 +222,61 @@ export function getGuardianReaction(result) {
     return `${guardian.name} grew to level ${guardian.level} — ${guardian.growth_stage.toLowerCase()} now.`;
   }
   return null; // no reaction on every single XP tick — docs are explicit: too many reactions reduce meaning
+}
+
+/** The "full_history" unlock's actual payoff — recent_events on the
+ *  guardian row is always capped at 10, but xp_transactions was never
+ *  capped, it's the real audit trail. This just reads more of what
+ *  already existed. */
+export async function getFullHistory(guardianId) {
+  const { data, error } = await supabase.from('xp_transactions')
+    .select('*').eq('guardian_id', guardianId).order('created_at', { ascending: false }).limit(100);
+  if (error) throw error;
+  return data;
+}
+
+// ---------- Achievements ----------
+// Deliberately text + icon, zero custom art — matches the Guardian
+// doc's own "no major art work" rule for anything before the
+// Personality Layer. Computed live from xp_transactions and guardian
+// levels, nothing new stored — an achievement "unlocking" is just a
+// true/false read of data that already exists, same principle as the
+// rest of this file (Guardians observe, they don't own data).
+export const ACHIEVEMENT_DEFINITIONS = [
+  { key: 'first_step', name: 'First Step', description: 'Earn your first XP', icon: '✨', check: s => s.totalEvents >= 1 },
+  { key: 'level_up', name: 'Growing', description: 'Any Guardian reaches level 2', icon: '🌱', check: s => s.maxLevel >= 2 },
+  { key: 'well_rounded', name: 'Well-Rounded', description: 'All 4 Guardians reach level 2', icon: '🧭', check: s => s.minLevel >= 2 },
+  { key: 'consistent', name: 'Consistent', description: 'Log 7 habit completions', icon: '🔁', check: s => (s.byEvent['habits:completed'] || 0) >= 7 },
+  { key: 'relationship_builder', name: 'Relationship Builder', description: 'Log 10 business interactions', icon: '🤝', check: s => (s.byEvent['interactions:interaction_logged'] || 0) >= 10 },
+  { key: 'closer', name: 'Closer', description: 'Log your first closed transaction', icon: '🏆', check: s => (s.byEvent['transactions:closed'] || 0) >= 1 },
+  { key: 'goal_getter', name: 'Goal Getter', description: 'Complete your first goal', icon: '🎯', check: s => (s.byEvent['goals:completed'] || 0) >= 1 },
+  { key: 'content_creator', name: 'Content Creator', description: 'Publish 5 pieces of content', icon: '📣', check: s => (s.byEvent['content_items:published'] || 0) >= 5 },
+];
+
+export async function getAchievementProgress() {
+  const userId = await getUserId();
+  if (!userId) return ACHIEVEMENT_DEFINITIONS.map(a => ({ ...a, earned: false }));
+
+  const [{ data: transactions, error }, guardians] = await Promise.all([
+    supabase.from('xp_transactions').select('source_table, event_type').eq('user_id', userId),
+    listGuardians(),
+  ]);
+  if (error) throw error;
+
+  // Composite key, same shape as EVENT_XP_MAP's keys — event_type alone
+  // isn't unique ('completed' is shared by tasks/habits/goals/chores).
+  const byEvent = {};
+  (transactions || []).forEach(t => {
+    const key = `${t.source_table}:${t.event_type}`;
+    byEvent[key] = (byEvent[key] || 0) + 1;
+  });
+
+  const stats = {
+    totalEvents: (transactions || []).length,
+    maxLevel: guardians.length ? Math.max(...guardians.map(g => g.level)) : 0,
+    minLevel: guardians.length ? Math.min(...guardians.map(g => g.level)) : 0,
+    byEvent,
+  };
+
+  return ACHIEVEMENT_DEFINITIONS.map(a => ({ ...a, earned: a.check(stats) }));
 }

@@ -4,7 +4,9 @@ import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import ImageUploadField from '../../components/ui/ImageUploadField.jsx';
-import { seedGuardiansIfEmpty, listGuardians, getXpProgressWithinLevel } from '../../services/guardians.js';
+import {
+  seedGuardiansIfEmpty, listGuardians, getXpProgressWithinLevel, getFullHistory, getAchievementProgress,
+} from '../../services/guardians.js';
 import {
   CATEGORY_LISTS, getCategoryList, setCategoryList,
   FEATURE_FLAGS, getAllFeatureFlags, setFeatureFlag,
@@ -158,12 +160,16 @@ function FeaturesSection() {
   const [sleepTargets, setSleepTargetsState] = useState({ bedtime: '22:30', wake_time: '06:00' });
   const [sleepSaved, setSleepSaved] = useState(false);
   const [guardians, setGuardians] = useState(null);
+  const [achievements, setAchievements] = useState(null);
+  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
+  const [fullHistory, setFullHistory] = useState(null);
 
   async function refresh() {
     setFlags(await getAllFeatureFlags());
     setSleepTargetsState(await getSleepTargets());
     await seedGuardiansIfEmpty();
     setGuardians(await listGuardians());
+    setAchievements(await getAchievementProgress());
   }
   useEffect(() => { refresh(); }, []);
 
@@ -176,6 +182,15 @@ function FeaturesSection() {
     await setSleepTargets(sleepTargets);
     setSleepSaved(true);
     setTimeout(() => setSleepSaved(false), 1200);
+  }
+
+  async function handleToggleHistory(guardian) {
+    if (expandedHistoryId === guardian.id) {
+      setExpandedHistoryId(null);
+      return;
+    }
+    setExpandedHistoryId(guardian.id);
+    setFullHistory(await getFullHistory(guardian.id));
   }
 
   return (
@@ -221,9 +236,9 @@ function FeaturesSection() {
     <Card>
       <div className="section-label">Guardian progress</div>
       <p className="muted" style={{ fontSize: 12 }}>
-        Real accomplishments earn XP — completed tasks, logged relationship activity, habits, and workouts.
-        No visuals or personalities built yet on purpose — this is a plain progress readout, not the
-        finished Guardian experience.
+        Real accomplishments earn XP — tasks, goals, habits, workouts, chores, maintenance, business
+        interactions, published content, and closed transactions all count. No visuals or personalities
+        built yet on purpose — this is a plain progress readout, not the finished Guardian experience.
       </p>
       {guardians === null ? null : (
         <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-3)' }}>
@@ -238,6 +253,54 @@ function FeaturesSection() {
               {g.recent_events?.[0]?.reaction && (
                 <div style={{ fontSize: 12, marginTop: 4, color: 'var(--sage)' }}>{g.recent_events[0].reaction}</div>
               )}
+              {(g.unlocked_features || []).includes('full_history') && (
+                <>
+                  <Button size="sm" variant="text" onClick={() => handleToggleHistory(g)} style={{ marginTop: 4, padding: 0 }}>
+                    {expandedHistoryId === g.id ? 'Hide full history' : 'View full history ✨ unlocked at level 3'}
+                  </Button>
+                  {expandedHistoryId === g.id && fullHistory && (
+                    <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 2, maxHeight: 160, overflowY: 'auto' }}>
+                      {fullHistory.length === 0 ? (
+                        <span className="muted" style={{ fontSize: 11 }}>No history yet.</span>
+                      ) : fullHistory.map(t => (
+                        <div key={t.id} className="row-between" style={{ fontSize: 11 }}>
+                          <span className="muted">{t.source_table}:{t.event_type}</span>
+                          <span className="muted">+{t.amount} XP</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+
+    <Card>
+      <div className="section-label">Achievements</div>
+      <p className="muted" style={{ fontSize: 12 }}>
+        A trophy case, not a to-do list — these track themselves as you use the app, nothing to manage here.
+      </p>
+      {achievements === null ? null : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
+          {achievements.map(a => (
+            <div
+              key={a.key}
+              className="stack"
+              style={{
+                alignItems: 'center', textAlign: 'center', gap: 4, padding: 'var(--space-3)',
+                borderRadius: 'var(--radius-md)',
+                background: a.earned ? 'var(--cream)' : 'transparent',
+                border: a.earned ? '2px solid var(--accent)' : '2px solid transparent',
+                opacity: a.earned ? 1 : 0.45,
+              }}
+              title={a.description}
+            >
+              <div style={{ fontSize: 28 }}>{a.icon}</div>
+              <span style={{ fontSize: 12, fontWeight: 700 }}>{a.name}</span>
+              <span className="muted" style={{ fontSize: 10 }}>{a.description}</span>
             </div>
           ))}
         </div>
