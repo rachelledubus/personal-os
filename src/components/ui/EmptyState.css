@@ -15,10 +15,12 @@
   position: absolute; top: 0; left: 0;
 }
 .empty-state-icon-glyph {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   color: var(--navy);
   opacity: 0.6;
-  margin-top: 8px;
 }
 .empty-state-title { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--navy); }
 .empty-state-subtitle { font-size: var(--text-caption); color: var(--ink-soft); margin-top: var(--space-1); }
