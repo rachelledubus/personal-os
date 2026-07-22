@@ -31,10 +31,55 @@ const GUARDIAN_DEFINITIONS = [
   { guardian_key: 'growth', name: 'Growth Guardian', role: 'growth', personality_values: ['reflection', 'intention', 'self-improvement'] },
 ];
 
+// Personality Layer (Guardian Stage 3) — deliberately built FROM the
+// personality_values already defined above, not invented lore. No
+// "Guardian Bible" doc exists yet to define deeper dialogue/worldbuilding,
+// and that's a real creative-direction decision, not a technical one —
+// making that up unilaterally would be overstepping. What's here is
+// honest: each Guardian's reactions actually reflect its own stated
+// values instead of one interchangeable template, several variants per
+// Guardian so it doesn't feel scripted, picked at random per level-up.
+const REACTION_VARIANTS = {
+  productivity: [
+    (name, level) => `${name} grew to level ${level} — that kind of focus doesn't happen by accident.`,
+    (name, level) => `${name} grew to level ${level} — consistency is starting to show.`,
+    (name, level) => `${name} grew to level ${level} — discipline like that adds up.`,
+  ],
+  business: [
+    (name, level) => `${name} grew to level ${level} — those relationships are paying off.`,
+    (name, level) => `${name} grew to level ${level} — that took real courage to keep showing up.`,
+    (name, level) => `${name} grew to level ${level} — clear communication, real results.`,
+  ],
+  health: [
+    (name, level) => `${name} grew to level ${level} — finding that balance.`,
+    (name, level) => `${name} grew to level ${level} — your energy is showing.`,
+    (name, level) => `${name} grew to level ${level} — that's self-care in action.`,
+  ],
+  growth: [
+    (name, level) => `${name} grew to level ${level} — real reflection, real progress.`,
+    (name, level) => `${name} grew to level ${level} — that intention is showing up in what you're doing.`,
+    (name, level) => `${name} grew to level ${level} — self-improvement, one day at a time.`,
+  ],
+};
+
+// Mood (Emotional State field, already in the data model) — reflects
+// real recent engagement, not a score to optimize or a guilt trip for
+// gaps. Computed from how many of THIS Guardian's events landed in the
+// last 14 days, using recent_events (already tracked, nothing new to
+// read). Deliberately no negative/shame-adjacent word for the quiet
+// end — "quiet" describes the data, it doesn't judge the person.
+function computeMood(recentEvents) {
+  const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  const recentCount = (recentEvents || []).filter(e => new Date(e.at).getTime() >= cutoff).length;
+  if (recentCount >= 5) return 'thriving';
+  if (recentCount >= 2) return 'content';
+  return 'quiet';
+}
+
 // Event -> Guardian XP mapping. Tasks and interactions were the first
 // events flowing into activity_log; habits and workouts were added
 // once their completion paths started logging too (see dailyExecution
-// call sites in GrowPage/missions.js and workoutAnalytics.js).
+// call sites in GrowPage/todayItems.js and workoutAnalytics.js).
 //
 // habits map to 'growth', not 'health' — the doc's own Event
 // Categories section lists HABIT_COMPLETED under "Personal Growth
@@ -157,12 +202,17 @@ async function awardXp(guardianKey, amount, sourceTable, sourceId, eventType) {
     ...(guardian.recent_events || []),
   ].slice(0, 10);
 
+  const newMood = computeMood(recentEvents);
+  const newBondLevel = guardian.bond_level + 1;
+
   const { data: updated, error } = await supabase.from('guardians').update({
     experience_points: newXp,
     level: newLevel,
     growth_stage: newGrowthStage,
     recent_events: recentEvents,
     unlocked_features: unlockedFeatures,
+    mood: newMood,
+    bond_level: newBondLevel,
     updated_at: new Date().toISOString(),
   }).eq('id', guardian.id).select().single();
   if (error) throw error;
@@ -219,6 +269,14 @@ export function getGuardianReaction(result) {
   if (!result) return null;
   const { guardian, leveledUp } = result;
   if (leveledUp) {
+    const variants = REACTION_VARIANTS[guardian.guardian_key];
+    if (variants && variants.length > 0) {
+      const pick = variants[Math.floor(Math.random() * variants.length)];
+      return pick(guardian.name, guardian.level);
+    }
+    // Fallback only reachable for a guardian_key not in REACTION_VARIANTS
+    // (shouldn't happen with the current 4, but never let a missing
+    // variant silently produce no reaction at all).
     return `${guardian.name} grew to level ${guardian.level} — ${guardian.growth_stage.toLowerCase()} now.`;
   }
   return null; // no reaction on every single XP tick — docs are explicit: too many reactions reduce meaning

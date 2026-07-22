@@ -24,6 +24,7 @@ import {
   getEnvelopeSummary, setStartingAmount, addEnvelope, updateEnvelope, deleteEnvelope,
 } from '../../services/envelopeBudget.js';
 import { logActivity } from '../../services/goals.js';
+import { getHabitPatternInsights } from '../../services/habitInsights.js';
 import Banner from '../../components/ui/Banner.jsx';
 
 const TABS = ['habits', 'workouts', 'chores', 'maintenance', 'finance'];
@@ -63,8 +64,9 @@ function HabitsTab() {
   const [habits, setHabits] = useState([]);
   const [doneIds, setDoneIds] = useState(new Set());
   const [streaks, setStreaks] = useState({});
+  const [insights, setInsights] = useState([]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); getHabitPatternInsights().then(setInsights); }, []);
 
   async function load() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -115,6 +117,14 @@ function HabitsTab() {
               {streaks[h.id] > 1 && <span className="muted" style={{ fontSize: 12 }}>🔥 {streaks[h.id]} day streak</span>}
             </div>
           ))}
+        </div>
+      )}
+      {insights.length > 0 && (
+        <div className="stack" style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-soft, #e2ded4)' }}>
+          <div className="section-label">Patterns</div>
+          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+            {insights.map((line, i) => <div key={i} style={{ fontSize: 13 }}>💡 {line}</div>)}
+          </div>
         </div>
       )}
     </Card>

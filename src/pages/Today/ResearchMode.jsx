@@ -41,7 +41,7 @@ export default function ResearchMode() {
           <h1 className="focus-title" style={{ fontSize: 24 }}>Time's up — what next?</h1>
           <div className="stack" style={{ marginTop: 'var(--space-5)', alignItems: 'center' }}>
             <Button variant="ghost" onClick={() => setShowExitPrompt(false)}>Continue researching</Button>
-            <Button variant="primary" onClick={() => navigate('/today')}>Return to today's mission</Button>
+            <Button variant="primary" onClick={() => navigate('/today')}>Return to Today</Button>
             <Button variant="text" onClick={() => navigate('/library/notes')}>Save research for later</Button>
           </div>
         </div>

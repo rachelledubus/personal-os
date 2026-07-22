@@ -43,11 +43,11 @@
   align-items: flex-start;
 }
 .today-schedule-col { flex: 1.4; min-width: 0; }
-.today-missions-col { flex: 1; min-width: 0; }
+.today-items-col { flex: 1; min-width: 0; }
 
 @media (max-width: 860px) {
   .today-columns { flex-direction: column; }
-  .today-schedule-col, .today-missions-col { width: 100%; }
+  .today-schedule-col, .today-items-col { width: 100%; }
 }
 
 .hyperfocus-nudge {

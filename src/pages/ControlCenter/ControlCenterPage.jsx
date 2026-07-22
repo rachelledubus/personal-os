@@ -246,7 +246,7 @@ function FeaturesSection() {
             <div key={g.id}>
               <div className="row-between" style={{ fontSize: 13 }}>
                 <span style={{ fontWeight: 700 }}>{g.name}</span>
-                <span className="muted">Level {g.level} · {g.growth_stage}</span>
+                <span className="muted">Level {g.level} · {g.growth_stage} · {g.mood}</span>
               </div>
               <ProgressBar value={getXpProgressWithinLevel(g.experience_points)} max={100} tone="sage" />
               <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{g.experience_points} total XP</div>

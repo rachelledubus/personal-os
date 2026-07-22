@@ -132,7 +132,7 @@ export async function resolveToContentIdea(item, fields = {}) {
   return data;
 }
 
-/** Legacy path — content_items still powers the Today mission list's
+/** Legacy path — content_items still powers the Today item list's
  *  content nudge, so this stays available even though new captures
  *  default to the real pipeline above. */
 export async function resolveToContentItem(item, fields = {}) {

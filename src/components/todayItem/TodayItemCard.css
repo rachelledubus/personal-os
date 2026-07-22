@@ -1,0 +1,50 @@
+.today-item-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 14px 16px 14px 20px;
+  box-shadow: var(--shadow-resting);
+  overflow: hidden;
+  transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base), opacity var(--duration-slow);
+}
+
+.today-item-track-bar {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+}
+.track-personal .today-item-track-bar { background: var(--track-personal); }
+.track-business .today-item-track-bar { background: var(--track-business); }
+
+.today-item-active {
+  box-shadow: var(--shadow-active);
+  transform: scale(1.01);
+}
+
+.today-item-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: var(--cream);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+.track-business .today-item-icon { color: var(--accent); }
+.track-personal .today-item-icon { color: var(--sage); }
+
+.today-item-body { flex: 1; min-width: 0; cursor: default; }
+.today-item-title { font-family: var(--font-display); font-weight: 700; font-size: var(--text-card-title); color: var(--navy); }
+.today-item-context { font-size: var(--text-caption); color: var(--ink-soft); margin-top: 2px; }
+
+.today-item-dismiss {
+  background: none; border: none; color: var(--ink-faint); font-size: 18px; line-height: 1; padding: 4px;
+}
+
+.today-item-done {
+  opacity: 0.55;
+  transform: translateX(4px);
+}
+
+/* When an item is checked off, it fades and slides out — the list
+   above re-flows to promote the next item. Handled at the list level
+   via a CSS transition on removal (see TodayItemList.css). */

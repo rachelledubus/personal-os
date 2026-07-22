@@ -50,7 +50,7 @@ function daysUntil(dateStr) {
   return Math.round(diffMs / 86400000);
 }
 
-/** Transparent, simple scoring — same philosophy as the Mission
+/** Transparent, simple scoring — same philosophy as the Today Items
  *  Engine's nudge logic: a direct read of real fields, not a hidden
  *  black box. Higher score = scheduled first. Returns both the score
  *  and the human-readable reasons that produced it, so the caller can

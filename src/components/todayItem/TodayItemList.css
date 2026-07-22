@@ -1,0 +1,7 @@
+.today-item-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.today-item-list-item { animation: todayItemIn var(--duration-slow) var(--ease-standard); }
+
+@keyframes todayItemIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

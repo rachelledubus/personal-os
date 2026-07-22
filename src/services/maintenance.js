@@ -8,7 +8,7 @@ import { logActivity } from './goals.js';
 // (daily) and `checklist_items` (fixed daily/weekly/monthly chores).
 // Behavior is suggest-and-remind, never rigid: nothing here blocks a
 // day or forces itself into a time block. Due-soon items surface as a
-// nudge (see missions.js integration) the same way pipeline nudges do.
+// nudge (see todayItems.js integration) the same way pipeline nudges do.
 // ============================================================
 
 async function getUserId() {
@@ -59,7 +59,7 @@ export async function completeMaintenanceItem(id) {
 }
 
 /** Items due today or within their own reminder_lead_days window —
- *  what the Mission Engine nudge reads. */
+ *  what the Today Items engine nudge reads. */
 export async function listDueSoon() {
   const items = await listMaintenanceItems();
   const today = new Date(todayStr());
@@ -78,7 +78,7 @@ export async function listDueSoon() {
 // matching maintenance_item already tracking it, suggests formalizing
 // it. Deliberately simple and transparent — a direct read of recent
 // history, not a black-box model, matching how the pipeline nudge in
-// missions.js already works.
+// todayItems.js already works.
 export async function getPatternSuggestions() {
   const userId = await getUserId();
   if (!userId) return [];

@@ -9,6 +9,9 @@ import {
   listGoals, addGoal, listProjects, addProject,
   listProjectTasks, listMilestones, addMilestone, toggleMilestone, markGoalAchieved,
 } from '../../services/goals.js';
+import {
+  listMissions, addMission, completeMission, deleteMission, listTasksForMission, addTaskToMission, toggleMissionTask,
+} from '../../services/missions.js';
 
 async function getUserId() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -37,6 +40,7 @@ export default function ProjectsTab() {
   const [goals, setGoals] = useState([]);
   const [projects, setProjects] = useState([]);
   const [expandedProject, setExpandedProject] = useState(null);
+  const [expandedGoal, setExpandedGoal] = useState(null);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [newProjectGoal, setNewProjectGoal] = useState('');
@@ -77,26 +81,13 @@ export default function ProjectsTab() {
         {goals.length === 0 ? <EmptyState icon="star" title="No goals yet" /> : (
           <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
             {goals.map(g => (
-              <div key={g.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
-                <div className="row-between" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{g.title}</div>
-                    <div className="muted" style={{ fontSize: 12 }}>{g.category} · {g.status}</div>
-                  </div>
-                  <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
-                    {g.target_date && <div className="muted" style={{ fontSize: 12 }}>{g.target_date}</div>}
-                    {g.status !== 'Achieved' && (
-                      <Button size="sm" variant="ghost" onClick={() => handleMarkAchieved(g.id)}>Mark achieved</Button>
-                    )}
-                  </div>
-                </div>
-                {g.target_value != null && (
-                  <div style={{ marginTop: 6 }}>
-                    <ProgressBar value={g.current_value || 0} max={g.target_value} />
-                    <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{g.current_value || 0} / {g.target_value}</div>
-                  </div>
-                )}
-              </div>
+              <GoalRow
+                key={g.id}
+                goal={g}
+                expanded={expandedGoal === g.id}
+                onToggleExpand={() => setExpandedGoal(expandedGoal === g.id ? null : g.id)}
+                onMarkAchieved={() => handleMarkAchieved(g.id)}
+              />
             ))}
           </div>
         )}
@@ -129,6 +120,153 @@ export default function ProjectsTab() {
           <Button size="sm" onClick={handleAddProject}>+ Add project</Button>
         </div>
       </Card>
+    </div>
+  );
+}
+
+function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved }) {
+  const [missions, setMissions] = useState([]);
+  const [newMissionTitle, setNewMissionTitle] = useState('');
+  const [expandedMission, setExpandedMission] = useState(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    listMissions({ goalId: goal.id }).then(setMissions);
+  }, [expanded, goal.id]);
+
+  async function refreshMissions() {
+    setMissions(await listMissions({ goalId: goal.id }));
+  }
+
+  async function handleAddMission() {
+    if (!newMissionTitle.trim()) return;
+    await addMission({ title: newMissionTitle.trim(), goal_id: goal.id });
+    setNewMissionTitle('');
+    refreshMissions();
+  }
+
+  async function handleCompleteMission(id) {
+    await completeMission(id);
+    refreshMissions();
+  }
+
+  async function handleDeleteMission(id) {
+    await deleteMission(id);
+    refreshMissions();
+  }
+
+  return (
+    <div style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)', cursor: 'pointer' }}>
+      <div className="row-between" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }} onClick={onToggleExpand}>
+        <div>
+          <div style={{ fontWeight: 700 }}>{goal.title}</div>
+          <div className="muted" style={{ fontSize: 12 }}>
+            {goal.category} · {goal.status}
+            {missions.length > 0 && ` · ${missions.filter(m => m.status === 'completed').length}/${missions.length} missions`}
+          </div>
+        </div>
+        <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
+          {goal.target_date && <div className="muted" style={{ fontSize: 12 }}>{goal.target_date}</div>}
+          {goal.status !== 'Achieved' && (
+            <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); onMarkAchieved(); }}>Mark achieved</Button>
+          )}
+        </div>
+      </div>
+      {goal.target_value != null && (
+        <div style={{ marginTop: 6 }} onClick={e => e.stopPropagation()}>
+          <ProgressBar value={goal.current_value || 0} max={goal.target_value} />
+          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{goal.current_value || 0} / {goal.target_value}</div>
+        </div>
+      )}
+
+      {expanded && (
+        <div style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
+          <div className="section-label">Missions</div>
+          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+            Optional — a Mission groups a few Tasks under one outcome, like "Prepare for consultation."
+          </div>
+          {missions.length === 0 ? (
+            <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>No missions yet — not every goal needs one.</div>
+          ) : (
+            <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
+              {missions.map(m => (
+                <MissionRow
+                  key={m.id}
+                  mission={m}
+                  expanded={expandedMission === m.id}
+                  onToggleExpand={() => setExpandedMission(expandedMission === m.id ? null : m.id)}
+                  onComplete={() => handleCompleteMission(m.id)}
+                  onDelete={() => handleDeleteMission(m.id)}
+                />
+              ))}
+            </div>
+          )}
+          <div className="row" style={{ marginTop: 'var(--space-2)' }}>
+            <input placeholder="New mission..." value={newMissionTitle} onChange={e => setNewMissionTitle(e.target.value)} />
+            <Button size="sm" variant="ghost" onClick={handleAddMission}>+ Add mission</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MissionRow({ mission, expanded, onToggleExpand, onComplete, onDelete }) {
+  const [tasks, setTasks] = useState([]);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+
+  useEffect(() => {
+    if (!expanded) return;
+    listTasksForMission(mission.id).then(setTasks);
+  }, [expanded, mission.id]);
+
+  async function refreshTasks() {
+    setTasks(await listTasksForMission(mission.id));
+  }
+
+  async function handleAddTask() {
+    if (!newTaskTitle.trim()) return;
+    await addTaskToMission(mission.id, newTaskTitle.trim());
+    setNewTaskTitle('');
+    refreshTasks();
+  }
+
+  async function handleToggleTask(taskId, done) {
+    await toggleMissionTask(taskId, done);
+    refreshTasks();
+  }
+
+  const doneCount = tasks.filter(t => t.completed).length;
+
+  return (
+    <div style={{ background: 'var(--cream)', borderRadius: 'var(--radius-sm)', padding: 'var(--space-2)' }}>
+      <div className="row-between" onClick={onToggleExpand} style={{ cursor: 'pointer' }}>
+        <div>
+          <span style={{ fontWeight: 700, fontSize: 13, textDecoration: mission.status === 'completed' ? 'line-through' : 'none' }}>
+            {mission.title}
+          </span>
+          {tasks.length > 0 && <span className="muted" style={{ fontSize: 11 }}> · {doneCount}/{tasks.length} tasks</span>}
+        </div>
+        {mission.status !== 'completed' && (
+          <div className="row" style={{ gap: 4 }}>
+            <Button size="sm" variant="text" onClick={e => { e.stopPropagation(); onComplete(); }}>Complete</Button>
+            <Button size="sm" variant="text" onClick={e => { e.stopPropagation(); onDelete(); }}>Delete</Button>
+          </div>
+        )}
+      </div>
+      {expanded && (
+        <div style={{ marginTop: 'var(--space-2)' }} onClick={e => e.stopPropagation()}>
+          <div className="stack" style={{ gap: 4 }}>
+            {tasks.map(t => (
+              <Checkbox key={t.id} checked={t.completed} onChange={v => handleToggleTask(t.id, v)} label={t.title} />
+            ))}
+          </div>
+          <div className="row" style={{ marginTop: 'var(--space-2)' }}>
+            <input placeholder="New task..." value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} />
+            <Button size="sm" variant="ghost" onClick={handleAddTask}>+ Add</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

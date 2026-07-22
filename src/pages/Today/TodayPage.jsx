@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import MissionList from '../../components/mission/MissionList.jsx';
+import TodayItemList from '../../components/todayItem/TodayItemList.jsx';
 import ScheduleView, { getOverrunningBlock } from '../../components/schedule/ScheduleView.jsx';
 import Banner from '../../components/ui/Banner.jsx';
 import EnergyCheckIn from '../../components/intelligence/EnergyCheckIn.jsx';
@@ -10,7 +10,7 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { listGuardians, getXpProgressWithinLevel } from '../../services/guardians.js';
-import { getTodayMissions, toggleMission, dismissMission, addCustomMission } from '../../services/missions.js';
+import { getTodayItems, toggleTodayItem, dismissTodayItem, addCustomTodayItem } from '../../services/todayItems.js';
 import { getTodaySchedule, toggleTaskDone, moveTaskToBlock, dismissBlock } from '../../services/dailyExecution.js';
 import { listTodayFocusSessions } from '../../services/focusSessions.js';
 import { toggleBlockCompletion, toggleBlockStep, addTransitionStep } from '../../services/lifeRhythm.js';
@@ -21,7 +21,7 @@ import './TodayPage.css';
 
 export default function TodayPage() {
   const [schedule, setSchedule] = useState(null);
-  const [missions, setMissions] = useState(null);
+  const [todayItems, setTodayItems] = useState(null);
   const [duePrompt, setDuePrompt] = useState(null);
   const [addingCustom, setAddingCustom] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
@@ -46,14 +46,14 @@ export default function TodayPage() {
     }
   }
 
-  async function refreshMissions() {
-    const list = await getTodayMissions();
-    setMissions(list);
+  async function refreshTodayItems() {
+    const list = await getTodayItems();
+    setTodayItems(list);
   }
 
   useEffect(() => {
     refreshSchedule();
-    refreshMissions();
+    refreshTodayItems();
     getDuePrompt().then(setDuePrompt);
     getFeatureFlag('show_energy_checkin').then(setShowEnergyCheckin);
     getNeglectedPriorities().then(setNeglected).catch(err => {
@@ -121,23 +121,23 @@ export default function TodayPage() {
     refreshSchedule();
   }
 
-  async function handleToggleMission(mission, done) {
-    setMissions(prev => prev.map(m => (m.id === mission.id ? { ...m, done } : m)));
-    await toggleMission(mission, done);
-    setTimeout(refreshMissions, 450);
+  async function handleToggleItem(item, done) {
+    setTodayItems(prev => prev.map(m => (m.id === item.id ? { ...m, done } : m)));
+    await toggleTodayItem(item, done);
+    setTimeout(refreshTodayItems, 450);
   }
 
-  async function handleDismiss(mission) {
-    await dismissMission(mission);
-    refreshMissions();
+  async function handleDismiss(item) {
+    await dismissTodayItem(item);
+    refreshTodayItems();
   }
 
   async function handleAddCustom(track) {
     if (!customTitle.trim()) return;
-    await addCustomMission(customTitle.trim(), track);
+    await addCustomTodayItem(customTitle.trim(), track);
     setCustomTitle('');
     setAddingCustom(false);
-    refreshMissions();
+    refreshTodayItems();
   }
 
   async function handleDismissBlock(block) {
@@ -244,9 +244,9 @@ export default function TodayPage() {
           )}
         </div>
 
-        <div className="today-missions-col">
+        <div className="today-items-col">
           <div className="section-label" style={{ marginTop: 'var(--space-5)', marginBottom: 'var(--space-3)' }}>Other things today</div>
-          <MissionList missions={missions} onToggle={handleToggleMission} onDismiss={handleDismiss} />
+          <TodayItemList items={todayItems} onToggle={handleToggleItem} onDismiss={handleDismiss} />
 
           <div className="today-add-custom">
             {addingCustom ? (
