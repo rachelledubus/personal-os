@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { addMaintenanceItem } from './maintenance.js';
+import { logActivity } from './goals.js';
 
 // ============================================================
 // TRANSACTION REVIEW LOG (System 00J)
@@ -29,6 +30,7 @@ export async function addTransaction(fields) {
   const { contacts_name, ...dbFields } = fields;
   const { data, error } = await supabase.from('transactions').insert({ ...dbFields, user_id: userId }).select().single();
   if (error) throw error;
+  await logActivity('transactions', data.id, 'closed');
 
   // The automations — this is what makes logging a transaction worth
   // doing instead of skipping.

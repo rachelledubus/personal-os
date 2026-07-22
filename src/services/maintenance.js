@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { todayStr } from '../utils/date.js';
+import { logActivity } from './goals.js';
 
 // ============================================================
 // PERSONAL MAINTENANCE
@@ -45,6 +46,7 @@ export async function completeMaintenanceItem(id) {
 
   if (!item.interval_days) {
     await supabase.from('maintenance_items').update({ active: false, last_completed_date: todayStr() }).eq('id', id);
+    await logActivity('maintenance', id, 'completed');
     return;
   }
   const next = new Date();
@@ -53,6 +55,7 @@ export async function completeMaintenanceItem(id) {
     last_completed_date: todayStr(),
     next_due_date: next.toISOString().slice(0, 10),
   }).eq('id', id);
+  await logActivity('maintenance', id, 'completed');
 }
 
 /** Items due today or within their own reminder_lead_days window —

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient.js';
+import { logActivity } from './goals.js';
 import { getCustomAiInstructions } from './settings.js';
 
 // ============================================================
@@ -40,6 +41,7 @@ export async function advanceStatus(id, status) {
   const fields = { status };
   if (status === 'published') fields.published_date = new Date().toISOString().slice(0, 10);
   await updateContentPiece(id, fields);
+  if (status === 'published') await logActivity('content_items', id, 'published');
 }
 
 /** Creates the 5 empty repurpose slots for a piece once it's

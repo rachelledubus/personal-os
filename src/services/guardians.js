@@ -48,6 +48,10 @@ const EVENT_XP_MAP = {
   'interactions:interaction_logged': { guardianKey: 'business', amount: 10 },
   'habits:completed': { guardianKey: 'growth', amount: 10 },
   'workouts:logged': { guardianKey: 'health', amount: 10 },
+  'chores:completed': { guardianKey: 'growth', amount: 5 }, // small and frequent, same bucket as habits — routine personal upkeep
+  'maintenance:completed': { guardianKey: 'growth', amount: 10 },
+  'content_items:published': { guardianKey: 'business', amount: 15 },
+  'transactions:closed': { guardianKey: 'business', amount: 50 }, // the single biggest real-world business win the app tracks
 };
 
 // XP -> level: simple, deliberately not final. 100 XP per level.

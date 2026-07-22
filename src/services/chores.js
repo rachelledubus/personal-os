@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { todayStr, mondayOfWeek, currentMonthStr } from '../utils/date.js';
+import { logActivity } from './goals.js';
 
 // ============================================================
 // CHORES
@@ -94,6 +95,7 @@ export async function toggleChore(item, done) {
     await supabase.from('checklist_completions').upsert({
       user_id: userId, checklist_item_id: item.id, period_marker: periodMarker,
     }, { onConflict: 'user_id,checklist_item_id,period_marker' });
+    await logActivity('chores', item.id, 'completed');
   } else {
     await supabase.from('checklist_completions').delete()
       .eq('checklist_item_id', item.id).eq('period_marker', periodMarker);
