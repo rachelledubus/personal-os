@@ -6,6 +6,14 @@ async function getUserId() {
   return user?.id;
 }
 
+// ============================================================
+// Guided Flow definitions. Each step is a small form; "Next"
+// autosaves that step's answers into guided_flow_runs.answers (jsonb)
+// and advances current_step. On the final step, onComplete() applies
+// the accumulated answers to the real table (usually contacts) so
+// the SOP's outcome — not just its process — is captured.
+// ============================================================
+
 export const FLOWS = {
   new_lead_intake: {
     label: 'New Lead Intake',
@@ -75,7 +83,7 @@ export const FLOWS = {
       { key: 'checklist', title: 'Quality check', fields: ['fact_checked'] },
     ],
     async onComplete() {
-      return null;
+      return null; // publishing itself happens in the Content module
     },
   },
 };

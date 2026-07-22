@@ -7,20 +7,13 @@
   border-radius: var(--radius-pill);
   transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), opacity var(--duration-fast);
   white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 .btn:active { transform: scale(0.97); }
 .btn:disabled { opacity: 0.5; cursor: default; }
 
-/* Mobile fix: btn-sm used to be 8px vertical padding (~30px total
-   target) — under the 44px minimum touch target. Kept the same visual
-   density on desktop via font-size/line-height, but every button size
-   now has a real 44px minimum tap height. */
-.btn-sm { font-size: 11px; padding: 8px 14px; min-height: 40px; }
-.btn-md { font-size: 12.5px; padding: 11px 20px; min-height: 44px; }
-.btn-lg { font-size: 13px; padding: 13px 26px; min-height: 48px; }
+.btn-sm { font-size: 11px; padding: 8px 14px; }
+.btn-md { font-size: 12.5px; padding: 11px 20px; }
+.btn-lg { font-size: 13px; padding: 13px 26px; }
 
 .btn-primary { background: var(--navy); color: var(--white); }
 .btn-primary:hover:not(:disabled) { box-shadow: var(--shadow-active); }
@@ -33,8 +26,4 @@
 .btn-ghost { background: transparent; color: var(--navy); border: 1px solid rgba(22,50,79,0.15); }
 .btn-ghost:hover:not(:disabled) { background: var(--cream); }
 
-.btn-text { background: none; color: var(--ink-soft); text-decoration: underline; text-transform: none; letter-spacing: 0; padding: 4px; min-height: 32px; }
-
-@media (max-width: 640px) {
-  .btn-sm { min-height: 44px; padding: 10px 16px; }
-}
+.btn-text { background: none; color: var(--ink-soft); text-decoration: underline; text-transform: none; letter-spacing: 0; padding: 4px; }

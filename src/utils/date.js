@@ -10,7 +10,18 @@ export function mondayOfWeek(d = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
-export function isMonday(d = new Date()) { return d.getDay() === 1; }
-export function isFriday(d = new Date()) { return d.getDay() === 5; }
-export function isFirstWeekOfMonth(d = new Date()) { return d.getDate() <= 7; }
-export function currentMonthStr(d = new Date()) { return d.toISOString().slice(0, 7); }
+export function isMonday(d = new Date()) {
+  return d.getDay() === 1;
+}
+
+export function isFriday(d = new Date()) {
+  return d.getDay() === 5;
+}
+
+export function isFirstWeekOfMonth(d = new Date()) {
+  return d.getDate() <= 7;
+}
+
+export function currentMonthStr(d = new Date()) {
+  return d.toISOString().slice(0, 7);
+}

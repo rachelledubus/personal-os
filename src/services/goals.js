@@ -5,6 +5,7 @@ async function getUserId() {
   return user?.id;
 }
 
+// ---------- Goals ----------
 export async function listGoals() {
   const userId = await getUserId();
   const { data, error } = await supabase.from('goals').select('*').eq('user_id', userId).order('target_date', { ascending: true, nullsFirst: false });
@@ -25,6 +26,7 @@ export async function updateGoal(id, fields) {
   if (error) throw error;
 }
 
+// ---------- Projects ----------
 export async function listProjects(goalId = null) {
   const userId = await getUserId();
   let q = supabase.from('projects').select('*, goals(title)').eq('user_id', userId).order('due_date', { ascending: true, nullsFirst: false });
@@ -46,17 +48,24 @@ export async function updateProject(id, fields) {
   if (error) throw error;
 }
 
+// Tasks that belong to a project — reuses the EXISTING tasks table,
+// just filtered by the new nullable project_id column.
 export async function listProjectTasks(projectId) {
   const { data, error } = await supabase.from('tasks').select('*').eq('project_id', projectId);
   if (error) throw error;
   return data;
 }
 
-export async function listMilestones({ projectId, goalId }) {
+// ---------- Milestones ----------
+// Also doubles as roadmap sub-tasks (roadmapId) — same table, same
+// checkbox pattern, just a third optional parent alongside
+// project_id/goal_id.
+export async function listMilestones({ projectId, goalId, roadmapId }) {
   const userId = await getUserId();
   let q = supabase.from('milestones').select('*').eq('user_id', userId).order('sort_order');
   if (projectId) q = q.eq('project_id', projectId);
   if (goalId) q = q.eq('goal_id', goalId);
+  if (roadmapId) q = q.eq('roadmap_item_id', roadmapId);
   const { data, error } = await q;
   if (error) throw error;
   return data;
@@ -75,6 +84,14 @@ export async function toggleMilestone(id, completed) {
   if (error) throw error;
 }
 
+// ---------- Roadmap items (link_to only — status/phase already
+// managed inline where roadmap items are listed) ----------
+export async function updateRoadmapLink(id, linkTo) {
+  const { error } = await supabase.from('roadmap_items').update({ link_to: linkTo }).eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- Activity log (generic history — see migration for why) ----------
 export async function logActivity(sourceTable, sourceId, eventType, metadata = {}) {
   const userId = await getUserId();
   if (!userId) return;

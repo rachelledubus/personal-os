@@ -5,6 +5,10 @@ async function getUserId() {
   return user?.id;
 }
 
+/** Reads one preference value, or returns `fallback` if unset. Any
+ *  future AI feature (or any current component) reads personal
+ *  context through this single function rather than each feature
+ *  hardcoding its own defaults. */
 export async function getPreference(category, key, fallback = null) {
   const userId = await getUserId();
   if (!userId) return fallback;

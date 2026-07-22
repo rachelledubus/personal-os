@@ -87,7 +87,10 @@ export default function GuidedFlow() {
           {step.fields.map(f => (
             <label key={f} className="reset-field">
               <span>{FIELD_LABELS[f] || f}</span>
-              <input value={values[f] || ''} onChange={e => setValues({ ...values, [f]: e.target.value })} />
+              <input
+                value={values[f] || ''}
+                onChange={e => setValues({ ...values, [f]: e.target.value })}
+              />
             </label>
           ))}
         </div>

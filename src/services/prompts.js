@@ -20,6 +20,10 @@ async function logShown(userId, promptType, marker) {
   );
 }
 
+/** Called once when the app loads. Returns which prompt (if any) should
+ *  interrupt the user right now — checked in priority order, only one
+ *  fires per load. Each only fires once per period (tracked in prompt_log),
+ *  so a Monday reload later that day won't re-trigger it. */
 export async function getDuePrompt() {
   const userId = await getUserId();
   if (!userId) return null;
@@ -28,16 +32,25 @@ export async function getDuePrompt() {
 
   if (isMonday(now)) {
     const marker = mondayOfWeek(now);
-    if (!(await hasBeenShown(userId, 'weekly_reset', marker))) return { type: 'weekly_reset', marker };
+    if (!(await hasBeenShown(userId, 'weekly_reset', marker))) {
+      return { type: 'weekly_reset', marker };
+    }
   }
+
   if (isFriday(now)) {
     const marker = mondayOfWeek(now);
-    if (!(await hasBeenShown(userId, 'weekly_closeout', marker))) return { type: 'weekly_closeout', marker };
+    if (!(await hasBeenShown(userId, 'weekly_closeout', marker))) {
+      return { type: 'weekly_closeout', marker };
+    }
   }
+
   if (isFirstWeekOfMonth(now)) {
     const marker = currentMonthStr(now);
-    if (!(await hasBeenShown(userId, 'monthly_snapshot', marker))) return { type: 'monthly_snapshot', marker };
+    if (!(await hasBeenShown(userId, 'monthly_snapshot', marker))) {
+      return { type: 'monthly_snapshot', marker };
+    }
   }
+
   return null;
 }
 
