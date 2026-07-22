@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { addContact, updateContact } from './contacts.js';
+import { addInteraction } from './interactions.js';
 
 async function getUserId() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -47,12 +48,14 @@ export const FLOWS = {
     ],
     async onComplete(answers, contactId) {
       if (!contactId) return;
+      const combinedNotes = [answers.situation_notes, answers.lifestyle_notes, answers.budget_notes]
+        .filter(Boolean).join('\n\n');
+      if (combinedNotes) {
+        await addInteraction(contactId, { type: 'meeting', notes: combinedNotes });
+      }
       return updateContact(contactId, {
-        relationship_notes: [answers.situation_notes, answers.lifestyle_notes, answers.budget_notes]
-          .filter(Boolean).join('\n\n'),
         next_action: answers.next_action,
         next_follow_up_date: answers.next_follow_up_date,
-        last_contact_date: new Date().toISOString().slice(0, 10),
       });
     },
   },
@@ -65,11 +68,14 @@ export const FLOWS = {
       { key: 'reply', title: 'Send the text-back script', fields: ['note'] },
     ],
     async onComplete(answers) {
-      return addContact({
+      const contact = await addContact({
         name: answers.name || 'Unknown caller', phone: answers.phone,
         category: 'Lead', source: 'Missed call',
-        relationship_notes: answers.note,
       });
+      if (answers.note && contact?.id) {
+        await addInteraction(contact.id, { type: 'text', notes: answers.note });
+      }
+      return contact;
     },
   },
 

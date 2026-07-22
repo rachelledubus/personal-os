@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient.js';
+import { addInteraction } from './interactions.js';
 
 // ============================================================
 // UNIVERSAL CAPTURE INBOX
@@ -178,15 +179,12 @@ function defaultFollowUpDate(daysOut = 7) {
 export async function resolveToContact(item, fields = {}, contactId = null) {
   const userId = await getUserId();
   if (contactId) {
-    const { data: existing } = await supabase.from('contacts').select('relationship_notes').eq('id', contactId).single();
-    const notePrefix = existing?.relationship_notes ? `${existing.relationship_notes}\n` : '';
-    const dateStamp = new Date().toISOString().slice(0, 10);
     const { error } = await supabase.from('contacts').update({
-      relationship_notes: `${notePrefix}[${dateStamp}] ${item.raw_text}`,
       next_action: fields.next_action || item.raw_text,
       next_follow_up_date: fields.next_follow_up_date || defaultFollowUpDate(),
     }).eq('id', contactId);
     if (error) throw error;
+    await addInteraction(contactId, { type: 'note', notes: item.raw_text });
     await markResolved(item.id, 'contacts', contactId);
     return { id: contactId };
   }

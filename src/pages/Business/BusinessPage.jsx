@@ -20,6 +20,7 @@ import { listContentPieces, addContentPiece, advanceStatus, initRepurposeSlots, 
 import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt } from '../../services/library.js';
 import { listTransactions, addTransaction } from '../../services/transactions.js';
 import { getAutonomyLevel } from '../../services/aiOperator.js';
+import InteractionTimeline from '../../components/business/InteractionTimeline.jsx';
 
 const TABS = ['dashboard', 'pipeline', 'relationships', 'content', 'library', 'clients', 'roadmap'];
 const TAB_LABELS = { dashboard: 'Dashboard', pipeline: 'Pipeline', relationships: 'Relationships', content: 'Content', library: 'Library', clients: 'Clients', roadmap: 'Roadmap' };
@@ -317,6 +318,7 @@ function PipelineTab() {
                           <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draft.channel} · {draft.reasoning}</div>
                         </AiSuggestionBox>
                       )}
+                      <InteractionTimeline contactId={c.id} />
                     </div>
                   )}
                 </div>
