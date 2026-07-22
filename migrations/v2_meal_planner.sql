@@ -1,6 +1,14 @@
 -- ============================================================
--- Migration: Meal Planner — unchanged from the prior V2 pass.
--- Included for a complete migrations folder; skip if already run.
+-- Migration: Meal Planner
+-- Adds the ability to PLAN meals ahead of time (against a future
+-- plan_date) rather than only logging what's already been eaten.
+-- Reuses the existing `foods` table entirely — nothing duplicated,
+-- meal_plan_items just references it the same way meal_logs does.
+--
+-- Additive only. No existing table touched.
+--
+-- HOW TO RUN: Supabase dashboard → SQL Editor → New query → paste
+-- this whole file → Run.
 -- ============================================================
 
 create table if not exists meal_plan_items (
@@ -32,3 +40,6 @@ alter table meal_plan_templates enable row level security;
 drop policy if exists "meal_plan_templates: owner all" on meal_plan_templates;
 create policy "meal_plan_templates: owner all" on meal_plan_templates
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- No data to migrate — both tables start empty.
+-- ============================================================
