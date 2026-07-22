@@ -1,0 +1,15 @@
+.planner-add-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  align-items: center;
+}
+
+@media (max-width: 720px) {
+  .planner-add-form {
+    grid-template-columns: 1fr 1fr;
+  }
+  .planner-add-form input[placeholder="Block title"] { grid-column: 1 / -1; }
+  .planner-add-form .btn { grid-column: 1 / -1; }
+}
