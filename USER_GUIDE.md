@@ -36,17 +36,13 @@ You'll see a little **✨** in a few places — drafting a follow-up message on 
 
 ---
 
-## Banners & the running chibi 🐾
+## Banners 🐾
 
-The look of the app comes from two things now, not the small corner accents this guide used to describe (those got replaced — a full-width banner plus clean cards reads better than a banner *and* six competing corner doodles).
+The look of the app comes from full-width illustrated banners now, not the small corner accents this guide used to describe (those got replaced — a banner plus clean cards reads better than a banner *and* six competing corner doodles).
 
-**Banners** — a full-width illustrated scene at the top of Today, Business, Grow, Plan, Library, and Inbox. Each has its own themed default (sunrise cottage on Today, a path & signpost on Business, garden rows on Grow, a winding hill path on Plan, a reading nook on Library, a basket catching falling notes on Inbox). Want to swap any of them for real art instead of the default illustration? Control Center → Appearance → Banners lets you **upload an image directly, or paste a link** to override any of them.
+A banner sits at the top of Today, Business, Grow, Plan, Library, and Inbox — each with its own themed default (sunrise cottage on Today, a path & signpost on Business, garden rows on Grow, a winding hill path on Plan, a reading nook on Library, a basket catching falling notes on Inbox). Want to swap any of them for real art instead of the default illustration? Control Center → Appearance → Banners lets you **upload an image directly, or paste a link** to override any of them.
 
-**The running chibi** — a small animal that scurries to a new corner when the window gets narrow (top-right on desktop, smaller top-right on tablet, bottom-left near mobile width). Pick which one follows you around in Control Center → Appearance: bunny, cat, fox, or duck, with a live preview of each before you choose.
-
-A couple of things worth knowing:
-- The **floating + button** in the corner is *not* a decoration — that's the capture button, plain and functional on purpose.
-- The running chibi (and the soft background wash behind everything, and your Companion) respects the `show_decorations` toggle in Control Center → Feature Toggles, if you ever want a plainer, quieter interface. Banners aren't gated by that toggle — they're part of each page's layout, not an optional extra.
+The **floating + button** in the corner is *not* a decoration — that's the capture button, plain and functional on purpose.
 
 ---
 
@@ -54,7 +50,9 @@ A couple of things worth knowing:
 
 **Focus Mode** (from Today) now has a real timer — pick Pomodoro, Deep Work, Short Focus, Open Stopwatch, or set your own custom length. It keeps running even if you navigate to a different page — a small bar appears in the corner showing the time and letting you pause or stop it from anywhere, until you come back or finish. Today's total focus time and session count show right there too.
 
-**Your Companion** is now actually visible (it wasn't rendering before this update) — a small animated character that lives in the corner of every page except Focus/Research mode. In the evening, it may show a small speech bubble about your PM routine and bedtime — set your real bedtime and wake time in Control Center → Feature Toggles → Sleep targets so that's actually accurate to you.
+**Your Companion** is a small animated character that lives in the corner of every page except Focus/Research mode (respects the `show_decorations` toggle in Control Center → Feature Toggles if you want a plainer, quieter interface). It speaks up in two situations:
+- **Evenings**, about your PM routine and bedtime — set your real bedtime and wake time in Control Center → Feature Toggles → Sleep targets so that's actually accurate to you.
+- **Right after a Guardian levels up** — a small celebration bubble, since that moment used to be invisible unless you went and checked Control Center yourself.
 
 ---
 
@@ -63,7 +61,7 @@ A couple of things worth knowing:
 A few things are intentionally not built yet, and that's not an oversight:
 - **Real push notifications** aren't built — that needs infrastructure beyond what this app currently has.
 - **Data import/restore** isn't built — export (a safe, one-click backup) is.
-- **Guardian personalities, dialogue, and real artwork** aren't built — the Guardians (Productivity, Business, Health, Growth) genuinely track your real progress and level up, but on purpose there's no character art or written personality yet, just a plain progress readout in Control Center. That's deliberately saved for later, not a gap.
+- **Guardian personalities and real artwork** aren't built — the Guardians (Productivity, Business, Health, Growth) genuinely track your real progress, level up, and now celebrate it in the moment, but on purpose there's no character art or written personality yet, just a plain progress readout in Control Center. That's deliberately saved for later, not a gap.
 - **Achievements and unlocks** aren't built — same reasoning as above, staying possible for later without being worked on now.
 
 If any of these become worth doing, they're each their own focused piece of work, not something to rush in alongside everything else.

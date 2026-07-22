@@ -174,3 +174,11 @@
 @media (max-width: 640px) {
   .companion-bubble { width: 180px; right: -8px; }
 }
+
+.companion-bubble-celebrate {
+  background: var(--white);
+  border: 1.5px solid var(--sage);
+}
+.companion-bubble-celebrate::after {
+  border-top-color: var(--white);
+}

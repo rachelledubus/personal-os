@@ -173,6 +173,26 @@ export async function processActivityEvent(sourceTable, sourceId, eventType) {
   }
 }
 
+/** Most recent level-up across all Guardians, if any happened in the
+ *  last 2 minutes — what the Companion polls to know whether to
+ *  celebrate. Session-local "already shown" tracking lives on the
+ *  caller side (Companion.jsx), not here, so this stays a plain read. */
+export async function getRecentLevelUp() {
+  const guardians = await listGuardians();
+  const cutoff = Date.now() - 2 * 60 * 1000;
+  let mostRecent = null;
+  for (const g of guardians) {
+    const top = (g.recent_events || [])[0];
+    if (!top?.reaction) continue;
+    const at = new Date(top.at).getTime();
+    if (at < cutoff) continue;
+    if (!mostRecent || at > new Date(mostRecent.at).getTime()) {
+      mostRecent = { ...top, guardianId: g.id };
+    }
+  }
+  return mostRecent;
+}
+
 // ---------- Reaction framework ----------
 // Deliberately generic, supportive phrasing (Brand Voice: warm,
 // encouraging, never shame-based) — not per-Guardian dialogue trees.

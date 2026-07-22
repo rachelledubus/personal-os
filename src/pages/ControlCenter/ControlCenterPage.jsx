@@ -9,10 +9,8 @@ import {
   CATEGORY_LISTS, getCategoryList, setCategoryList,
   FEATURE_FLAGS, getAllFeatureFlags, setFeatureFlag,
   getCustomAiInstructions, setCustomAiInstructions,
-  getRunningChibiVariant, setRunningChibiVariant,
   getSleepTargets, setSleepTargets,
 } from '../../services/settings.js';
-import { CHIBI_VARIANTS, ChibiPreview } from '../../components/ui/RunningChibi.jsx';
 import { listAssetSlots, setAssetSlot } from '../../services/assets.js';
 import { getAutonomyLevel, setAutonomyLevel } from '../../services/aiOperator.js';
 import { listDevLog, listDecisions, addDecision, getSystemStatus, generateHandoff } from '../../services/devMemory.js';
@@ -109,15 +107,9 @@ function CategoriesSection() {
 
 function AppearanceSection() {
   const [slots, setSlots] = useState([]);
-  const [chibiVariant, setChibiVariant] = useState('bunny');
 
   async function refresh() { setSlots(await listAssetSlots()); }
-  useEffect(() => { refresh(); getRunningChibiVariant().then(setChibiVariant); }, []);
-
-  async function handlePickChibi(variant) {
-    setChibiVariant(variant);
-    await setRunningChibiVariant(variant);
-  }
+  useEffect(() => { refresh(); }, []);
 
   async function handleAssetChange(slotKey, newUrl) {
     await setAssetSlot(slotKey, newUrl);
@@ -129,32 +121,6 @@ function AppearanceSection() {
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
-      <Card>
-        <div className="section-label">Running chibi</div>
-        <p className="muted" style={{ fontSize: 12 }}>The little animal that scurries to a new corner when the window gets narrow.</p>
-        <div className="row" style={{ gap: 'var(--space-4)', marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
-          {CHIBI_VARIANTS.map(v => (
-            <button
-              key={v.key}
-              onClick={() => handlePickChibi(v.key)}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                background: chibiVariant === v.key ? 'var(--cream)' : 'transparent',
-                border: chibiVariant === v.key ? '2px solid var(--accent)' : '2px solid transparent',
-                borderRadius: 'var(--radius-md)', padding: 8, cursor: 'pointer',
-              }}
-            >
-              <div style={{ width: 64, height: 48, position: 'relative' }}>
-                <svg viewBox="0 0 80 60" style={{ width: '100%', height: '100%' }}>
-                  <ChibiPreview variant={v.key} />
-                </svg>
-              </div>
-              <span style={{ fontSize: 11, fontWeight: chibiVariant === v.key ? 700 : 400 }}>{v.label}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
-
       <p className="muted" style={{ fontSize: 12 }}>
         Upload your own image, or paste a link to one you've already got hosted somewhere (Google Drive
         share link, Imgur, etc.). Leave unset to use the built-in illustrated scene. Banners work best

@@ -9,9 +9,11 @@ import CompanionPlaceholderArt from './CompanionPlaceholderArt.jsx';
 import CompanionSpriteFrame from './CompanionSpriteFrame.jsx';
 import { getPreference, setPreference } from '../../services/preferences.js';
 import { getPmRoutineStatus } from '../../services/sleepCountdown.js';
+import { getRecentLevelUp } from '../../services/guardians.js';
 import './Companion.css';
 
 const BUBBLE_CHECK_MS = 5 * 60 * 1000; // check every 5 minutes — this is a light nudge, not a live countdown
+const LEVELUP_CHECK_MS = 20 * 1000; // level-ups should feel snappy, not lag 5 minutes behind the action
 
 /** Mounted once in App.jsx, outside <Routes>, so it persists across
  *  navigation instead of remounting per page. Reacts to viewport size
@@ -27,6 +29,9 @@ export default function Companion() {
   const [dismissedThisSession, setDismissedThisSession] = useState(false);
   const [bubbleMessage, setBubbleMessage] = useState(null);
   const [bubbleDismissed, setBubbleDismissed] = useState(false);
+  const [levelUpMessage, setLevelUpMessage] = useState(null);
+  const [levelUpDismissed, setLevelUpDismissed] = useState(false);
+  const shownLevelUpsRef = useRef(new Set());
   const blinkCheckRef = useRef(null);
 
   // Persisted minimize preference (user_preferences, category 'companion') —
@@ -72,6 +77,31 @@ export default function Companion() {
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
+  // Guardian level-up celebration — checks more often than the sleep
+  // nudge since this should feel like a real-time moment, not a batch
+  // job. "Already shown" is tracked per-session (a ref, not persisted)
+  // — good enough since the underlying event itself has a 2-minute
+  // window server-side, so nothing stale can resurface after a reload.
+  useEffect(() => {
+    let cancelled = false;
+    async function checkLevelUp() {
+      try {
+        const levelUp = await getRecentLevelUp();
+        if (cancelled || !levelUp) return;
+        const key = `${levelUp.guardianId}:${levelUp.at}`;
+        if (shownLevelUpsRef.current.has(key)) return;
+        shownLevelUpsRef.current.add(key);
+        setLevelUpMessage(levelUp.reaction);
+        setLevelUpDismissed(false);
+      } catch {
+        // Same principle as the sleep nudge — never let this break the companion.
+      }
+    }
+    checkLevelUp();
+    const id = setInterval(checkLevelUp, LEVELUP_CHECK_MS);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
   // Full-screen Focus/Research modes already own the screen — stay out
   // of the way there rather than floating over a distraction-free view.
   const hiddenOnRoute = location.pathname.startsWith('/today/focus') || location.pathname.startsWith('/today/research');
@@ -104,12 +134,20 @@ export default function Companion() {
       <button className="companion-toggle" onClick={toggleMinimized} aria-label={minimized ? 'Show companion' : 'Minimize companion'}>
         {minimized ? '›' : '‹'}
       </button>
-      {bubbleMessage && !bubbleDismissed && !minimized && (
-        <div className="companion-bubble">
-          <button className="companion-bubble-close" onClick={() => setBubbleDismissed(true)} aria-label="Dismiss">×</button>
-          <div className="companion-bubble-text">{bubbleMessage}</div>
+      {levelUpMessage && !levelUpDismissed && !minimized && (
+        <div className="companion-bubble companion-bubble-celebrate">
+          <button className="companion-bubble-close" onClick={() => setLevelUpDismissed(true)} aria-label="Dismiss">×</button>
+          <div className="companion-bubble-text">✨ {levelUpMessage}</div>
         </div>
       )}
+      {!levelUpMessage || levelUpDismissed ? (
+        bubbleMessage && !bubbleDismissed && !minimized && (
+          <div className="companion-bubble">
+            <button className="companion-bubble-close" onClick={() => setBubbleDismissed(true)} aria-label="Dismiss">×</button>
+            <div className="companion-bubble-text">{bubbleMessage}</div>
+          </div>
+        )
+      ) : null}
       <div className="companion-figure" role="img" aria-label="Your Personal OS companion">
         {USE_SPRITE_SHEET ? (
           <CompanionSpriteFrame stateName={animState} frame={frame} size={size} />

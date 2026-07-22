@@ -8,6 +8,8 @@ import { getFeatureFlag } from '../../services/settings.js';
 import AskAIPanel from '../../components/intelligence/AskAIPanel.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
+import ProgressBar from '../../components/ui/ProgressBar.jsx';
+import { listGuardians, getXpProgressWithinLevel } from '../../services/guardians.js';
 import { getTodayMissions, toggleMission, dismissMission, addCustomMission } from '../../services/missions.js';
 import { getTodaySchedule, toggleTaskDone, moveTaskToBlock, dismissBlock } from '../../services/dailyExecution.js';
 import { listTodayFocusSessions } from '../../services/focusSessions.js';
@@ -153,6 +155,7 @@ export default function TodayPage() {
     <div>
       <Banner slotKey="today_banner" scene="today" />
       <div className="page-title">🏡 Today</div>
+      <GuardianStrip />
 
       <Card className="today-summary-card">
         <div className="row-between">
@@ -272,6 +275,35 @@ export default function TodayPage() {
           onClose={() => setDuePrompt(null)}
         />
       )}
+    </div>
+  );
+}
+
+const GUARDIAN_EMOJI = { productivity: '⚡', business: '🤝', health: '🌤️', growth: '🌱' };
+
+/** Compact, glance-only — Product Vision's "clarity over completeness"
+ *  applies here as much as anywhere else. Full detail still lives in
+ *  Control Center; this is just enough to feel real without becoming
+ *  another list to manage. */
+function GuardianStrip() {
+  const [guardians, setGuardians] = useState(null);
+
+  useEffect(() => { listGuardians().then(setGuardians); }, []);
+
+  if (!guardians || guardians.length === 0) return null;
+
+  return (
+    <div className="guardian-strip">
+      {guardians.map(g => (
+        <div key={g.id} className="guardian-strip-item">
+          <div className="guardian-strip-label">
+            <span>{GUARDIAN_EMOJI[g.guardian_key] || '✨'}</span>
+            <span>{g.name}</span>
+            <span className="muted">Lv {g.level}</span>
+          </div>
+          <ProgressBar value={getXpProgressWithinLevel(g.experience_points)} max={100} tone="sage" />
+        </div>
+      ))}
     </div>
   );
 }
