@@ -17,6 +17,37 @@ async function getUserId() {
   return user?.id;
 }
 
+// ---------- Cross-device drafts ----------
+// One row per day_key, upserted as you type. Only restored if it's
+// from today — a stale draft from last week's same day_key shouldn't
+// silently repopulate this week's numbers.
+
+export async function saveWorkoutDraft(dayKey, entries) {
+  const userId = await getUserId();
+  if (!userId) return;
+  const { error } = await supabase.from('workout_drafts').upsert(
+    { user_id: userId, day_key: dayKey, entries, updated_at: new Date().toISOString() },
+    { onConflict: 'user_id,day_key' }
+  );
+  if (error) throw error;
+}
+
+export async function loadWorkoutDraft(dayKey) {
+  const userId = await getUserId();
+  if (!userId) return null;
+  const { data } = await supabase.from('workout_drafts')
+    .select('entries, updated_at').eq('user_id', userId).eq('day_key', dayKey).maybeSingle();
+  if (!data) return null;
+  const isToday = new Date(data.updated_at).toDateString() === new Date().toDateString();
+  return isToday ? data.entries : null;
+}
+
+export async function clearWorkoutDraft(dayKey) {
+  const userId = await getUserId();
+  if (!userId) return;
+  await supabase.from('workout_drafts').delete().eq('user_id', userId).eq('day_key', dayKey);
+}
+
 function estimated1RM(weight, reps) {
   if (!weight || !reps) return 0;
   return weight * (1 + reps / 30);

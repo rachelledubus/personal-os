@@ -78,13 +78,23 @@ export default function TodayPage() {
     }
   }
 
+  const [justCompletedIds, setJustCompletedIds] = useState(new Set());
+  const [showCompleted, setShowCompleted] = useState(false);
+
   async function handleToggleBlock(block, done) {
     setSchedule(prev => prev.map(b => (b.id === block.id ? { ...b, completed: done } : b)));
     await toggleBlockCompletion(block.id, done);
     if (done) {
+      // Brief hold in the main view so the checkmark actually registers
+      // before it moves to "Completed today" — the data itself is kept
+      // (not deleted), which is what makes that section real instead of
+      // a dead end once you navigate away and back.
+      setJustCompletedIds(prev => new Set(prev).add(block.id));
       setTimeout(() => {
-        setSchedule(prev => prev.filter(b => b.id !== block.id));
+        setJustCompletedIds(prev => { const next = new Set(prev); next.delete(block.id); return next; });
       }, 650);
+    } else {
+      setJustCompletedIds(prev => { const next = new Set(prev); next.delete(block.id); return next; });
     }
   }
 
@@ -146,6 +156,8 @@ export default function TodayPage() {
   }
 
   const allScheduledTasks = schedule ? schedule.flatMap(b => b.tasks || []) : [];
+  const visibleBlocks = schedule ? schedule.filter(b => !b.completed || justCompletedIds.has(b.id)) : schedule;
+  const completedBlocks = schedule ? schedule.filter(b => b.completed && !justCompletedIds.has(b.id)) : [];
   const doneCount = allScheduledTasks.filter(t => t.completed).length;
   const total = allScheduledTasks.length;
   const nextUp = allScheduledTasks.find(t => !t.completed);
@@ -226,7 +238,7 @@ export default function TodayPage() {
             </div>
           </div>
           <ScheduleView
-            blocks={schedule}
+            blocks={visibleBlocks}
             onToggleTask={handleToggleTask}
             onToggleBlock={handleToggleBlock}
             onToggleStep={handleToggleStep}
@@ -241,6 +253,25 @@ export default function TodayPage() {
                 Most likely cause: the newest database migration (v2_executive_function_layer.sql) hasn't been run yet in Supabase.
               </div>
             </Card>
+          )}
+          {completedBlocks.length > 0 && (
+            <div style={{ marginTop: 'var(--space-3)' }}>
+              <Button size="sm" variant="text" onClick={() => setShowCompleted(!showCompleted)}>
+                {showCompleted ? '▾' : '▸'} ✓ Completed today ({completedBlocks.length})
+              </Button>
+              {showCompleted && (
+                <div style={{ marginTop: 'var(--space-2)', opacity: 0.7 }}>
+                  <ScheduleView
+                    blocks={completedBlocks}
+                    onToggleTask={handleToggleTask}
+                    onToggleBlock={handleToggleBlock}
+                    onToggleStep={handleToggleStep}
+                    onAddStep={handleAddStep}
+                    onMoveTask={handleMoveTask}
+                  />
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -285,6 +316,8 @@ const GUARDIAN_EMOJI = { hana: '🌿', rei: '📘', mochi: '🍡', sora: '☁️
  *  applies here as much as anywhere else. Full detail still lives in
  *  Control Center; this is just enough to feel real without becoming
  *  another list to manage. */
+const GUARDIAN_BADGE_COLOR = { hana: 'var(--sage)', rei: 'var(--navy)', mochi: 'var(--blush)', sora: 'var(--gold)' };
+
 function GuardianStrip() {
   const [guardians, setGuardians] = useState(null);
 
@@ -296,8 +329,13 @@ function GuardianStrip() {
     <div className="guardian-strip">
       {guardians.map(g => (
         <div key={g.id} className="guardian-strip-item">
-          <div className="guardian-strip-label">
+          <div
+            className="guardian-strip-badge"
+            style={{ background: GUARDIAN_BADGE_COLOR[g.guardian_key] || 'var(--sage)' }}
+          >
             <span>{GUARDIAN_EMOJI[g.guardian_key] || '✨'}</span>
+          </div>
+          <div className="guardian-strip-label">
             <span>{g.name}</span>
             <span className="muted">Lv {g.level}</span>
           </div>

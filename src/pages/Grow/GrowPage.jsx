@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -13,6 +13,7 @@ import {
 import {
   seedDefaultWorkoutTemplatesIfEmpty, listTemplateForDay, addTemplateExercise, getLastExerciseEntry,
   logWorkoutSession, generateInsights, requestExerciseSwap,
+  saveWorkoutDraft, loadWorkoutDraft, clearWorkoutDraft,
 } from '../../services/workoutAnalytics.js';
 import { listChores, listCurrentCompletions, toggleChore, addChore, seedStarterChoresIfEmpty, getLastCompletedDates } from '../../services/chores.js';
 import {
@@ -231,6 +232,8 @@ function WorkoutsTab() {
   const [addingExercise, setAddingExercise] = useState(false);
   const [newExercise, setNewExercise] = useState({ exercise_name: '', target_sets: 3, target_reps: '' });
   const [saved, setSaved] = useState(false);
+  const [restoredDraft, setRestoredDraft] = useState(false);
+  const draftSaveTimer = useRef(null);
 
   useEffect(() => { seedDefaultWorkoutTemplatesIfEmpty().then(loadDay); generateInsights().then(setInsights); }, []);
   useEffect(() => { loadDay(); }, [activeDay]);
@@ -246,15 +249,32 @@ function WorkoutsTab() {
       initialEntries[ex.exercise_name] = Array.from({ length: targetSets }, () => ({ weight: '', reps: '' }));
       last[ex.exercise_name] = await getLastExerciseEntry(ex.exercise_name);
     }
-    setEntries(initialEntries);
+
+    const draft = await loadWorkoutDraft(activeDay);
+    if (draft) {
+      setEntries(draft);
+      setRestoredDraft(true);
+    } else {
+      setEntries(initialEntries);
+      setRestoredDraft(false);
+    }
     setLastEntries(last);
   }
 
   function updateSet(displayName, setIndex, field, value) {
-    setEntries(prev => ({
-      ...prev,
-      [displayName]: prev[displayName].map((s, i) => (i === setIndex ? { ...s, [field]: value } : s)),
-    }));
+    setEntries(prev => {
+      const next = {
+        ...prev,
+        [displayName]: prev[displayName].map((s, i) => (i === setIndex ? { ...s, [field]: value } : s)),
+      };
+      // Debounced, not literally every keystroke — saves a real database
+      // write, not a browser-local one, so it's the same across devices.
+      // 800ms after typing stops, not on every character.
+      clearTimeout(draftSaveTimer.current);
+      draftSaveTimer.current = setTimeout(() => saveWorkoutDraft(activeDay, next), 800);
+      return next;
+    });
+    setRestoredDraft(false); // once you're actively editing, the "restored" banner has served its purpose
   }
 
   async function handleRequestSwap(ex) {
@@ -298,6 +318,7 @@ function WorkoutsTab() {
         .filter(s => s.weight || s.reps),
     }));
     await logWorkoutSession({ workout_date: todayStr(), day_key: activeDay, exercises });
+    clearWorkoutDraft(activeDay); // now safely in the database — the draft's job is done
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
     loadDay();
@@ -314,6 +335,12 @@ function WorkoutsTab() {
             {insights.map((line, i) => <div key={i} style={{ fontSize: 13 }}>💡 {line}</div>)}
           </div>
         </Card>
+      )}
+
+      {restoredDraft && (
+        <div className="muted" style={{ fontSize: 12, background: 'var(--cream)', padding: '8px 12px', borderRadius: 'var(--radius-sm)' }}>
+          ✓ Restored your unsaved numbers from earlier — nothing was lost.
+        </div>
       )}
 
       <div className="row" style={{ gap: 'var(--space-2)' }}>

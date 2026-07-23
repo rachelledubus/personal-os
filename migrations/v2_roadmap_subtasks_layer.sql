@@ -29,7 +29,7 @@ from roadmap_items, unnest(array[
   'Set up lead source tracking: Relocation Guide, Real Payment Guide, Website SEO, Facebook group, Sphere referral, Partner referral',
   'Set up timeline/pipeline stages: Now (0-3mo), Soon (3-6mo), Future (6-12mo), Long Term (12mo+)'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Build CRM Foundation';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Build CRM Foundation';
 
 -- ---------- Week 2: Complete CRM + Publish Content #1 (Systems 07, 03) ----------
 update roadmap_items set title = 'Complete CRM + Publish Content #1'
@@ -44,7 +44,7 @@ from roadmap_items, unnest(array[
   'Draft, fact-check, and run the quality checklist on flagship content #1',
   'Publish flagship content #1 and repurpose into 2+ formats'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Complete CRM + Publish Content #1';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Complete CRM + Publish Content #1';
 
 -- ---------- Week 3: Draft Real Payment Guide + Content #2 (Systems 04C, 03) ----------
 update roadmap_items set title = 'Draft Real Payment Guide + Content #2'
@@ -57,7 +57,7 @@ from roadmap_items, unnest(array[
   'Draft the Real Payment Guide content',
   'Publish flagship content #2'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Draft Real Payment Guide + Content #2';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Draft Real Payment Guide + Content #2';
 
 -- ---------- Week 4: Launch Real Payment Guide + Month 1 Review (Systems 04C, 09) ----------
 update roadmap_items set title = 'Launch Real Payment Guide + Month 1 Review'
@@ -72,7 +72,7 @@ from roadmap_items, unnest(array[
   'Publish flagship content #3',
   'Run Month 1 review (Friday, System 09) — confirm CRM active, guide live, nurture sending, 4 consecutive weekly reviews done'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Launch Real Payment Guide + Month 1 Review';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Launch Real Payment Guide + Month 1 Review';
 
 -- ---------- Week 5: Cooper City Guide + Content #4 (Systems 02, 03) ----------
 update roadmap_items set title = 'Cooper City Guide + Content #4'
@@ -85,7 +85,7 @@ from roadmap_items, unnest(array[
   'Finalize the email nurture sequence',
   'Publish flagship content #4'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Cooper City Guide + Content #4';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Cooper City Guide + Content #4';
 
 -- ---------- Week 6: Plantation Guide + Network List (Systems 02, 05D) ----------
 update roadmap_items set title = 'Plantation Guide + Network List'
@@ -98,7 +98,7 @@ from roadmap_items, unnest(array[
   'List 10 target organizations for Professional Network outreach',
   'Publish flagship content #5'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Plantation Guide + Network List';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Plantation Guide + Network List';
 
 -- ---------- Week 7: Pembroke Pines Guide + Outreach Begins (Systems 02, 05D) ----------
 update roadmap_items set title = 'Pembroke Pines Guide + Outreach Begins'
@@ -111,7 +111,7 @@ from roadmap_items, unnest(array[
   'Begin outreach to first 5 organizations (contribution first, no partnership asks yet)',
   'Publish flagship content #6'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Pembroke Pines Guide + Outreach Begins';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Pembroke Pines Guide + Outreach Begins';
 
 -- ---------- Week 8: Consultation Materials + Month 2 Review (Systems 08, 09) ----------
 update roadmap_items set title = 'Consultation Materials + Month 2 Review'
@@ -126,7 +126,7 @@ from roadmap_items, unnest(array[
   'Publish flagship content #7',
   'Run Month 2 review (Friday) — confirm all 3 neighborhood guides live, first conversation logged with each of the 10 organizations, consultation materials used in a real consultation'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Consultation Materials + Month 2 Review';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Consultation Materials + Month 2 Review';
 
 -- ---------- Week 9: Conversion Data Review (System 00A) ----------
 update roadmap_items set title = 'Conversion Data Review'
@@ -139,7 +139,7 @@ from roadmap_items, unnest(array[
   'Pull data on which relationships created opportunities',
   'Publish content #8'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Conversion Data Review';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Conversion Data Review';
 
 -- ---------- Week 10: Activity vs. Results Diagnosis (System 10) ----------
 update roadmap_items set title = 'Activity vs. Results Diagnosis'
@@ -151,7 +151,7 @@ from roadmap_items, unnest(array[
   'Run the System 10 diagnosis: activity vs. results across the month',
   'Publish content #9'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Activity vs. Results Diagnosis';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Activity vs. Results Diagnosis';
 
 -- ---------- Week 11: Scale Top Lead Source (Systems 04, 07) ----------
 update roadmap_items set title = 'Scale Top Lead Source'
@@ -164,7 +164,7 @@ from roadmap_items, unnest(array[
   'Double down / expand investment in that lead source',
   'Publish content #10'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Scale Top Lead Source';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Scale Top Lead Source';
 
 -- ---------- Week 12: Deepen Top Partner Relationships (System 05D) ----------
 update roadmap_items set title = 'Deepen Top Partner Relationships'
@@ -177,7 +177,7 @@ from roadmap_items, unnest(array[
   'Deepen those relationships',
   'Publish content #11'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Deepen Top Partner Relationships';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Deepen Top Partner Relationships';
 
 -- ---------- Week 13: Day-90 Review + Next Plan (Systems 11, 09) ----------
 update roadmap_items set title = 'Day-90 Review + Next Plan'
@@ -190,4 +190,4 @@ from roadmap_items, unnest(array[
   'Run the Day-90 review against Phase 1 success criteria',
   'Set the next 90-day plan (Friday)'
 ]) with ordinality as sub(title, ord)
-where user_id = auth.uid() and title = 'Day-90 Review + Next Plan';
+where roadmap_items.user_id = auth.uid() and roadmap_items.title = 'Day-90 Review + Next Plan';

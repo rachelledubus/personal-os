@@ -124,3 +124,35 @@ export async function saveComboAsTemplate(name, selection) {
   const { error } = await supabase.from('meal_plan_templates').insert({ user_id: userId, name, items });
   if (error) throw error;
 }
+
+// ---------- Quick meals / packaged foods (AI-estimated) ----------
+
+/** Asks the AI Netlify function for a calorie/macro estimate for a
+ *  quick or packaged food — "half a frozen pizza," "premade tortellini,
+ *  1.5 cups." Returns null (never throws) if the AI layer isn't
+ *  configured, same pattern as every other AI feature in the app. */
+export async function estimateFoodCalories(description) {
+  try {
+    const res = await fetch('/.netlify/functions/estimate-food-calories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/** Saves an AI-estimated quick meal as a real row in `foods` — same
+ *  table every other food lives in, so it's immediately usable
+ *  everywhere foods already work (meal builder slots, day planning). */
+export async function saveQuickMealAsFood(description, estimate, slot = null) {
+  const userId = await getUserId();
+  const { error } = await supabase.from('foods').insert({
+    user_id: userId, name: description, meal_slot: slot,
+    calories: estimate.calories, protein: estimate.protein, carbs: estimate.carbs, fat: estimate.fat,
+  });
+  if (error) throw error;
+}
