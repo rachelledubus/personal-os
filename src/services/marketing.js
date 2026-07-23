@@ -14,7 +14,7 @@ async function getUserId() {
 
 export async function listMarketingActivities() {
   const userId = await getUserId();
-  const { data, error } = await supabase.from('marketing_activities').select('*')
+  const { data, error } = await supabase.from('marketing_activities').select('*, goals(title)')
     .eq('user_id', userId).order('activity_date', { ascending: true, nullsFirst: false });
   if (error) throw error;
   return data || [];

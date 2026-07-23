@@ -6,7 +6,7 @@ import Checkbox from '../../components/ui/Checkbox.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { FLOWS } from '../../services/flows.js';
-import { listMilestones, addMilestone, toggleMilestone, updateMilestone, deleteMilestone, updateRoadmapLink, updateRoadmapTitle } from '../../services/goals.js';
+import { listMilestones, addMilestone, toggleMilestone, updateMilestone, deleteMilestone, updateRoadmapLink, updateRoadmapTitle, listGoals } from '../../services/goals.js';
 import { getCategoryList } from '../../services/settings.js';
 import Banner from '../../components/ui/Banner.jsx';
 import AiSuggestionBox from '../../components/ui/AiSuggestionBox.jsx';
@@ -17,7 +17,7 @@ import {
 import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals, getWeeklyReview, setWeeklyReview } from '../../services/dailyCheckin.js';
 import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses } from '../../services/timeline.js';
 import { listContentPieces, addContentPiece, advanceStatus, initRepurposeSlots, markRepurposed, requestRepurposeDrafts } from '../../services/contentEngine.js';
-import { listMarketingActivities, addMarketingActivity, completeMarketingActivity, deleteMarketingActivity } from '../../services/marketing.js';
+import { listMarketingActivities, addMarketingActivity, updateMarketingActivity, completeMarketingActivity, deleteMarketingActivity } from '../../services/marketing.js';
 import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt } from '../../services/library.js';
 import { listTransactions, addTransaction } from '../../services/transactions.js';
 import { getAutonomyLevel } from '../../services/aiOperator.js';
@@ -634,21 +634,28 @@ function ContentTab() {
 function MarketingTab() {
   const [activities, setActivities] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ title: '', category: '', activity_date: '', notes: '' });
+  const [form, setForm] = useState({ title: '', category: '', activity_date: '', notes: '', goal_id: '' });
   const [filter, setFilter] = useState('All');
 
   async function refresh() {
     setActivities(await listMarketingActivities());
     setCategories(await getCategoryList('marketing_activity_categories'));
+    setGoals(await listGoals());
   }
   useEffect(() => { refresh(); }, []);
 
   async function handleAdd() {
     if (!form.title.trim() || !form.category) return;
-    await addMarketingActivity({ ...form, activity_date: form.activity_date || null });
-    setForm({ title: '', category: categories[0] || '', activity_date: '', notes: '' });
+    await addMarketingActivity({ ...form, activity_date: form.activity_date || null, goal_id: form.goal_id || null });
+    setForm({ title: '', category: categories[0] || '', activity_date: '', notes: '', goal_id: '' });
     setAdding(false);
+    refresh();
+  }
+
+  async function handleLinkGoal(activity, goalId) {
+    await updateMarketingActivity(activity.id, { goal_id: goalId || null });
     refresh();
   }
 
@@ -682,6 +689,12 @@ function MarketingTab() {
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <input type="date" value={form.activity_date} onChange={e => setForm({ ...form, activity_date: e.target.value })} />
+            {goals.length > 0 && (
+              <select value={form.goal_id} onChange={e => setForm({ ...form, goal_id: e.target.value })}>
+                <option value="">Not linked to a goal</option>
+                {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
+              </select>
+            )}
             <Button size="sm" onClick={handleAdd}>Save</Button>
           </div>
         )}
@@ -707,6 +720,15 @@ function MarketingTab() {
                   <div style={{ fontWeight: 700 }}>{a.title}</div>
                   <div className="muted" style={{ fontSize: 12 }}>{a.category}{a.activity_date && ` · ${a.activity_date}`}</div>
                   {a.notes && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{a.notes}</div>}
+                  {goals.length > 0 && (
+                    <div className="row" style={{ marginTop: 4, alignItems: 'center', gap: 4 }}>
+                      <span className="muted" style={{ fontSize: 11 }}>{a.goals?.title ? `Goal: ${a.goals.title}` : 'No goal linked'}</span>
+                      <select style={{ fontSize: 11 }} value={a.goal_id || ''} onChange={e => handleLinkGoal(a, e.target.value)}>
+                        <option value="">Not linked</option>
+                        {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
+                      </select>
+                    </div>
+                  )}
                 </div>
                 <div className="row" style={{ gap: 'var(--space-2)' }}>
                   <Button size="sm" variant="ghost" onClick={() => handleComplete(a)}>Mark done</Button>
@@ -724,7 +746,7 @@ function MarketingTab() {
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {completed.map(a => (
               <div key={a.id} className="row-between" style={{ padding: '4px 0' }}>
-                <span className="muted" style={{ fontSize: 13 }}>{a.title} · {a.category}</span>
+                <span className="muted" style={{ fontSize: 13 }}>{a.title} · {a.category}{a.goals?.title && ` · ${a.goals.title}`}</span>
                 <span className="muted" style={{ fontSize: 11 }}>{a.activity_date}</span>
               </div>
             ))}
