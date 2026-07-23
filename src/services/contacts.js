@@ -1,13 +1,12 @@
 import { supabase } from '../lib/supabaseClient.js';
-import { todayStr, mondayOfWeek } from '../utils/date.js';
+import { getCustomAiInstructions } from './settings.js';
 
 // ============================================================
-// THE WEEKLY BUSINESS DASHBOARD
-// Per 0_-_Start_Here.docx: "Two documents run the business day to
-// day: the Dashboard and the Timeline." This is that Dashboard,
-// finally real instead of a Google Doc someone has to remember to
-// open. Four boxes, checked daily: Relationship, Authority, Pipeline,
-// Knowledge — the day's actual minimum.
+// CRM — rebuilt to match System_07_CRM_Database.xlsx field-for-field.
+// This is the real source of truth now, not a thinner copy of it.
+// Status and days-until-follow-up are computed here, not stored —
+// they're derived from next_follow_up_date, so they're never stale
+// the way a manually-typed spreadsheet column would be.
 // ============================================================
 
 async function getUserId() {
@@ -15,94 +14,148 @@ async function getUserId() {
   return user?.id;
 }
 
-export async function getTodayCheckin() {
-  const userId = await getUserId();
-  const { data, error } = await supabase.from('daily_checkin').select('*')
-    .eq('user_id', userId).eq('checkin_date', todayStr()).maybeSingle();
-  if (error) throw error;
-  return data;
+/** Mirrors the spreadsheet's Status column exactly: On Track / Due
+ *  Soon / Overdue / No Next Action / No Date Set. */
+export function computeStatus(contact) {
+  if (!contact.next_action) return 'No Next Action';
+  if (!contact.next_follow_up_date) return 'No Date Set';
+  const days = daysUntil(contact.next_follow_up_date);
+  if (days < 0) return 'Overdue';
+  if (days <= 3) return 'Due Soon';
+  return 'On Track';
 }
 
-export async function toggleCheckinBox(box, done, note = null) {
-  const userId = await getUserId();
-  const fields = { [`${box}_done`]: done };
-  if (note !== null) fields[`${box}_note`] = note;
-  const { error } = await supabase.from('daily_checkin').upsert({
-    user_id: userId, checkin_date: todayStr(), ...fields,
-  }, { onConflict: 'user_id,checkin_date' });
-  if (error) throw error;
+export function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const diffMs = new Date(dateStr) - new Date(new Date().toISOString().slice(0, 10));
+  return Math.round(diffMs / 86400000);
 }
 
-/** This week's Mon-Fri boxes, for the weekly Total row. */
-export async function getWeekCheckins() {
+export async function listContacts(category = null) {
   const userId = await getUserId();
-  const monday = mondayOfWeek();
-  const friday = new Date(monday); friday.setDate(friday.getDate() + 4);
-  const { data, error } = await supabase.from('daily_checkin').select('*')
-    .eq('user_id', userId).gte('checkin_date', monday).lte('checkin_date', friday.toISOString().slice(0, 10))
-    .order('checkin_date');
+  let query = supabase.from('contacts').select('*').eq('user_id', userId)
+    .order('next_follow_up_date', { ascending: true, nullsFirst: false });
+  if (category) query = query.eq('category', category);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []).map(c => ({ ...c, status: computeStatus(c), daysUntilFollowup: daysUntil(c.next_follow_up_date) }));
+}
+
+/** Filtered by relationship tier — this is what replaces having
+ *  separate Sphere/Community/Professional Network pages. Same table,
+ *  same contact, just a different lens on it. */
+export async function listByTier(tier) {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('contacts').select('*')
+    .eq('user_id', userId).eq('relationship_tier', tier)
+    .order('next_follow_up_date', { ascending: true, nullsFirst: false });
+  if (error) throw error;
+  return (data || []).map(c => ({ ...c, status: computeStatus(c), daysUntilFollowup: daysUntil(c.next_follow_up_date) }));
+}
+
+export async function listOverdue() {
+  const userId = await getUserId();
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase.from('contacts').select('*')
+    .eq('user_id', userId).lt('next_follow_up_date', today).not('next_follow_up_date', 'is', null);
   if (error) throw error;
   return data || [];
 }
 
-export async function getWeeklyTargets() {
+export async function getContact(id) {
+  const { data, error } = await supabase.from('contacts').select('*').eq('id', id).single();
+  if (error) throw error;
+  return { ...data, status: computeStatus(data), daysUntilFollowup: daysUntil(data.next_follow_up_date) };
+}
+
+export async function addContact(fields) {
   const userId = await getUserId();
-  const monday = mondayOfWeek();
-  const { data, error } = await supabase.from('weekly_targets').select('*')
-    .eq('user_id', userId).eq('week_start', monday).maybeSingle();
+  const { data, error } = await supabase.from('contacts').insert({ ...fields, user_id: userId }).select().single();
   if (error) throw error;
   return data;
 }
 
-export async function setWeeklyTargets(fields) {
-  const userId = await getUserId();
-  const monday = mondayOfWeek();
-  const { error } = await supabase.from('weekly_targets').upsert({
-    user_id: userId, week_start: monday, ...fields,
-  }, { onConflict: 'user_id,week_start' });
+export async function updateContact(id, fields) {
+  const { error } = await supabase.from('contacts').update(fields).eq('id', id);
   if (error) throw error;
 }
 
-/** The Reflection half of the Weekly Business Review (PRD Module 5) —
- *  What worked? What didn't? What needs attention? What should I
- *  prioritize next week? One row per week, same week_start key as
- *  weekly_targets so both halves of the review line up. */
-export async function getWeeklyReview() {
+export async function deleteContact(id) {
+  const { error } = await supabase.from('contacts').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function searchContactsByName(query) {
+  if (!query || query.length < 2) return [];
   const userId = await getUserId();
-  const monday = mondayOfWeek();
-  const { data, error } = await supabase.from('weekly_reviews').select('*')
-    .eq('user_id', userId).eq('week_start', monday).maybeSingle();
+  const { data, error } = await supabase.from('contacts').select('id, name, category')
+    .eq('user_id', userId).ilike('name', `%${query}%`).limit(6);
   if (error) throw error;
   return data;
 }
 
-export async function setWeeklyReview(fields) {
-  const userId = await getUserId();
-  const monday = mondayOfWeek();
-  const { error } = await supabase.from('weekly_reviews').upsert({
-    user_id: userId, week_start: monday, ...fields, updated_at: new Date().toISOString(),
-  }, { onConflict: 'user_id,week_start' });
-  if (error) throw error;
+// ---------- Relationship tier: inferred, not manually decided ----------
+// Category already tells you most of what tier means — asking for
+// both is asking twice for the same signal. This is a default, always
+// visible and overridable, never silently forced.
+const TIER_DEFAULT_BY_CATEGORY = {
+  Sphere: 'Tier 2 - Developing',
+  Partner: 'Tier 3 - Strategic',
+  'Agent Referral': 'Tier 3 - Strategic',
+};
+
+export function inferDefaultTier(category) {
+  return TIER_DEFAULT_BY_CATEGORY[category] || null;
 }
 
-/** Running totals against target — reads real data instead of asking
- *  for manual tallies: conversations from activity_log (mission
- *  completions of type 'contacts'/'sphere'), pipeline moves from
- *  contacts whose category changed this week (approximated via
- *  updated contacts this week), consultations from guided_flow_runs. */
-export async function getWeeklyRunningTotals() {
+/** Tags every untiered Sphere/Partner/Agent Referral contact with its
+ *  inferred default in one call — the "why am I doing this one at a
+ *  time" fix for what used to be a manual per-contact decision. */
+export async function autoTagUntieredContacts() {
   const userId = await getUserId();
-  const monday = mondayOfWeek();
+  const { data, error } = await supabase.from('contacts').select('id, category')
+    .eq('user_id', userId).is('relationship_tier', null).in('category', Object.keys(TIER_DEFAULT_BY_CATEGORY));
+  if (error) throw error;
+  const updates = (data || [])
+    .map(c => ({ id: c.id, tier: inferDefaultTier(c.category) }))
+    .filter(u => u.tier);
+  await Promise.all(updates.map(u => supabase.from('contacts').update({ relationship_tier: u.tier }).eq('id', u.id)));
+  return updates.length;
+}
 
-  const [{ count: conversations }, { count: consultations }] = await Promise.all([
-    supabase.from('activity_log').select('id', { count: 'exact', head: true })
-      .eq('user_id', userId).eq('source_table', 'contacts').eq('event_type', 'completed').gte('event_date', monday),
-    supabase.from('guided_flow_runs').select('id', { count: 'exact', head: true })
-      .eq('user_id', userId).eq('flow_key', 'consultation').gte('started_at', monday),
-  ]);
+/** AI-drafted follow-up from CRM context — A5. Graceful-degrade like
+ *  every other AI feature: null if the function isn't configured. */
+export async function requestFollowUpDraft(contact) {
+  try {
+    const customInstructions = await getCustomAiInstructions();
+    const res = await fetch('/.netlify/functions/draft-followup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contact, customInstructions }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
 
+// ---------- Database health — the spreadsheet's own Dashboard sheet, computed live ----------
+export async function getDatabaseHealth() {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('contacts').select('next_action, next_follow_up_date, created_at')
+    .eq('user_id', userId);
+  if (error) throw error;
+  const contacts = data || [];
+  const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate() - 30);
+  const newThisMonth = contacts.filter(c => c.created_at && new Date(c.created_at) >= monthAgo).length;
+  const withNextAction = contacts.filter(c => c.next_action).length;
+  const overdue = contacts.filter(c => c.next_follow_up_date && daysUntil(c.next_follow_up_date) < 0).length;
   return {
-    conversations: conversations || 0,
-    consultations: consultations || 0,
+    total: contacts.length,
+    newThisMonth,
+    withNextAction,
+    completeness: contacts.length ? Math.round((withNextAction / contacts.length) * 100) : 100,
+    overdue,
   };
 }
