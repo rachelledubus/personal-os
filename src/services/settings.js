@@ -15,14 +15,20 @@ async function getUserId() {
   return user?.id;
 }
 
-async function getPreference(category, key) {
+// Exported generic get/set — this is also now the single preference
+// read/write path for the whole app (see WHERE_WE_LEFT_OFF: preferences.js
+// was "superseded by settings.js" twice before and kept coming back
+// because two call sites never actually migrated. Fixed for real now —
+// preferences.js is removed, timer.js and Companion.jsx import from here.
+export async function getPreference(category, key, fallback = null) {
   const userId = await getUserId();
+  if (!userId) return fallback;
   const { data } = await supabase.from('user_preferences').select('value')
     .eq('user_id', userId).eq('category', category).eq('key', key).maybeSingle();
-  return data?.value;
+  return data ? data.value : fallback;
 }
 
-async function setPreference(category, key, value) {
+export async function setPreference(category, key, value) {
   const userId = await getUserId();
   const { error } = await supabase.from('user_preferences').upsert({
     user_id: userId, category, key, value,
@@ -46,6 +52,14 @@ export const CATEGORY_LISTS = {
   lead_stages: {
     label: 'Pipeline — lead funnel stages',
     default: ['New Lead', 'Contact Attempted', 'Conversation Started', 'Nurture', 'Consultation Scheduled', 'Active Client', 'Closed'],
+  },
+  lead_sources: {
+    label: 'Pipeline — lead sources',
+    default: ['Website', 'Referral', 'Social Media', 'Open House', 'Farming', 'Networking'],
+  },
+  marketing_activity_categories: {
+    label: 'Marketing — activity categories',
+    default: ['Relationship Marketing', 'Farming', 'Networking', 'Events', 'Campaigns'],
   },
   finance_expense_categories: {
     label: 'Finance — expense/bill categories',

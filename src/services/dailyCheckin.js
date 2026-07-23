@@ -63,6 +63,28 @@ export async function setWeeklyTargets(fields) {
   if (error) throw error;
 }
 
+/** The Reflection half of the Weekly Business Review (PRD Module 5) —
+ *  What worked? What didn't? What needs attention? What should I
+ *  prioritize next week? One row per week, same week_start key as
+ *  weekly_targets so both halves of the review line up. */
+export async function getWeeklyReview() {
+  const userId = await getUserId();
+  const monday = mondayOfWeek();
+  const { data, error } = await supabase.from('weekly_reviews').select('*')
+    .eq('user_id', userId).eq('week_start', monday).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function setWeeklyReview(fields) {
+  const userId = await getUserId();
+  const monday = mondayOfWeek();
+  const { error } = await supabase.from('weekly_reviews').upsert({
+    user_id: userId, week_start: monday, ...fields, updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id,week_start' });
+  if (error) throw error;
+}
+
 /** Running totals against target — reads real data instead of asking
  *  for manual tallies: conversations from activity_log (mission
  *  completions of type 'contacts'/'sphere'), pipeline moves from

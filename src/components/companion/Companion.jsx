@@ -7,7 +7,7 @@ import { useCompanionPosition } from './useCompanionPosition.js';
 import { useSpriteAnimation } from './useSpriteAnimation.js';
 import CompanionPlaceholderArt from './CompanionPlaceholderArt.jsx';
 import CompanionSpriteFrame from './CompanionSpriteFrame.jsx';
-import { getPreference, setPreference } from '../../services/preferences.js';
+import { getPreference, setPreference } from '../../services/settings.js';
 import { getPmRoutineStatus } from '../../services/sleepCountdown.js';
 import { getRecentLevelUp } from '../../services/guardians.js';
 import { getDueReminderHabit, markHabitReminded } from '../../services/habitReminders.js';

@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { todayStr } from '../utils/date.js';
-import { getPreference, setPreference } from './preferences.js';
+import { getPreference, setPreference } from './settings.js';
 
 // ============================================================
 // Timer service. Deliberately uses NO new tables:

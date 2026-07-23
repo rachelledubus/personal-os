@@ -14,16 +14,17 @@ import {
   listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, updateContact, requestFollowUpDraft,
   inferDefaultTier, autoTagUntieredContacts,
 } from '../../services/contacts.js';
-import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals } from '../../services/dailyCheckin.js';
+import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals, getWeeklyReview, setWeeklyReview } from '../../services/dailyCheckin.js';
 import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses } from '../../services/timeline.js';
 import { listContentPieces, addContentPiece, advanceStatus, initRepurposeSlots, markRepurposed, requestRepurposeDrafts } from '../../services/contentEngine.js';
+import { listMarketingActivities, addMarketingActivity, completeMarketingActivity, deleteMarketingActivity } from '../../services/marketing.js';
 import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt } from '../../services/library.js';
 import { listTransactions, addTransaction } from '../../services/transactions.js';
 import { getAutonomyLevel } from '../../services/aiOperator.js';
 import InteractionTimeline from '../../components/business/InteractionTimeline.jsx';
 
-const TABS = ['dashboard', 'pipeline', 'relationships', 'content', 'library', 'clients', 'roadmap'];
-const TAB_LABELS = { dashboard: 'Dashboard', pipeline: 'Pipeline', relationships: 'Relationships', content: 'Content', library: 'Library', clients: 'Clients', roadmap: 'Roadmap' };
+const TABS = ['dashboard', 'pipeline', 'relationships', 'content', 'marketing', 'library', 'clients', 'roadmap'];
+const TAB_LABELS = { dashboard: 'Dashboard', pipeline: 'Pipeline', relationships: 'Relationships', content: 'Content', marketing: 'Marketing', library: 'Library', clients: 'Clients', roadmap: 'Roadmap' };
 
 export default function BusinessPage() {
   const { tab = 'dashboard' } = useParams();
@@ -46,6 +47,7 @@ export default function BusinessPage() {
       {tab === 'pipeline' && <PipelineTab />}
       {tab === 'relationships' && <RelationshipsTab />}
       {tab === 'content' && <ContentTab />}
+      {tab === 'marketing' && <MarketingTab />}
       {tab === 'library' && <LibraryTab />}
       {tab === 'clients' && <ClientsTab />}
       {tab === 'roadmap' && <RoadmapTab />}
@@ -70,17 +72,22 @@ function DashboardTab() {
   const [draftsByContact, setDraftsByContact] = useState({});
   const [drafting, setDrafting] = useState(null);
   const [autonomy, setAutonomy] = useState('confirm');
+  const [review, setReview] = useState(null);
+  const [reviewForm, setReviewForm] = useState({ what_worked: '', what_didnt: '', needs_attention: '', next_week_priorities: '' });
+  const [editingReview, setEditingReview] = useState(false);
 
   useEffect(() => { seedMasterTimelineIfEmpty().then(syncRoadmapStatuses).then(refresh); getAutonomyLevel().then(setAutonomy); }, []);
 
   async function refresh() {
-    const [c, wc, t, r, w, ov, h] = await Promise.all([
+    const [c, wc, t, r, w, ov, h, rv] = await Promise.all([
       getTodayCheckin(), getWeekCheckins(), getWeeklyTargets(), getWeeklyRunningTotals(),
-      getThisWeekBuild(), listOverdue(), getDatabaseHealth(),
+      getThisWeekBuild(), listOverdue(), getDatabaseHealth(), getWeeklyReview(),
     ]);
     setCheckin(c); setWeekCheckins(wc); setTargets(t); setRunning(r);
     setThisWeekBuild(w); setOverdue(ov); setHealth(h);
     if (t) setTargetForm(t);
+    setReview(rv);
+    if (rv) setReviewForm({ what_worked: rv.what_worked || '', what_didnt: rv.what_didnt || '', needs_attention: rv.needs_attention || '', next_week_priorities: rv.next_week_priorities || '' });
 
     // Autonomy "auto": overdue follow-ups draft themselves, no click
     // needed. This is the actual behavior the setting controls — see
@@ -103,6 +110,12 @@ function DashboardTab() {
   async function handleSaveTargets() {
     await setWeeklyTargets(targetForm);
     setEditingTargets(false);
+    refresh();
+  }
+
+  async function handleSaveReview() {
+    await setWeeklyReview(reviewForm);
+    setEditingReview(false);
     refresh();
   }
 
@@ -160,6 +173,41 @@ function DashboardTab() {
             <div className="row-between" style={{ fontSize: 13 }}><span>Authority boxes checked</span><span className="muted">{weekDoneCount('authority')} / 5</span></div>
             <div className="row-between" style={{ fontSize: 13 }}><span>Consultations booked</span><span className="muted">{running.consultations} / {targets?.consultations_target ?? 0}</span></div>
           </div>
+        )}
+      </Card>
+
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Weekly reflection</div>
+          <Button size="sm" variant="text" onClick={() => setEditingReview(!editingReview)}>
+            {editingReview ? 'Cancel' : (review ? 'Edit' : 'Add reflection')}
+          </Button>
+        </div>
+        {editingReview ? (
+          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+            <label className="reset-field"><span>What worked?</span>
+              <textarea value={reviewForm.what_worked} onChange={e => setReviewForm({ ...reviewForm, what_worked: e.target.value })} style={{ minHeight: 50 }} />
+            </label>
+            <label className="reset-field"><span>What didn't?</span>
+              <textarea value={reviewForm.what_didnt} onChange={e => setReviewForm({ ...reviewForm, what_didnt: e.target.value })} style={{ minHeight: 50 }} />
+            </label>
+            <label className="reset-field"><span>What needs attention?</span>
+              <textarea value={reviewForm.needs_attention} onChange={e => setReviewForm({ ...reviewForm, needs_attention: e.target.value })} style={{ minHeight: 50 }} />
+            </label>
+            <label className="reset-field"><span>Next week's priorities</span>
+              <textarea value={reviewForm.next_week_priorities} onChange={e => setReviewForm({ ...reviewForm, next_week_priorities: e.target.value })} style={{ minHeight: 50 }} />
+            </label>
+            <div><Button size="sm" onClick={handleSaveReview}>Save reflection</Button></div>
+          </div>
+        ) : review ? (
+          <div className="stack" style={{ marginTop: 'var(--space-2)', fontSize: 13 }}>
+            {review.what_worked && <div><strong>What worked:</strong> {review.what_worked}</div>}
+            {review.what_didnt && <div><strong>What didn't:</strong> {review.what_didnt}</div>}
+            {review.needs_attention && <div><strong>Needs attention:</strong> {review.needs_attention}</div>}
+            {review.next_week_priorities && <div><strong>Next week:</strong> {review.next_week_priorities}</div>}
+          </div>
+        ) : (
+          <div className="muted" style={{ fontSize: 13, marginTop: 'var(--space-2)' }}>No reflection recorded for this week yet.</div>
         )}
       </Card>
 
@@ -222,8 +270,9 @@ function PipelineTab() {
   const [contacts, setContacts] = useState([]);
   const [categories, setCategories] = useState(['Lead']);
   const [stages, setStages] = useState([]);
+  const [sources, setSources] = useState([]);
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '' });
+  const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '' });
   const [expandedId, setExpandedId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [drafting, setDrafting] = useState(null);
@@ -233,13 +282,14 @@ function PipelineTab() {
     setContacts(await listContacts());
     setCategories(await getCategoryList('pipeline_categories'));
     setStages(await getCategoryList('lead_stages'));
+    setSources(await getCategoryList('lead_sources'));
   }
   useEffect(() => { refresh(); }, []);
 
   async function handleAdd() {
     if (!form.name.trim()) return;
-    await addContact({ ...form, lead_stage: form.lead_stage || null, relationship_tier: inferDefaultTier(form.category) });
-    setForm({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '' });
+    await addContact({ ...form, lead_stage: form.lead_stage || null, source: form.source || null, relationship_tier: inferDefaultTier(form.category) });
+    setForm({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '' });
     setAdding(false);
     refresh();
   }
@@ -284,6 +334,12 @@ function PipelineTab() {
               <select value={form.lead_stage} onChange={e => setForm({ ...form, lead_stage: e.target.value })}>
                 <option value="">No stage set</option>
                 {stages.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            )}
+            {['Lead', 'Future Client'].includes(form.category) && (
+              <select value={form.source} onChange={e => setForm({ ...form, source: e.target.value })}>
+                <option value="">Source unknown</option>
+                {sources.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             )}
             <Button size="sm" onClick={handleAdd}>Save</Button>
@@ -564,6 +620,117 @@ function ContentTab() {
           )}
         </Card>
       ))}
+    </div>
+  );
+}
+
+// ============================================================
+// MARKETING — Relationship Marketing / Farming / Networking / Events /
+// Campaigns (PRD Module 4). Deliberately separate from ContentTab:
+// that tab is the written-content pipeline (brief -> repurpose);
+// this tab is dated, real-world activities that aren't "content" —
+// a mailer drop, a client appreciation call, a networking event.
+// ============================================================
+function MarketingTab() {
+  const [activities, setActivities] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ title: '', category: '', activity_date: '', notes: '' });
+  const [filter, setFilter] = useState('All');
+
+  async function refresh() {
+    setActivities(await listMarketingActivities());
+    setCategories(await getCategoryList('marketing_activity_categories'));
+  }
+  useEffect(() => { refresh(); }, []);
+
+  async function handleAdd() {
+    if (!form.title.trim() || !form.category) return;
+    await addMarketingActivity({ ...form, activity_date: form.activity_date || null });
+    setForm({ title: '', category: categories[0] || '', activity_date: '', notes: '' });
+    setAdding(false);
+    refresh();
+  }
+
+  async function handleComplete(activity) {
+    await completeMarketingActivity(activity.id);
+    refresh();
+  }
+
+  async function handleDelete(activity) {
+    await deleteMarketingActivity(activity.id);
+    refresh();
+  }
+
+  const filtered = filter === 'All' ? activities : activities.filter(a => a.category === filter);
+  const planned = filtered.filter(a => a.status === 'planned');
+  const completed = filtered.filter(a => a.status === 'completed');
+
+  return (
+    <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Marketing Calendar</div>
+          <Button size="sm" variant="ghost" onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : '+ Add activity'}</Button>
+        </div>
+
+        {adding && (
+          <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
+            <input placeholder="Activity title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+              <option value="">Select category...</option>
+              {categories.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <input type="date" value={form.activity_date} onChange={e => setForm({ ...form, activity_date: e.target.value })} />
+            <Button size="sm" onClick={handleAdd}>Save</Button>
+          </div>
+        )}
+        {adding && (
+          <textarea placeholder="Notes (optional)" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+            style={{ marginTop: 'var(--space-2)', minHeight: 50, width: '100%' }} />
+        )}
+
+        <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 4 }}>
+          {['All', ...categories].map(c => (
+            <button key={c} className={`sub-tab ${filter === c ? 'active' : ''}`} style={{ fontSize: 11 }} onClick={() => setFilter(c)}>{c}</button>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <div className="section-label">Planned · {planned.length}</div>
+        {planned.length === 0 ? <EmptyState icon="sparkles" title="Nothing planned yet" /> : (
+          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+            {planned.map(a => (
+              <div key={a.id} className="row-between" style={{ borderBottom: '1px solid var(--sand)', padding: '8px 0' }}>
+                <div>
+                  <div style={{ fontWeight: 700 }}>{a.title}</div>
+                  <div className="muted" style={{ fontSize: 12 }}>{a.category}{a.activity_date && ` · ${a.activity_date}`}</div>
+                  {a.notes && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{a.notes}</div>}
+                </div>
+                <div className="row" style={{ gap: 'var(--space-2)' }}>
+                  <Button size="sm" variant="ghost" onClick={() => handleComplete(a)}>Mark done</Button>
+                  <Button size="sm" variant="text" onClick={() => handleDelete(a)}>Remove</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {completed.length > 0 && (
+        <Card>
+          <div className="section-label">Completed · {completed.length}</div>
+          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+            {completed.map(a => (
+              <div key={a.id} className="row-between" style={{ padding: '4px 0' }}>
+                <span className="muted" style={{ fontSize: 13 }}>{a.title} · {a.category}</span>
+                <span className="muted" style={{ fontSize: 11 }}>{a.activity_date}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
