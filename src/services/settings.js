@@ -55,7 +55,11 @@ export const CATEGORY_LISTS = {
   },
   lead_sources: {
     label: 'Pipeline — lead sources',
-    default: ['Website', 'Referral', 'Social Media', 'Open House', 'Farming', 'Networking'],
+    default: ['Relocation Guide', 'Real Payment Guide', 'Website SEO', 'Facebook group', 'Sphere referral', 'Partner referral'],
+  },
+  contact_timelines: {
+    label: 'Pipeline — timeline / urgency',
+    default: ['Now (0-3mo)', 'Soon (3-6mo)', 'Future (6-12mo)', 'Long Term (12mo+)'],
   },
   marketing_activity_categories: {
     label: 'Marketing — activity categories',

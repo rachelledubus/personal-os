@@ -11,7 +11,7 @@ import { getCategoryList } from '../../services/settings.js';
 import Banner from '../../components/ui/Banner.jsx';
 import AiSuggestionBox from '../../components/ui/AiSuggestionBox.jsx';
 import {
-  listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, updateContact, requestFollowUpDraft,
+  listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, updateContact, deleteContact, requestFollowUpDraft,
   inferDefaultTier, autoTagUntieredContacts,
 } from '../../services/contacts.js';
 import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals, getWeeklyReview, setWeeklyReview } from '../../services/dailyCheckin.js';
@@ -271,8 +271,9 @@ function PipelineTab() {
   const [categories, setCategories] = useState(['Lead']);
   const [stages, setStages] = useState([]);
   const [sources, setSources] = useState([]);
+  const [timelines, setTimelines] = useState([]);
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '' });
+  const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '', timeline: '' });
   const [expandedId, setExpandedId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [drafting, setDrafting] = useState(null);
@@ -283,19 +284,32 @@ function PipelineTab() {
     setCategories(await getCategoryList('pipeline_categories'));
     setStages(await getCategoryList('lead_stages'));
     setSources(await getCategoryList('lead_sources'));
+    setTimelines(await getCategoryList('contact_timelines'));
   }
   useEffect(() => { refresh(); }, []);
 
   async function handleAdd() {
     if (!form.name.trim()) return;
-    await addContact({ ...form, lead_stage: form.lead_stage || null, source: form.source || null, relationship_tier: inferDefaultTier(form.category) });
-    setForm({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '' });
+    await addContact({ ...form, lead_stage: form.lead_stage || null, source: form.source || null, timeline: form.timeline || null, relationship_tier: inferDefaultTier(form.category) });
+    setForm({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '', timeline: '' });
     setAdding(false);
     refresh();
   }
 
   async function handleStageChange(contact, stage) {
     await updateContact(contact.id, { lead_stage: stage || null });
+    refresh();
+  }
+
+  async function handleTimelineChange(contact, timeline) {
+    await updateContact(contact.id, { timeline: timeline || null });
+    refresh();
+  }
+
+  async function handleDelete(contact) {
+    if (!window.confirm(`Delete ${contact.name}? This removes the contact and can't be undone.`)) return;
+    await deleteContact(contact.id);
+    setExpandedId(null);
     refresh();
   }
 
@@ -342,6 +356,12 @@ function PipelineTab() {
                 {sources.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             )}
+            {['Lead', 'Future Client'].includes(form.category) && (
+              <select value={form.timeline} onChange={e => setForm({ ...form, timeline: e.target.value })}>
+                <option value="">Timeline unknown</option>
+                {timelines.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            )}
             <Button size="sm" onClick={handleAdd}>Save</Button>
           </div>
         )}
@@ -374,7 +394,7 @@ function PipelineTab() {
                   {expandedId === c.id && (
                     <div style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
                       <div className="muted" style={{ fontSize: 12 }}>
-                        {c.source && `Source: ${c.source} · `}{c.timeline && `Timeline: ${c.timeline} · `}Prefers {c.preferred_contact_method || 'text'}
+                        {c.source && `Source: ${c.source} · `}Prefers {c.preferred_contact_method || 'text'}
                       </div>
                       {['Lead', 'Future Client'].includes(c.category) && (
                         <div className="row" style={{ marginTop: 'var(--space-2)', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -385,6 +405,15 @@ function PipelineTab() {
                           </select>
                         </div>
                       )}
+                      {['Lead', 'Future Client'].includes(c.category) && (
+                        <div className="row" style={{ marginTop: 'var(--space-2)', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          <span className="muted" style={{ fontSize: 12 }}>Timeline:</span>
+                          <select value={c.timeline || ''} onChange={e => handleTimelineChange(c, e.target.value)}>
+                            <option value="">Timeline unknown</option>
+                            {timelines.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      )}
                       {c.goals && <div style={{ fontSize: 13, marginTop: 4 }}><strong>Goals:</strong> {c.goals}</div>}
                       {c.concerns && <div style={{ fontSize: 13, marginTop: 4 }}><strong>Concerns:</strong> {c.concerns}</div>}
                       <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
@@ -392,6 +421,7 @@ function PipelineTab() {
                         <Button size="sm" variant="ghost" onClick={() => handleDraftFollowUp(c)} disabled={drafting === c.id}>
                           {drafting === c.id ? 'Drafting…' : '✨ Draft follow-up'}
                         </Button>
+                        <Button size="sm" variant="text" onClick={() => handleDelete(c)}>Delete</Button>
                       </div>
                       {draft?.contactId === c.id && (
                         <AiSuggestionBox unavailable={draft.unavailable} onDismiss={() => setDraft(null)}>
