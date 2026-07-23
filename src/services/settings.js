@@ -43,6 +43,10 @@ export const CATEGORY_LISTS = {
     label: 'Pipeline contact categories',
     default: ['Lead', 'Future Client', 'Active Client', 'Past Client', 'Sphere', 'Partner', 'Agent Referral'],
   },
+  lead_stages: {
+    label: 'Pipeline — lead funnel stages',
+    default: ['New Lead', 'Contact Attempted', 'Conversation Started', 'Nurture', 'Consultation Scheduled', 'Active Client', 'Closed'],
+  },
   finance_expense_categories: {
     label: 'Finance — expense/bill categories',
     default: ['Housing', 'Utilities', 'Groceries', 'Transportation', 'Subscriptions', 'Insurance', 'Debt', 'Personal', 'Business', 'Other'],

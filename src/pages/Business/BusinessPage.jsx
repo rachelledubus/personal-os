@@ -11,7 +11,7 @@ import { getCategoryList } from '../../services/settings.js';
 import Banner from '../../components/ui/Banner.jsx';
 import AiSuggestionBox from '../../components/ui/AiSuggestionBox.jsx';
 import {
-  listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, requestFollowUpDraft,
+  listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, updateContact, requestFollowUpDraft,
   inferDefaultTier, autoTagUntieredContacts,
 } from '../../services/contacts.js';
 import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals } from '../../services/dailyCheckin.js';
@@ -221,8 +221,9 @@ const STATUS_TONE = { Overdue: 'var(--danger)', 'Due Soon': 'var(--gold)', 'On T
 function PipelineTab() {
   const [contacts, setContacts] = useState([]);
   const [categories, setCategories] = useState(['Lead']);
+  const [stages, setStages] = useState([]);
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text' });
+  const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '' });
   const [expandedId, setExpandedId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [drafting, setDrafting] = useState(null);
@@ -231,14 +232,20 @@ function PipelineTab() {
   async function refresh() {
     setContacts(await listContacts());
     setCategories(await getCategoryList('pipeline_categories'));
+    setStages(await getCategoryList('lead_stages'));
   }
   useEffect(() => { refresh(); }, []);
 
   async function handleAdd() {
     if (!form.name.trim()) return;
-    await addContact({ ...form, relationship_tier: inferDefaultTier(form.category) });
-    setForm({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text' });
+    await addContact({ ...form, lead_stage: form.lead_stage || null, relationship_tier: inferDefaultTier(form.category) });
+    setForm({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '' });
     setAdding(false);
+    refresh();
+  }
+
+  async function handleStageChange(contact, stage) {
+    await updateContact(contact.id, { lead_stage: stage || null });
     refresh();
   }
 
@@ -273,6 +280,12 @@ function PipelineTab() {
               <option value="email">Prefers email</option>
               <option value="call_scheduled">Scheduled calls only</option>
             </select>
+            {['Lead', 'Future Client'].includes(form.category) && (
+              <select value={form.lead_stage} onChange={e => setForm({ ...form, lead_stage: e.target.value })}>
+                <option value="">No stage set</option>
+                {stages.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            )}
             <Button size="sm" onClick={handleAdd}>Save</Button>
           </div>
         )}
@@ -293,7 +306,10 @@ function PipelineTab() {
                 <div key={c.id} style={{ borderBottom: '1px solid var(--sand)', padding: '8px 0' }}>
                   <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}>
                     <div>
-                      <div style={{ fontWeight: 700 }}>{c.name}{c.organization && <span className="muted" style={{ fontWeight: 400 }}> · {c.organization}</span>}</div>
+                      <div style={{ fontWeight: 700 }}>
+                        {c.name}{c.organization && <span className="muted" style={{ fontWeight: 400 }}> · {c.organization}</span>}
+                        {c.lead_stage && <span className="muted" style={{ fontWeight: 400 }}> · {c.lead_stage}</span>}
+                      </div>
                       <div className="muted" style={{ fontSize: 12 }}>{c.next_action || 'No next action set'}</div>
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_TONE[c.status] }}>{c.status}</span>
@@ -304,6 +320,15 @@ function PipelineTab() {
                       <div className="muted" style={{ fontSize: 12 }}>
                         {c.source && `Source: ${c.source} · `}{c.timeline && `Timeline: ${c.timeline} · `}Prefers {c.preferred_contact_method || 'text'}
                       </div>
+                      {['Lead', 'Future Client'].includes(c.category) && (
+                        <div className="row" style={{ marginTop: 'var(--space-2)', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          <span className="muted" style={{ fontSize: 12 }}>Stage:</span>
+                          <select value={c.lead_stage || ''} onChange={e => handleStageChange(c, e.target.value)}>
+                            <option value="">No stage set</option>
+                            {stages.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                      )}
                       {c.goals && <div style={{ fontSize: 13, marginTop: 4 }}><strong>Goals:</strong> {c.goals}</div>}
                       {c.concerns && <div style={{ fontSize: 13, marginTop: 4 }}><strong>Concerns:</strong> {c.concerns}</div>}
                       <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
