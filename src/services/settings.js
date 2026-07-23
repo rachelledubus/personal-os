@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient.js';
+import * as dbAdapter from '../../packages/universal-core/adapters/supabaseAdapter.js';
 import { addDevLogEntry } from './devMemory.js';
 
 // ============================================================
@@ -11,23 +11,17 @@ import { addDevLogEntry } from './devMemory.js';
 // ============================================================
 
 async function getUserId() {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id;
+  return dbAdapter.getUserId();
 }
 
 async function getPreference(category, key) {
-  const userId = await getUserId();
-  const { data } = await supabase.from('user_preferences').select('value')
-    .eq('user_id', userId).eq('category', category).eq('key', key).maybeSingle();
-  return data?.value;
+  return dbAdapter.getPreference(category, key);
 }
 
 async function setPreference(category, key, value) {
-  const userId = await getUserId();
-  const { error } = await supabase.from('user_preferences').upsert({
-    user_id: userId, category, key, value,
-  }, { onConflict: 'user_id,category,key' });
-  if (error) throw error;
+  const userId = await dbAdapter.getUserId();
+  if (!userId) throw new Error('No user');
+  return dbAdapter.upsertPreference(userId, category, key, value);
 }
 
 // ---------- Category lists ----------
@@ -94,9 +88,9 @@ export async function getFeatureFlag(flagKey) {
 
 export async function getAllFeatureFlags() {
   const userId = await getUserId();
-  const { data } = await supabase.from('user_preferences').select('key, value')
+  const data = await dbAdapter.supabase.from('user_preferences').select('key, value')
     .eq('user_id', userId).eq('category', 'feature_flags');
-  const stored = Object.fromEntries((data || []).map(d => [d.key, d.value.enabled]));
+  const stored = Object.fromEntries((data.data || []).map(d => [d.key, d.value.enabled]));
   const result = {};
   Object.keys(FEATURE_FLAGS).forEach(key => {
     result[key] = stored[key] !== undefined ? stored[key] : FEATURE_FLAGS[key].default;
