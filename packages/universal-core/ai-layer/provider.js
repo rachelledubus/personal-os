@@ -1,4 +1,9 @@
-// packages/universal-core/ai-layer/provider.js
+// OWNER: UNIVERSAL-OS (core)
+// File: packages/universal-core/ai-layer/provider.js
+// Purpose: AI provider facade and registry used by core and applications.
+// Public API: registerProvider(name, impl), getActiveProvider(), classify(text), generate(prompt)
+// Notes: Providers should register themselves at application bootstrap to avoid
+// accidentally enabling LLM calls. App code can call this facade to remain provider-agnostic.
 
 // Minimal AI provider registry and facade. Providers can register themselves
 // with registerProvider(name, impl) where impl exposes classify(text) and
