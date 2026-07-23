@@ -1,3 +1,9 @@
+// Universal-OS Core — Timer state engine (packages/universal-core/state-engine/timer/index.js)
+// Personal-OS original file: src/services/timer.js (compatibility shim re-exports this module)
+// Purpose: centralize timer presets, custom preset storage, session logging and simple stats.
+// Ownership: UNIVERSAL-OS (core) — reusable across OS apps. Import for app-level usage via
+// the existing shim at src/services/timer.js to preserve backward compatibility.
+
 import { todayStr } from '../../../../src/utils/date.js';
 import * as db from '../../adapters/supabaseAdapter.js';
 
