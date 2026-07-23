@@ -1,6 +1,8 @@
 # OWNER: REPOSITORY (docs)
 # 09 - Realtor OS Project Decision Log (Living Document)
 
+This file is the living decision log for Realtor OS. Entries MUST follow the ADR template.
+
 ADR-001
 Date: 2026-07-23
 Status: Accepted

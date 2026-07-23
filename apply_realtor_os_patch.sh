@@ -346,7 +346,7 @@ import path from 'path';
 const checklistPath = path.resolve(new URL(import.meta.url).pathname, '../../realtor-os/checklists/closing-checklist.md');
 try {
   const raw = fs.readFileSync(checklistPath, 'utf8');
-  const items = raw.split('\n').filter(l => l.trim().startsWith('- [ ]')).map(l => l.replace(/^- \[ \] /, '').trim());
+  const items = raw.split('\n').filter(l => l.trim().startsWith('- [ ]')).map(l => l.replace(/^- \\[ \\] /, '').trim());
   registerChecklist('closing_checklist', items);
 } catch (err) {
   console.warn('Could not register closing checklist', err.message);

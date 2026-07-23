@@ -1,5 +1,6 @@
 # OWNER: REALTOR-OS (application)
-# Closing Checklist
+# File: packages/realtor-os/checklists/closing-checklist.md
+# Purpose: Verification checklist for closing a transaction. Used by UI and automation to guide closing steps.
 
 - [ ] Confirm buyer financing approval
 - [ ] Complete home inspection and resolve outstanding items
