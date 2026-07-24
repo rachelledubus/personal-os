@@ -16,6 +16,7 @@ import { listTodayFocusSessions } from '../../services/focusSessions.js';
 import { toggleBlockCompletion, toggleBlockStep, addTransitionStep } from '../../services/lifeRhythm.js';
 import { getDuePrompt } from '../../services/prompts.js';
 import { getNeglectedPriorities } from '../../services/neglected.js';
+import { countOverdue } from '../../services/contacts.js';
 import WeeklyResetModal from '../Plan/WeeklyResetModal.jsx';
 import './TodayPage.css';
 
@@ -28,6 +29,7 @@ export default function TodayPage() {
   const [showEnergyCheckin, setShowEnergyCheckin] = useState(true);
   const [neglected, setNeglected] = useState([]);
   const [neglectedError, setNeglectedError] = useState(null);
+  const [businessOverdueCount, setBusinessOverdueCount] = useState(0);
   const [hyperfocusDismissed, setHyperfocusDismissed] = useState(false);
   const [focusSessions, setFocusSessions] = useState([]);
 
@@ -60,6 +62,7 @@ export default function TodayPage() {
       console.error('Failed to load neglected priorities:', err);
       setNeglectedError(err.message || 'Something went wrong.');
     });
+    countOverdue().then(setBusinessOverdueCount);
   }, []);
 
   async function handleToggleTask(task, done) {
@@ -209,6 +212,17 @@ export default function TodayPage() {
 
       {/* Neglected Priorities (Area 1/2) — the one place that looks
           across goals, relationships, habits, and maintenance at once. */}
+      {businessOverdueCount > 0 && (
+        <Card style={{ marginTop: 'var(--space-4)' }}>
+          <div className="row-between">
+            <div className="section-label">Business</div>
+          </div>
+          <Link to="/business/weekly-reset" className="row-between neglected-link" style={{ fontSize: 13, padding: '4px 0' }}>
+            <span>You have {businessOverdueCount} overdue Business task{businessOverdueCount === 1 ? '' : 's'}</span>
+            <span className="muted" style={{ fontSize: 11 }}>See who →</span>
+          </Link>
+        </Card>
+      )}
       {neglectedError && (
         <Card style={{ marginTop: 'var(--space-4)', borderLeft: '3px solid var(--danger)' }}>
           <div style={{ fontSize: 13 }}>"Might be worth a look" couldn't load: {neglectedError}</div>

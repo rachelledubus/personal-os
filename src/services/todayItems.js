@@ -3,7 +3,6 @@ import { todayStr } from '../utils/date.js';
 import { listDueSoon, completeMaintenanceItem } from './maintenance.js';
 import { logActivity } from './goals.js';
 import { syncRoadmapItemFromSubtasks } from './timeline.js';
-import { countOverdue } from './contacts.js';
 
 // ============================================================
 // TODAY ITEMS ENGINE (renamed from "Mission Engine")
@@ -236,38 +235,19 @@ async function fetchNudgeItems(userId) {
     .from('contacts').select('id', { count: 'exact', head: true })
     .eq('user_id', userId).gte('last_contact_date', weekAgo.toISOString().slice(0, 10));
 
-  const items = [];
+  if (count && count > 0) return [];
 
-  if (!count || count === 0) {
-    items.push({
-      id: 'nudge-outreach',
-      sourceTable: 'nudge',
-      sourceId: null,
-      track: 'business',
-      icon: 'lightbulb',
-      title: 'No outreach logged this week',
-      context: 'Consider a sphere or partner touch today',
-      done: false,
-      linkTo: '/business/flows/phone_boundaries',
-    });
-  }
-
-  const overdueCount = await countOverdue();
-  if (overdueCount > 0) {
-    items.push({
-      id: 'nudge-business-overdue',
-      sourceTable: 'nudge',
-      sourceId: null,
-      track: 'business',
-      icon: 'megaphone',
-      title: `You have ${overdueCount} overdue Business task${overdueCount === 1 ? '' : 's'}`,
-      context: 'Overdue for follow-up — see who in Business Dashboard',
-      done: false,
-      linkTo: '/business/weekly-reset',
-    });
-  }
-
-  return items;
+  return [{
+    id: 'nudge-outreach',
+    sourceTable: 'nudge',
+    sourceId: null,
+    track: 'business',
+    icon: 'lightbulb',
+    title: 'No outreach logged this week',
+    context: 'Consider a sphere or partner touch today',
+    done: false,
+    linkTo: '/business/flows/phone_boundaries',
+  }];
 }
 
 async function fetchMaintenanceItems(userId) {
