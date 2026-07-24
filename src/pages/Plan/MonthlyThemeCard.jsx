@@ -36,7 +36,8 @@ export default function MonthlyThemeCard() {
 
   if (!loaded) return null;
 
-  const monthLabel = new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const [y, m] = month.split('-').map(Number);
+  const monthLabel = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
     <Card>

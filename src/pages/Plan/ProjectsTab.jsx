@@ -13,6 +13,10 @@ import {
   listMissions, addMission, completeMission, deleteMission, listTasksForMission, addTaskToMission, toggleMissionTask,
 } from '../../services/missions.js';
 import MonthlyThemeCard from './MonthlyThemeCard.jsx';
+import { SECTIONS as DREAM_LIFE_SECTIONS } from './DreamLifeTab.jsx';
+
+const TIMEFRAMES = ['Year', 'Quarter', 'Month', 'Week'];
+const ENERGY_IMPACTS = ['Energizing', 'Neutral', 'Draining'];
 
 async function getUserId() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -43,8 +47,13 @@ export default function ProjectsTab() {
   const [expandedProject, setExpandedProject] = useState(null);
   const [expandedGoal, setExpandedGoal] = useState(null);
   const [newGoalTitle, setNewGoalTitle] = useState('');
+  const [newGoalTimeframe, setNewGoalTimeframe] = useState(null);
+  const [newGoalParent, setNewGoalParent] = useState('');
+  const [newGoalEnergy, setNewGoalEnergy] = useState(null);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [newProjectGoal, setNewProjectGoal] = useState('');
+  const [newProjectVision, setNewProjectVision] = useState('');
+  const [newProjectEnergy, setNewProjectEnergy] = useState(null);
 
   async function refresh() {
     const [g, p] = await Promise.all([listGoals(), listProjects()]);
@@ -55,8 +64,14 @@ export default function ProjectsTab() {
 
   async function handleAddGoal() {
     if (!newGoalTitle.trim()) return;
-    await addGoal({ title: newGoalTitle.trim() });
+    await addGoal({
+      title: newGoalTitle.trim(), timeframe: newGoalTimeframe,
+      parent_goal_id: newGoalParent || null, energy_impact: newGoalEnergy,
+    });
     setNewGoalTitle('');
+    setNewGoalTimeframe(null);
+    setNewGoalParent('');
+    setNewGoalEnergy(null);
     refresh();
   }
 
@@ -67,9 +82,14 @@ export default function ProjectsTab() {
 
   async function handleAddProject() {
     if (!newProjectTitle.trim()) return;
-    await addProject({ title: newProjectTitle.trim(), goal_id: newProjectGoal || null });
+    await addProject({
+      title: newProjectTitle.trim(), goal_id: newProjectGoal || null,
+      vision_link: newProjectVision || null, energy_impact: newProjectEnergy,
+    });
     setNewProjectTitle('');
     setNewProjectGoal('');
+    setNewProjectVision('');
+    setNewProjectEnergy(null);
     refresh();
   }
 
@@ -98,6 +118,29 @@ export default function ProjectsTab() {
           <input placeholder="New goal..." value={newGoalTitle} onChange={e => setNewGoalTitle(e.target.value)} />
           <Button size="sm" onClick={handleAddGoal}>+ Add goal</Button>
         </div>
+        <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
+          <span className="muted" style={{ fontSize: 11, marginRight: 4 }}>Timeframe (optional):</span>
+          {TIMEFRAMES.map(t => (
+            <button key={t} className={`sub-tab ${newGoalTimeframe === t ? 'active' : ''}`} style={{ fontSize: 11 }}
+              onClick={() => setNewGoalTimeframe(newGoalTimeframe === t ? null : t)}>{t}</button>
+          ))}
+          <span className="muted" style={{ fontSize: 11, margin: '0 4px 0 12px' }}>Energy impact (optional):</span>
+          {ENERGY_IMPACTS.map(e => (
+            <button key={e} className={`sub-tab ${newGoalEnergy === e ? 'active' : ''}`} style={{ fontSize: 11 }}
+              onClick={() => setNewGoalEnergy(newGoalEnergy === e ? null : e)}>{e}</button>
+          ))}
+        </div>
+        {newGoalTimeframe && newGoalTimeframe !== 'Year' && (
+          <div className="row" style={{ marginTop: 'var(--space-2)' }}>
+            <span className="muted" style={{ fontSize: 11, marginRight: 4 }}>Rolls up under (optional):</span>
+            <select value={newGoalParent} onChange={e => setNewGoalParent(e.target.value)}>
+              <option value="">No parent goal</option>
+              {goals.filter(g => g.timeframe && g.timeframe !== newGoalTimeframe).map(g => (
+                <option key={g.id} value={g.id}>{g.title} ({g.timeframe})</option>
+              ))}
+            </select>
+          </div>
+        )}
       </Card>
 
       <Card>
@@ -121,6 +164,18 @@ export default function ProjectsTab() {
             {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
           </select>
           <Button size="sm" onClick={handleAddProject}>+ Add project</Button>
+        </div>
+        <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
+          <span className="muted" style={{ fontSize: 11, marginRight: 4 }}>Connects to (optional):</span>
+          {DREAM_LIFE_SECTIONS.map(s => (
+            <button key={s.key} className={`sub-tab ${newProjectVision === s.key ? 'active' : ''}`} style={{ fontSize: 11 }}
+              onClick={() => setNewProjectVision(newProjectVision === s.key ? '' : s.key)}>{s.label}</button>
+          ))}
+          <span className="muted" style={{ fontSize: 11, margin: '0 4px 0 12px' }}>Energy impact (optional):</span>
+          {ENERGY_IMPACTS.map(e => (
+            <button key={e} className={`sub-tab ${newProjectEnergy === e ? 'active' : ''}`} style={{ fontSize: 11 }}
+              onClick={() => setNewProjectEnergy(newProjectEnergy === e ? null : e)}>{e}</button>
+          ))}
         </div>
       </Card>
     </div>
@@ -165,6 +220,8 @@ function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved }) {
           <div style={{ fontWeight: 700 }}>{goal.title}</div>
           <div className="muted" style={{ fontSize: 12 }}>
             {goal.category} · {goal.status}
+            {goal.timeframe && ` · ${goal.timeframe}`}
+            {goal.energy_impact && ` · ${goal.energy_impact}`}
             {missions.length > 0 && ` · ${missions.filter(m => m.status === 'completed').length}/${missions.length} missions`}
           </div>
         </div>

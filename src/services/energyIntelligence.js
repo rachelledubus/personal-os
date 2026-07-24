@@ -24,6 +24,18 @@ export async function logEnergy(level, notes = null) {
   // Mochi's Guardian ("how are we feeling?") — an energy check-in is
   // literally her whole purpose, not a stretch mapping.
   await logActivity('energy_checkin', data.id, 'logged');
+  return data;
+}
+
+/** Joy Tracking — added on the SAME row a moment after logEnergy(),
+ *  not a new table. Optional and quick: what created momentum today,
+ *  what drained it. Kept separate from the level tap itself so
+ *  checking in stays a one-tap action; these two fields are opt-in. */
+export async function logMomentum(energyLogId, momentumGain, momentumDrain) {
+  const { error } = await supabase.from('energy_logs')
+    .update({ momentum_gain: momentumGain || null, momentum_drain: momentumDrain || null })
+    .eq('id', energyLogId);
+  if (error) throw error;
 }
 
 /** Most recent check-in today, if any — what the assignment engine

@@ -8,7 +8,7 @@ import { getPreference, setPreference } from '../../services/settings.js';
 // no need to be queried/joined, which is exactly what that store is for.
 const CATEGORY = 'dream_life';
 
-const SECTIONS = [
+export const SECTIONS = [
   { key: 'ideal_day', label: 'My Ideal Day', placeholder: 'Walk through it hour by hour — where are you, what are you doing, how does it feel?' },
   { key: 'ideal_week', label: 'My Ideal Week', placeholder: 'What rhythm do the 7 days have? What\u2019s non-negotiable?' },
   { key: 'ideal_home', label: 'My Ideal Home', placeholder: 'Where do you live, what does it look and feel like?' },

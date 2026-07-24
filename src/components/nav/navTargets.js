@@ -21,7 +21,8 @@ export const ZONES = [
       { path: '/plan/goals', label: 'Goals & Projects', keywords: 'milestones tasks' },
       { path: '/plan/dream-life', label: 'Dream Life', keywords: 'vision north star ideal' },
       { path: '/plan/journal', label: 'Journal', keywords: 'habits mood energy grid' },
-      { path: '/plan/meals', label: 'Meal Planner', keywords: 'recipes food' },
+      { path: '/plan/meals', label: 'Meal Planner', keywords: 'recipes food grocery' },
+      { path: '/plan/schedule-template', label: 'Schedule Template', keywords: 'weekly rhythm routine edit' },
     ],
   },
   {

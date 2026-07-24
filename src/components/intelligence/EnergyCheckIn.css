@@ -28,3 +28,18 @@
   opacity: 0.6;
   cursor: default;
 }
+
+.energy-momentum {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.energy-momentum input {
+  flex: 1;
+  min-width: 180px;
+  font-size: var(--text-caption);
+  padding: 4px 8px;
+}

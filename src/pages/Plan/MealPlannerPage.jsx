@@ -18,6 +18,7 @@ import {
   scaleIngredients, totalMacrosAtServings, addRecipeToGroceryList,
 } from '../../services/recipes.js';
 import { ZONES as NAV_ZONES } from '../../components/nav/navTargets.js';
+import { listGroceryItems, toggleGroceryItemPurchased, deleteGroceryItem, clearPurchasedGroceryItems } from '../../services/groceryList.js';
 import './MealPlannerPage.css';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snacks'];
@@ -127,9 +128,12 @@ export default function MealPlannerPage() {
         <button className={`sub-tab ${viewMode === 'day' ? 'active' : ''}`} onClick={() => setViewMode('day')}>Plan a day</button>
         <button className={`sub-tab ${viewMode === 'week' ? 'active' : ''}`} onClick={() => setViewMode('week')}>Plan the week</button>
         <button className={`sub-tab ${viewMode === 'recipes' ? 'active' : ''}`} onClick={() => setViewMode('recipes')}>Recipes</button>
+        <button className={`sub-tab ${viewMode === 'grocery' ? 'active' : ''}`} onClick={() => setViewMode('grocery')}>Grocery List</button>
       </div>
 
-      {viewMode === 'recipes' ? (
+      {viewMode === 'grocery' ? (
+        <GroceryListTab />
+      ) : viewMode === 'recipes' ? (
         <RecipesTab />
       ) : viewMode === 'week' ? (
         <WeekPlanner foods={foods} />
@@ -546,6 +550,69 @@ function QuickMealAdd({ onSaved }) {
           <Button size="sm" style={{ marginTop: 'var(--space-2)' }} onClick={handleSave}>
             {saved ? 'Saved ✓' : 'Save to my foods'}
           </Button>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function GroceryListTab() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { refresh(); }, []);
+
+  async function refresh() {
+    setLoading(true);
+    setItems(await listGroceryItems());
+    setLoading(false);
+  }
+
+  async function handleToggle(item) {
+    await toggleGroceryItemPurchased(item.id, !item.purchased);
+    refresh();
+  }
+
+  async function handleClearPurchased() {
+    await clearPurchasedGroceryItems();
+    refresh();
+  }
+
+  if (loading) return null;
+
+  const needed = items.filter(i => !i.purchased);
+  const purchased = items.filter(i => i.purchased);
+
+  return (
+    <Card>
+      <div className="row-between">
+        <div className="section-label">Grocery List</div>
+        {purchased.length > 0 && <Button size="sm" variant="text" onClick={handleClearPurchased}>Clear checked ({purchased.length})</Button>}
+      </div>
+
+      {items.length === 0 ? (
+        <EmptyState icon="leaf" title="Nothing on your list yet" subtitle="Use 'Generate grocery list' from Plan a day/week, or 'Add to grocery list' from a recipe." />
+      ) : (
+        <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 4 }}>
+          {needed.map(item => (
+            <label key={item.id} className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
+              <input type="checkbox" checked={false} onChange={() => handleToggle(item)} />
+              <span>{item.name}</span>
+              <span className="muted" style={{ fontSize: 11 }}>{item.category}</span>
+              <button className="row-remove-btn" onClick={() => deleteGroceryItem(item.id).then(refresh)}>×</button>
+            </label>
+          ))}
+          {purchased.length > 0 && (
+            <>
+              <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-3)' }}>Checked off</div>
+              {purchased.map(item => (
+                <label key={item.id} className="row" style={{ gap: 'var(--space-2)', alignItems: 'center', opacity: 0.5 }}>
+                  <input type="checkbox" checked={true} onChange={() => handleToggle(item)} />
+                  <span style={{ textDecoration: 'line-through' }}>{item.name}</span>
+                </label>
+              ))}
+            </>
+          )}
         </div>
       )}
     </Card>
