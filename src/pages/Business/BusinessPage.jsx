@@ -17,8 +17,8 @@ import {
 import ContactProfilePanel from '../../components/business/ContactProfilePanel.jsx';
 import { FOLLOWUP_STANDARD_TYPES, getCadenceStandards, setCadenceStandards } from '../../services/followupStandards.js';
 import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals, getWeeklyReview, setWeeklyReview } from '../../services/dailyCheckin.js';
-import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses, syncRoadmapItemFromSubtasks } from '../../services/timeline.js';
-import { listContentPieces, addContentPiece, advanceStatus, initRepurposeSlots, markRepurposed, requestRepurposeDrafts } from '../../services/contentEngine.js';
+import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses, syncRoadmapItemFromSubtasks, setRoadmapItemInProgress, setRoadmapItemStatus, resetRoadmapItemToAutomatic } from '../../services/timeline.js';
+import { listContentPieces, addContentPiece } from '../../services/contentEngine.js';
 import { listMarketingActivities, addMarketingActivity, updateMarketingActivity, completeMarketingActivity, deleteMarketingActivity } from '../../services/marketing.js';
 import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt } from '../../services/library.js';
 import { listTransactions, addTransaction } from '../../services/transactions.js';
@@ -531,9 +531,6 @@ function ContentTab() {
   const [pieces, setPieces] = useState([]);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ title: '', buyer_question: '', audience: '', funnel_stage: 'Awareness' });
-  const [expandedId, setExpandedId] = useState(null);
-  const [drafts, setDrafts] = useState(null);
-  const [draftingFor, setDraftingFor] = useState(null);
   const [autonomy, setAutonomy] = useState('confirm');
 
   async function refresh() { setPieces(await listContentPieces()); }
@@ -547,39 +544,11 @@ function ContentTab() {
     refresh();
   }
 
-  async function handleAdvance(piece, status) {
-    await advanceStatus(piece.id, status);
-    if (status === 'published') {
-      await initRepurposeSlots(piece.id);
-      // Don't make the person ask for this separately — the moment
-      // something publishes is exactly when repurposing is useful.
-      await handleRepurpose({ ...piece, status: 'published' }, true);
-    }
-    refresh();
-  }
-
-  async function handleRepurpose(piece, isFirstPass = false) {
-    setDraftingFor(piece.id);
-    const result = await requestRepurposeDrafts(piece);
-    setDraftingFor(null);
-    setDrafts(result ? { pieceId: piece.id, ...result } : { pieceId: piece.id, unavailable: true });
-
-    // Autonomy "auto": drafts don't just generate — they're considered
-    // done. Confirm mode leaves each format for a manual publish click.
-    if (result && autonomy === 'auto') {
-      const freshPiece = await listContentPieces();
-      const match = freshPiece.find(p => p.id === piece.id);
-      await Promise.all((match?.content_repurpose_items || []).map(item => markRepurposed(item.id)));
-      refresh();
-    }
-  }
-
-  async function handleMarkPublished(itemId) {
-    await markRepurposed(itemId);
-    refresh();
-  }
-
-  const NEXT_STATUS = { idea: 'drafting', drafting: 'published' };
+  const COLUMNS = [
+    { key: 'idea', label: 'Idea' },
+    { key: 'drafting', label: 'Drafting' },
+    { key: 'published', label: 'Published' },
+  ];
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
@@ -602,64 +571,36 @@ function ContentTab() {
         )}
       </Card>
 
-      {pieces.length === 0 ? <EmptyState icon="megaphone" title="No content in the pipeline yet" /> : pieces.map(p => (
-        <Card key={p.id}>
-          <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
-            <div>
-              <div style={{ fontWeight: 700 }}>{p.title}</div>
-              <div className="muted" style={{ fontSize: 12 }}>{p.audience} · {p.funnel_stage}</div>
-            </div>
-            <span className="muted" style={{ fontSize: 11, textTransform: 'uppercase' }}>{p.status.replace('_', ' ')}</span>
-          </div>
-
-          {expandedId === p.id && (
-            <div style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
-              {p.buyer_question && <div style={{ fontSize: 13 }}><strong>Question:</strong> {p.buyer_question}</div>}
-
-              {NEXT_STATUS[p.status] && (
-                <Button size="sm" style={{ marginTop: 'var(--space-2)' }} onClick={() => handleAdvance(p, NEXT_STATUS[p.status])}>
-                  Move to {NEXT_STATUS[p.status].replace('_', ' ')} →
-                </Button>
-              )}
-
-              {p.status === 'published' && (
-                <div style={{ marginTop: 'var(--space-3)' }}>
-                  <div className="row-between">
-                    <span className="muted" style={{ fontSize: 12 }}>Repurposed: {(p.content_repurpose_items || []).filter(r => r.published).length} / {(p.content_repurpose_items || []).length}</span>
-                    <Button size="sm" variant="ghost" onClick={() => handleRepurpose(p)} disabled={draftingFor === p.id}>
-                      {draftingFor === p.id ? 'Drafting…' : '✨ Regenerate drafts'}
-                    </Button>
-                  </div>
-
-                  <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-                    {(p.content_repurpose_items || []).map(item => (
-                      <div key={item.id} className="row-between" style={{ fontSize: 12 }}>
-                        <span className="muted" style={{ textTransform: 'uppercase' }}>{item.format.replace('_', ' ')}</span>
-                        {item.published ? <span style={{ color: 'var(--success)' }}>✓ Published</span> : (
-                          <Button size="sm" variant="text" onClick={() => handleMarkPublished(item.id)}>Mark published</Button>
+      {pieces.length === 0 ? <EmptyState icon="megaphone" title="No content in the pipeline yet" /> : (
+        <div className="row" style={{ alignItems: 'flex-start', gap: 'var(--space-3)', overflowX: 'auto' }}>
+          {COLUMNS.map(col => {
+            const items = pieces.filter(p => p.status === col.key);
+            return (
+              <div key={col.key} style={{ flex: '1 1 0', minWidth: 200 }}>
+                <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                  {col.label} · {items.length}
+                </div>
+                <div className="stack" style={{ gap: 'var(--space-2)' }}>
+                  {items.map(p => (
+                    <Link key={p.id} to={`/business/content/${p.id}`} style={{ textDecoration: 'none' }}>
+                      <div className="planner-block track-business" style={{ cursor: 'pointer' }}>
+                        <div style={{ fontWeight: 700, fontSize: 14 }}>{p.title}</div>
+                        <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{p.audience || 'No audience set'}</div>
+                        {col.key === 'published' && (
+                          <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+                            {(p.content_repurpose_items || []).filter(r => r.published).length}/{(p.content_repurpose_items || []).length} repurposed
+                          </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-
-                  {drafts?.pieceId === p.id && (
-                    <AiSuggestionBox unavailable={drafts.unavailable}>
-                      <div className="stack" style={{ gap: 'var(--space-2)' }}>
-                        {Object.entries(drafts).filter(([k]) => k !== 'pieceId' && k !== 'unavailable').map(([format, text]) => (
-                          <div key={format}>
-                            <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase' }}>{format.replace('_', ' ')}</div>
-                            <div style={{ fontSize: 13 }}>{text}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </AiSuggestionBox>
-                  )}
+                    </Link>
+                  ))}
+                  {items.length === 0 && <div className="muted" style={{ fontSize: 12 }}>Nothing here</div>}
                 </div>
-              )}
-            </div>
-          )}
-        </Card>
-      ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1029,7 +970,6 @@ const LINK_OPTIONS = [
   { label: 'Business → Library', value: '/business/library' },
   { label: 'Business → Clients', value: '/business/clients' },
   { label: 'Plan → Goals & Projects', value: '/plan/goals' },
-  { label: 'Library → Documents', value: '/library/documents' },
 ];
 
 function RoadmapTab() {
@@ -1130,6 +1070,21 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
     onLinked();
   }
 
+  async function handleStartThisWeek() {
+    await setRoadmapItemInProgress(item.id);
+    onLinked();
+  }
+
+  async function handleSetStatus(status) {
+    await setRoadmapItemStatus(item.id, status);
+    onLinked();
+  }
+
+  async function handleResetAuto() {
+    await resetRoadmapItemToAutomatic(item.id);
+    onLinked();
+  }
+
   function openSplitPreview() {
     const parsed = parseCompoundTitle(item.title);
     if (parsed) setSplitPreview(parsed);
@@ -1166,9 +1121,12 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
           {item.date_range && <span className="muted" style={{ fontSize: 11 }}> · {item.date_range}</span>}
           {subtasks.length > 0 && <span className="muted" style={{ fontSize: 11 }}> · {doneCount}/{subtasks.length} sub-tasks</span>}
         </div>
-        <div className="row" style={{ gap: 'var(--space-2)' }}>
+        <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
           {item.link_to && <Link to={item.link_to}><Button size="sm" variant="ghost">Open →</Button></Link>}
-          <span className="muted" style={{ fontSize: 11 }}>{item.status}</span>
+          {item.status !== 'In Progress' && item.status !== 'Done' && (
+            <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); handleStartThisWeek(); }}>▶ Start this week</Button>
+          )}
+          <span className="muted" style={{ fontSize: 11 }}>{item.status}{item.status_manual && ' (manual)'}</span>
         </div>
       </div>
 
@@ -1189,6 +1147,16 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
             </div>
           )}
           {item.link_to && <Button size="sm" variant="text" onClick={() => setPickingLink(true)}>Change link</Button>}
+
+          <div className="row" style={{ marginTop: 'var(--space-2)', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span className="muted" style={{ fontSize: 12 }}>Status:</span>
+            <select value={item.status} onChange={e => handleSetStatus(e.target.value)}>
+              <option value="Not Started">Not Started</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Done">Done</option>
+            </select>
+            {item.status_manual && <Button size="sm" variant="text" onClick={handleResetAuto}>Reset to automatic</Button>}
+          </div>
 
           {subtasks.length === 0 && !splitPreview && parseCompoundTitle(item.title) && (
             <div style={{ marginTop: 'var(--space-2)' }}>
