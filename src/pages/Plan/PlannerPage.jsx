@@ -11,10 +11,10 @@ import JournalTab from './JournalTab.jsx';
 import DreamLifeTab from './DreamLifeTab.jsx';
 import ScheduleTemplateTab from './ScheduleTemplateTab.jsx';
 
-const TABS = ['blocks', 'goals', 'dream-life', 'journal', 'meals', 'schedule-template'];
+const TABS = ['blocks', 'goals', 'dream-life', 'journal', 'schedule-template'];
 const TAB_LABELS = {
   blocks: 'Time Blocks', goals: 'Goals & Projects', 'dream-life': 'Dream Life',
-  journal: 'Journal', meals: 'Meal Planner', 'schedule-template': 'Schedule Template',
+  journal: 'Journal', 'schedule-template': 'Schedule Template',
 };
 
 export default function PlannerPage() {
@@ -31,7 +31,7 @@ export default function PlannerPage() {
           <button
             key={t}
             className={`sub-tab ${tab === t ? 'active' : ''}`}
-            onClick={() => t === 'meals' ? navigate('/plan/meals') : navigate(t === 'blocks' ? '/plan' : `/plan/${t}`)}
+            onClick={() => navigate(t === 'blocks' ? '/plan' : `/plan/${t}`)}
           >
             {TAB_LABELS[t]}
           </button>

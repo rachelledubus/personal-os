@@ -36,14 +36,17 @@ export async function listWeekPlan(weekStart) {
   const userId = await getUserId();
   const dates = weekDates(weekStart);
   const { data, error } = await supabase
-    .from('meal_plan_items').select('*, foods(*)')
+    .from('meal_plan_items').select('*, foods(*), recipes(*)')
     .eq('user_id', userId).in('plan_date', dates);
   if (error) throw error;
 
   const byDate = {};
   dates.forEach(d => (byDate[d] = { breakfast: [], lunch: [], dinner: [], snacks: [] }));
   (data || []).forEach(item => {
-    if (byDate[item.plan_date]?.[item.meal_type]) {
+    if (!byDate[item.plan_date]?.[item.meal_type]) return;
+    if (item.recipe_id && item.recipes) {
+      byDate[item.plan_date][item.meal_type].push({ name: `${item.recipes.name} (recipe)`, servings: item.servings, planId: item.id });
+    } else {
       byDate[item.plan_date][item.meal_type].push({ ...item.foods, servings: item.servings, planId: item.id });
     }
   });
@@ -87,8 +90,11 @@ export async function listMealTemplates() {
 export async function applyTemplateToSlot(template, date, mealType) {
   const userId = await getUserId();
   const rows = (template.items || [])
-    .filter(i => i.foodId) // free-text-only items (no matching food row) can't be scheduled, only real foods can
-    .map(i => ({ user_id: userId, plan_date: date, meal_type: mealType, food_id: i.foodId, servings: i.servings || 1 }));
+    .filter(i => i.foodId || i.recipeId) // free-text-only items (no matching food/recipe row) can't be scheduled
+    .map(i => ({
+      user_id: userId, plan_date: date, meal_type: mealType,
+      food_id: i.foodId || null, recipe_id: i.recipeId || null, servings: i.servings || 1,
+    }));
   if (rows.length === 0) return;
   const { error } = await supabase.from('meal_plan_items').insert(rows);
   if (error) throw error;

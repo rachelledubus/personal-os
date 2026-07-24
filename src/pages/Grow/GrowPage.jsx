@@ -28,8 +28,13 @@ import { logActivity } from '../../services/goals.js';
 import { getHabitPatternInsights } from '../../services/habitInsights.js';
 import { suggestInterval, setHabitReminderInterval, setHabitReminderTimes, clearHabitReminder } from '../../services/habitReminders.js';
 import Banner from '../../components/ui/Banner.jsx';
+import MealPlannerPage from '../Plan/MealPlannerPage.jsx';
 
-const TABS = ['habits', 'workouts', 'chores', 'maintenance', 'finance'];
+const TABS = ['habits', 'workouts', 'chores', 'maintenance', 'finance', 'nutrition'];
+// "Habits" -> "Systems": per backlog #8, track the system not the single habit
+// (e.g. "Health Identity System" rather than "Exercise"). Copy-only change —
+// the route key and habits table stay as-is so nothing downstream breaks.
+const TAB_LABELS = { habits: 'Systems', nutrition: 'Nutrition' };
 
 const LIFTING_DAYS = [
   { key: 'A', label: 'Upper Body', weekday: 'Tue' },
@@ -49,7 +54,7 @@ export default function GrowPage() {
       <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
         {TABS.map(t => (
           <button key={t} className={`sub-tab ${tab === t ? 'active' : ''}`} onClick={() => navigate(`/grow/${t}`)}>
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {TAB_LABELS[t] || (t.charAt(0).toUpperCase() + t.slice(1))}
           </button>
         ))}
       </div>
@@ -58,6 +63,7 @@ export default function GrowPage() {
       {tab === 'chores' && <ChoresTab />}
       {tab === 'maintenance' && <MaintenanceTab />}
       {tab === 'finance' && <FinanceTab />}
+      {tab === 'nutrition' && <MealPlannerPage embedded />}
     </div>
   );
 }
@@ -161,8 +167,8 @@ function HabitsTab() {
 
   return (
     <Card>
-      <div className="section-label">Daily habits</div>
-      {habits.length === 0 ? <EmptyState icon="sparkles" title="No habits yet" /> : (
+      <div className="section-label">Daily systems</div>
+      {habits.length === 0 ? <EmptyState icon="sparkles" title="No systems yet" /> : (
         <div className="stack">
           {habits.map(h => (
             <div key={h.id}>

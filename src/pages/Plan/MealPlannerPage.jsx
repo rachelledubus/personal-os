@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
@@ -17,25 +16,20 @@ import {
   listRecipes, addRecipe, deleteRecipe, updateRecipeServings, listIngredients, addIngredient, deleteIngredient,
   scaleIngredients, totalMacrosAtServings, addRecipeToGroceryList,
 } from '../../services/recipes.js';
-import { ZONES as NAV_ZONES } from '../../components/nav/navTargets.js';
 import { listGroceryItems, toggleGroceryItemPurchased, deleteGroceryItem, clearPurchasedGroceryItems } from '../../services/groceryList.js';
 import './MealPlannerPage.css';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snacks'];
-// Was a separate hardcoded list that had already drifted from
-// PlannerPage's own tabs (missing Journal). Derived from navTargets
-// now so there's exactly one place that defines "what tabs does Plan
-// have" — both this page and PlannerPage read the same list.
-const PLAN_TABS = NAV_ZONES.find(z => z.path === '/plan').tabs.map(t => ({ label: t.label, to: t.path }));
 
 function formatFullDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-export default function MealPlannerPage() {
+export default function MealPlannerPage({ embedded = false }) {
   const [viewMode, setViewMode] = useState('day'); // 'day' | 'week'
   const [foods, setFoods] = useState([]);
+  const [recipes, setRecipes] = useState([]);
   const [goals, setGoals] = useState({ calorie_goal: 1835, protein_goal: 150, carb_goal: 185, fat_goal: 55 });
   const [planned, setPlanned] = useState({ breakfast: [], lunch: [], dinner: [], snacks: [] });
   const [actual, setActual] = useState([]);
@@ -51,20 +45,40 @@ export default function MealPlannerPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const [{ data: foodData }, { data: settings }, { data: planData }, { data: logData }] = await Promise.all([
+    const [{ data: foodData }, { data: recipeData }, { data: settings }, { data: planData }, { data: logData }] = await Promise.all([
       supabase.from('foods').select('*').eq('user_id', user.id).order('name'),
+      listRecipes(),
       supabase.from('settings').select('*').eq('user_id', user.id).maybeSingle(),
-      supabase.from('meal_plan_items').select('*, foods(*)').eq('user_id', user.id).eq('plan_date', planDate),
+      supabase.from('meal_plan_items').select('*, foods(*), recipes(*)').eq('user_id', user.id).eq('plan_date', planDate),
       supabase.from('meal_logs').select('*, foods(*)').eq('user_id', user.id).eq('log_date', planDate),
     ]);
 
     setFoods(foodData || []);
+    setRecipes(recipeData || []);
     if (settings) setGoals(settings);
 
+    // Recipe items need per-serving macros computed from their ingredients
+    // (foods already store per-serving macros directly) — cached by
+    // recipe_id since the same recipe can appear more than once in a day.
+    const macroCache = {};
+    async function recipeMacrosPerServing(recipeId) {
+      if (!macroCache[recipeId]) {
+        const ingredients = await listIngredients(recipeId);
+        macroCache[recipeId] = totalMacrosAtServings(ingredients, 1);
+      }
+      return macroCache[recipeId];
+    }
+
     const grouped = { breakfast: [], lunch: [], dinner: [], snacks: [] };
-    (planData || []).forEach(p => {
-      if (grouped[p.meal_type]) grouped[p.meal_type].push({ ...p.foods, servings: p.servings, planId: p.id });
-    });
+    for (const p of planData || []) {
+      if (!grouped[p.meal_type]) continue;
+      if (p.recipe_id && p.recipes) {
+        const macros = await recipeMacrosPerServing(p.recipe_id);
+        grouped[p.meal_type].push({ name: `${p.recipes.name} (recipe)`, servings: p.servings, planId: p.id, isRecipe: true, recipeId: p.recipe_id, ...macros });
+      } else {
+        grouped[p.meal_type].push({ ...p.foods, servings: p.servings, planId: p.id });
+      }
+    }
     setPlanned(grouped);
     setActual(logData || []);
   }
@@ -84,6 +98,14 @@ export default function MealPlannerPage() {
     loadAll();
   }
 
+  async function addRecipeToPlanDay(mealType, recipe) {
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from('meal_plan_items').insert({
+      user_id: user.id, plan_date: planDate, meal_type: mealType, recipe_id: recipe.id, servings: recipe.base_servings || 1,
+    });
+    loadAll();
+  }
+
   async function removeFromPlan(planId) {
     await supabase.from('meal_plan_items').delete().eq('id', planId);
     loadAll();
@@ -92,6 +114,7 @@ export default function MealPlannerPage() {
   async function generateGroceryList() {
     const { data: { user } } = await supabase.auth.getUser();
     for (const item of allPlannedItems) {
+      if (item.isRecipe) continue; // real ingredients come from the recipe's own "Add ingredients to grocery list" action
       const exists = await supabase.from('grocery_items').select('id')
         .eq('user_id', user.id).ilike('name', item.name).maybeSingle();
       if (!exists.data) {
@@ -105,21 +128,16 @@ export default function MealPlannerPage() {
     if (!name) return;
     const { data: { user } } = await supabase.auth.getUser();
     await supabase.from('meal_plan_templates').insert({
-      user_id: user.id, name, items: allPlannedItems.map(i => ({ mealType: i.mealType, foodId: i.id, servings: i.servings })),
+      user_id: user.id, name,
+      items: allPlannedItems.map(i => i.isRecipe
+        ? { recipeId: i.recipeId, servings: i.servings }
+        : { foodId: i.id, servings: i.servings }),
     });
   }
 
   return (
     <div>
-      <div className="page-title">🥗 Meal Planner</div>
-
-      <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
-        {PLAN_TABS.map(t => (
-          <Link key={t.to} to={t.to}>
-            <button className={`sub-tab ${t.to === '/plan/meals' ? 'active' : ''}`}>{t.label}</button>
-          </Link>
-        ))}
-      </div>
+      {!embedded && <div className="page-title">🥗 Meal Planner</div>}
 
       <MealBuilder foods={foods} onFoodsChanged={loadAll} />
       <QuickMealAdd onSaved={loadAll} />
@@ -136,7 +154,7 @@ export default function MealPlannerPage() {
       ) : viewMode === 'recipes' ? (
         <RecipesTab />
       ) : viewMode === 'week' ? (
-        <WeekPlanner foods={foods} />
+        <WeekPlanner foods={foods} recipes={recipes} />
       ) : (
       <>
       <Card>
@@ -180,6 +198,13 @@ export default function MealPlannerPage() {
               <button key={f.id} className="food-quick-add" onClick={() => addToPlan(mt, f)}>+ {f.name}</button>
             ))}
           </div>
+          {recipes.length > 0 && (
+            <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
+              {recipes.slice(0, 6).map(r => (
+                <button key={r.id} className="food-quick-add" onClick={() => addRecipeToPlanDay(mt, r)}>📖 + {r.name}</button>
+              ))}
+            </div>
+          )}
         </Card>
       ))}
 
@@ -223,7 +248,7 @@ export default function MealPlannerPage() {
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function WeekPlanner({ foods }) {
+function WeekPlanner({ foods, recipes }) {
   const [weekStart, setWeekStart] = useState(nextMonday());
   const [byDate, setByDate] = useState(null);
   const [templates, setTemplates] = useState([]);
@@ -241,6 +266,14 @@ function WeekPlanner({ foods }) {
     const { data: { user } } = await supabase.auth.getUser();
     await supabase.from('meal_plan_items').insert({
       user_id: user.id, plan_date: date, meal_type: mealType, food_id: food.id, servings: 1,
+    });
+    refresh();
+  }
+
+  async function addRecipeToSlot(date, mealType, recipe) {
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from('meal_plan_items').insert({
+      user_id: user.id, plan_date: date, meal_type: mealType, recipe_id: recipe.id, servings: recipe.base_servings || 1,
     });
     refresh();
   }
@@ -297,8 +330,10 @@ function WeekPlanner({ foods }) {
             date={date}
             dayPlan={byDate[date]}
             foods={foods}
+            recipes={recipes}
             templates={templates}
             onAdd={addToSlot}
+            onAddRecipe={addRecipeToSlot}
             onApplyTemplate={applyTemplate}
             onRemove={removeItem}
           />
@@ -308,7 +343,7 @@ function WeekPlanner({ foods }) {
   );
 }
 
-function DayCard({ date, dayPlan, foods, templates, onAdd, onApplyTemplate, onRemove }) {
+function DayCard({ date, dayPlan, foods, recipes, templates, onAdd, onAddRecipe, onApplyTemplate, onRemove }) {
   const [expanded, setExpanded] = useState(false);
   const weekday = WEEKDAY_LABELS[new Date(date).getDay()];
   const totalItems = MEAL_TYPES.reduce((s, mt) => s + dayPlan[mt].length, 0);
@@ -336,6 +371,9 @@ function DayCard({ date, dayPlan, foods, templates, onAdd, onApplyTemplate, onRe
               <div className="row" style={{ marginTop: 4, flexWrap: 'wrap', gap: 4 }}>
                 {foods.slice(0, 4).map(f => (
                   <button key={f.id} className="food-quick-add" onClick={() => onAdd(date, mt, f)}>+ {f.name}</button>
+                ))}
+                {(recipes || []).slice(0, 4).map(r => (
+                  <button key={r.id} className="food-quick-add" onClick={() => onAddRecipe(date, mt, r)}>📖 + {r.name}</button>
                 ))}
                 {templates.length > 0 && (
                   <select defaultValue="" onChange={e => { onApplyTemplate(e.target.value, date, mt); e.target.value = ''; }}>

@@ -21,18 +21,18 @@ export const ZONES = [
       { path: '/plan/goals', label: 'Goals & Projects', keywords: 'milestones tasks' },
       { path: '/plan/dream-life', label: 'Dream Life', keywords: 'vision north star ideal' },
       { path: '/plan/journal', label: 'Journal', keywords: 'habits mood energy grid' },
-      { path: '/plan/meals', label: 'Meal Planner', keywords: 'recipes food grocery' },
       { path: '/plan/schedule-template', label: 'Schedule Template', keywords: 'weekly rhythm routine edit' },
     ],
   },
   {
     path: '/grow', label: 'Grow', keywords: 'personal systems',
     tabs: [
-      { path: '/grow', label: 'Habits', keywords: 'systems streaks' },
+      { path: '/grow', label: 'Systems', keywords: 'habits streaks daily' },
       { path: '/grow/workouts', label: 'Workouts', keywords: 'exercise fitness' },
       { path: '/grow/chores', label: 'Chores', keywords: 'cleaning maintenance house' },
       { path: '/grow/maintenance', label: 'Maintenance', keywords: 'home upkeep' },
       { path: '/grow/finance', label: 'Finance', keywords: 'budget envelopes money' },
+      { path: '/grow/nutrition', label: 'Nutrition', keywords: 'meal planner recipes food grocery' },
     ],
   },
   {

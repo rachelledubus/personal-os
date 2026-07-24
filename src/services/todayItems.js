@@ -90,7 +90,7 @@ async function fetchMealItems(userId) {
       title: MEAL_LABEL[mealType],
       context: foodNames || 'Planned',
       done: mealItems.every(i => i.eaten),
-      linkTo: '/plan/meals',
+      linkTo: '/grow/nutrition',
     };
   });
 }

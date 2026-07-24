@@ -17,7 +17,6 @@ import FocusMode from './pages/Today/FocusMode.jsx';
 import ResearchMode from './pages/Today/ResearchMode.jsx';
 
 import PlannerPage from './pages/Plan/PlannerPage.jsx';
-import MealPlannerPage from './pages/Plan/MealPlannerPage.jsx';
 
 import GrowPage from './pages/Grow/GrowPage.jsx';
 
@@ -64,7 +63,7 @@ export default function App() {
 
             <Route path="/plan" element={<PlannerPage />} />
             <Route path="/plan/:tab" element={<PlannerPage />} />
-            <Route path="/plan/meals" element={<MealPlannerPage />} />
+            <Route path="/plan/meals" element={<Navigate to="/grow/nutrition" replace />} />
 
             <Route path="/grow" element={<GrowPage />} />
             <Route path="/grow/:tab" element={<GrowPage />} />
