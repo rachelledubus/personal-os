@@ -28,13 +28,17 @@ async function getUserId() {
  *  within that window. That's what catches a Sphere contact nobody's
  *  touched in 200 days instead of it staying silently invisible. */
 export function computeStatus(contact, cadenceDays = {}) {
+  // Cadence check always applies, regardless of whether an explicit
+  // date is set — this is the actual fix. A next_follow_up_date that
+  // was auto-set once (e.g. at creation) and never acted on shouldn't
+  // be able to mask a relationship that's gone genuinely stale by
+  // last_contact_date. Overdue-by-neglect always wins.
+  const standardKey = standardKeyForContact(contact);
+  const cadence = standardKey ? cadenceDays[standardKey] : null;
+  const anchor = contact.last_contact_date || contact.created_at;
+  if (cadence != null && anchor && daysSince(anchor) > cadence) return 'Overdue';
+
   const explicitDate = contact.next_follow_up_date;
-  if (!explicitDate) {
-    const standardKey = standardKeyForContact(contact);
-    const cadence = standardKey ? cadenceDays[standardKey] : null;
-    const anchor = contact.last_contact_date || contact.created_at;
-    if (cadence != null && anchor && daysSince(anchor) > cadence) return 'Overdue';
-  }
   if (!contact.next_action) return 'No Next Action';
   if (!explicitDate) return 'No Date Set';
   const days = daysUntil(explicitDate);

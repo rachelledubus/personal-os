@@ -98,10 +98,10 @@ export default function WeeklyResetModal({ promptType, marker, onClose }) {
             <input value={fields.priority || ''} onChange={e => set('priority', e.target.value)} />
           </label>
           <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>
-            This stays personal — your conversation/follow-up targets for the business live in Business Dashboard.
+            This stays personal — overdue contacts, this week's build, and your business targets live in the Business Weekly Reset.
           </div>
-          <Link to="/business/dashboard" onClick={onClose}>
-            <Button variant="ghost" size="sm" style={{ marginTop: 4 }}>Set this week's Business targets →</Button>
+          <Link to="/business/weekly-reset" onClick={onClose}>
+            <Button variant="ghost" size="sm" style={{ marginTop: 4 }}>Do the Business Weekly Reset →</Button>
           </Link>
         </div>
       )}

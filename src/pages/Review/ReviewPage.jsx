@@ -55,6 +55,16 @@ export default function ReviewPage() {
         <Card>
           <div className="row-between">
             <div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>🧭 Business Weekly Reset</div>
+              <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Overdue contacts, this week's build, and your targets — start of week.</div>
+            </div>
+            <Link to="/business/weekly-reset"><Button size="sm" variant="ghost">Open →</Button></Link>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="row-between">
+            <div>
               <div style={{ fontWeight: 700, fontSize: 15 }}>💼 Business Weekly Reflection</div>
               <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>What worked, what didn't, what's next — for the business specifically.</div>
             </div>

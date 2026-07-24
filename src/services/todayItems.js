@@ -263,7 +263,7 @@ async function fetchNudgeItems(userId) {
       title: `You have ${overdueCount} overdue Business task${overdueCount === 1 ? '' : 's'}`,
       context: 'Overdue for follow-up — see who in Business Dashboard',
       done: false,
-      linkTo: '/business/dashboard',
+      linkTo: '/business/weekly-reset',
     });
   }
 
