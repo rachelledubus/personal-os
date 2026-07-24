@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabaseClient.js';
 import { todayStr } from '../../utils/date.js';
 import { sumMacros, remainingMacros, suggestFoods, pctOfGoal } from '../../utils/macros.js';
 import {
-  SLOTS, listFoodsBySlot, tagFoodSlot, sumSelectionMacros, comboName, addComboToGroceryList, saveComboAsTemplate,
+  SLOTS, listFoodsBySlot, tagFoodSlot, sumSelectionMacros, comboName, addComboToGroceryList, saveComboAsRecipe,
   seedStarterFoodsIfEmpty, estimateFoodCalories, saveQuickMealAsFood,
 } from '../../services/mealBuilder.js';
 import {
@@ -45,13 +45,16 @@ export default function MealPlannerPage({ embedded = false }) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const [{ data: foodData }, { data: recipeData }, { data: settings }, { data: planData }, { data: logData }] = await Promise.all([
+    const [{ data: foodData }, { data: settings }, { data: planData }, { data: logData }] = await Promise.all([
       supabase.from('foods').select('*').eq('user_id', user.id).order('name'),
-      listRecipes(),
       supabase.from('settings').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('meal_plan_items').select('*, foods(*), recipes(*)').eq('user_id', user.id).eq('plan_date', planDate),
       supabase.from('meal_logs').select('*, foods(*)').eq('user_id', user.id).eq('log_date', planDate),
     ]);
+    // listRecipes() resolves to a plain array (not {data,error} like the
+    // raw supabase calls above), so it's fetched separately rather than
+    // destructured out of the Promise.all with the same pattern.
+    const recipeData = await listRecipes();
 
     setFoods(foodData || []);
     setRecipes(recipeData || []);
@@ -198,12 +201,14 @@ export default function MealPlannerPage({ embedded = false }) {
               <button key={f.id} className="food-quick-add" onClick={() => addToPlan(mt, f)}>+ {f.name}</button>
             ))}
           </div>
-          {recipes.length > 0 && (
+          {recipes.length > 0 ? (
             <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
               {recipes.slice(0, 6).map(r => (
                 <button key={r.id} className="food-quick-add" onClick={() => addRecipeToPlanDay(mt, r)}>📖 + {r.name}</button>
               ))}
             </div>
+          ) : (
+            <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>No recipes yet — add one in the Recipes tab to plan it into meals.</div>
           )}
         </Card>
       ))}
@@ -393,9 +398,13 @@ function DayCard({ date, dayPlan, foods, recipes, templates, onAdd, onAddRecipe,
 function MealBuilder({ foods, onFoodsChanged }) {
   const [bySlot, setBySlot] = useState(null);
   const [selection, setSelection] = useState({});
+  const [quantities, setQuantities] = useState({}); // { [slotKey]: { amount, unit } }
+  const [extraIngredients, setExtraIngredients] = useState([]); // [{ name, amount, unit }]
+  const [newExtra, setNewExtra] = useState({ name: '', amount: '', unit: '' });
   const [saveName, setSaveName] = useState('');
   const [managingSlots, setManagingSlots] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => { refreshSlots(); }, [foods]);
 
@@ -419,15 +428,37 @@ function MealBuilder({ foods, onFoodsChanged }) {
     setSelection(next);
   }
 
+  function handleQuantityChange(slotKey, field, value) {
+    setQuantities(prev => ({ ...prev, [slotKey]: { ...prev[slotKey], [field]: value } }));
+  }
+
+  function addExtraIngredient() {
+    if (!newExtra.name.trim()) return;
+    setExtraIngredients(prev => [...prev, newExtra]);
+    setNewExtra({ name: '', amount: '', unit: '' });
+  }
+
+  function removeExtraIngredient(index) {
+    setExtraIngredients(prev => prev.filter((_, i) => i !== index));
+  }
+
   async function handleAddToGrocery() {
     await addComboToGroceryList(selection);
   }
 
   async function handleSave() {
     if (!saveName.trim()) return;
-    await saveComboAsTemplate(saveName.trim(), selection);
+    try {
+      await saveComboAsRecipe(saveName.trim(), selection, quantities, extraIngredients);
+    } catch (err) {
+      setSaveError(err.message || String(err));
+      return;
+    }
+    setSaveError(null);
     setSaveName('');
+    setExtraIngredients([]);
     setSaved(true);
+    onFoodsChanged?.(); // refreshes the parent's recipe list too, so the new recipe shows up immediately in quick-add
     setTimeout(() => setSaved(false), 1200);
   }
 
@@ -473,8 +504,45 @@ function MealBuilder({ foods, onFoodsChanged }) {
                 style={{ width: '100%' }}
               />
             )}
+            {selection[s.key] && (
+              <div className="row" style={{ marginTop: 4, gap: 4 }}>
+                <input
+                  type="number" placeholder="Qty" value={quantities[s.key]?.amount ?? ''}
+                  onChange={e => handleQuantityChange(s.key, 'amount', e.target.value)}
+                  style={{ width: 56, fontSize: 12 }}
+                />
+                <input
+                  placeholder="Unit (tbsp, cup...)" value={quantities[s.key]?.unit ?? ''}
+                  onChange={e => handleQuantityChange(s.key, 'unit', e.target.value)}
+                  style={{ flex: 1, fontSize: 12 }}
+                />
+              </div>
+            )}
           </div>
         ))}
+      </div>
+
+      <div style={{ marginTop: 'var(--space-3)' }}>
+        <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', marginBottom: 4 }}>Extra ingredients (optional)</div>
+        {extraIngredients.length > 0 && (
+          <div className="stack" style={{ gap: 4, marginBottom: 'var(--space-2)' }}>
+            {extraIngredients.map((ing, i) => (
+              <div key={i} className="row-between" style={{ fontSize: 13 }}>
+                <span>{ing.name} <span className="faint">{ing.amount} {ing.unit}</span></span>
+                <button className="row-remove-btn" onClick={() => removeExtraIngredient(i)}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="row" style={{ flexWrap: 'wrap', gap: 4 }}>
+          <input placeholder="Ingredient name" value={newExtra.name} onChange={e => setNewExtra(n => ({ ...n, name: e.target.value }))} style={{ flex: 2, minWidth: 120 }} />
+          <input type="number" placeholder="Qty" value={newExtra.amount} onChange={e => setNewExtra(n => ({ ...n, amount: e.target.value }))} style={{ width: 56 }} />
+          <input placeholder="Unit" value={newExtra.unit} onChange={e => setNewExtra(n => ({ ...n, unit: e.target.value }))} style={{ width: 90 }} />
+          <Button size="sm" variant="ghost" onClick={addExtraIngredient}>+ Add ingredient</Button>
+        </div>
+        <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+          Macros for extra ingredients default to 0 — edit them precisely from the Recipes tab after saving, if needed.
+        </div>
       </div>
 
       {name && <div style={{ marginTop: 'var(--space-3)', fontWeight: 700 }}>{name}</div>}
@@ -495,9 +563,10 @@ function MealBuilder({ foods, onFoodsChanged }) {
       </div>
 
       <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
-        <input placeholder="Name this meal to save it (e.g. Weeknight bowl)" value={saveName} onChange={e => setSaveName(e.target.value)} style={{ flex: 1 }} />
-        <Button size="sm" onClick={handleSave} disabled={!name}>{saved ? 'Saved ✓' : 'Save this meal'}</Button>
+        <input placeholder="Name this recipe (e.g. Weeknight bowl)" value={saveName} onChange={e => setSaveName(e.target.value)} style={{ flex: 1 }} />
+        <Button size="sm" onClick={handleSave} disabled={!name}>{saved ? 'Saved ✓' : 'Save as Recipe'}</Button>
       </div>
+      {saveError && <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>Couldn't save: {saveError}</div>}
 
       <div style={{ marginTop: 'var(--space-4)' }}>
         <Button size="sm" variant="text" onClick={() => setManagingSlots(!managingSlots)}>
@@ -597,12 +666,21 @@ function QuickMealAdd({ onSaved }) {
 function GroceryListTab() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => { refresh(); }, []);
 
   async function refresh() {
     setLoading(true);
-    setItems(await listGroceryItems());
+    setLoadError(null);
+    try {
+      setItems(await listGroceryItems());
+    } catch (err) {
+      // Most likely cause: v2_grocery_list_display_layer.sql hasn't been
+      // run yet (purchased/created_at columns missing) — surfaced instead
+      // of failing silently and leaving this tab permanently blank.
+      setLoadError(err.message || String(err));
+    }
     setLoading(false);
   }
 
@@ -617,6 +695,17 @@ function GroceryListTab() {
   }
 
   if (loading) return null;
+  if (loadError) {
+    return (
+      <Card>
+        <div className="section-label">Grocery List</div>
+        <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)', color: 'var(--danger)' }}>
+          Couldn't load the grocery list: {loadError}
+          <br />If this mentions a missing column, the v2_grocery_list_display_layer.sql migration likely hasn't been run yet.
+        </div>
+      </Card>
+    );
+  }
 
   const needed = items.filter(i => !i.purchased);
   const purchased = items.filter(i => i.purchased);

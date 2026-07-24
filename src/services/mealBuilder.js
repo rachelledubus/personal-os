@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient.js';
+import { addRecipe, addIngredient } from './recipes.js';
 
 // ============================================================
 // MEAL BUILDER
@@ -114,15 +115,51 @@ export async function addComboToGroceryList(selection) {
   }
 }
 
-export async function saveComboAsTemplate(name, selection) {
-  const userId = await getUserId();
-  const items = SLOTS.map(s => {
+/** Saves the current slot selection (+ any freeform extra ingredients)
+ *  as a real recipe — recipe_ingredients rows with real quantity/unit,
+ *  not just a name blob. This is what "Save as Recipe" in the meal
+ *  builder actually calls, folding recipe creation into the builder
+ *  instead of a separate flow.
+ *  quantities: { [slotKey]: { amount, unit } } — amount defaults to 1,
+ *  which acts as a straight multiplier on that food's stored macros
+ *  (a food's macros already represent "1 of it" as named, e.g.
+ *  "Olive oil (1 tbsp)"). extraIngredients: [{ name, amount, unit }],
+ *  macros default to 0 since there's no food record backing them —
+ *  editable afterward from the Recipes tab like any other ingredient. */
+export async function saveComboAsRecipe(name, selection, quantities = {}, extraIngredients = [], servings = 1) {
+  const recipe = await addRecipe(name, servings);
+
+  for (const s of SLOTS) {
     const v = selection[s.key];
-    if (!v) return null;
-    return typeof v === 'object' ? { slot: s.key, foodId: v.id, name: v.name } : { slot: s.key, name: v };
-  }).filter(Boolean);
-  const { error } = await supabase.from('meal_plan_templates').insert({ user_id: userId, name, items });
-  if (error) throw error;
+    if (!v) continue;
+    const q = quantities[s.key] || {};
+    const amount = Number(q.amount) || 1;
+    const isFood = typeof v === 'object';
+    await addIngredient(recipe.id, {
+      name: isFood ? v.name : v,
+      quantity_per_serving: amount,
+      unit: q.unit || '',
+      calories_per_serving: isFood ? (v.calories || 0) * amount : 0,
+      protein_per_serving: isFood ? (v.protein || 0) * amount : 0,
+      carbs_per_serving: isFood ? (v.carbs || 0) * amount : 0,
+      fat_per_serving: isFood ? (v.fat || 0) * amount : 0,
+    });
+  }
+
+  for (const ing of extraIngredients) {
+    if (!ing.name?.trim()) continue;
+    await addIngredient(recipe.id, {
+      name: ing.name.trim(),
+      quantity_per_serving: Number(ing.amount) || 1,
+      unit: ing.unit || '',
+      calories_per_serving: Number(ing.calories) || 0,
+      protein_per_serving: Number(ing.protein) || 0,
+      carbs_per_serving: Number(ing.carbs) || 0,
+      fat_per_serving: Number(ing.fat) || 0,
+    });
+  }
+
+  return recipe;
 }
 
 // ---------- Quick meals / packaged foods (AI-estimated) ----------

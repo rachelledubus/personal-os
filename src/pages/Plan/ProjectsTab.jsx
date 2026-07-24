@@ -50,6 +50,7 @@ export default function ProjectsTab() {
   const [newGoalTimeframe, setNewGoalTimeframe] = useState(null);
   const [newGoalParent, setNewGoalParent] = useState('');
   const [newGoalEnergy, setNewGoalEnergy] = useState(null);
+  const [goalError, setGoalError] = useState(null);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [newProjectGoal, setNewProjectGoal] = useState('');
   const [newProjectVision, setNewProjectVision] = useState('');
@@ -64,10 +65,19 @@ export default function ProjectsTab() {
 
   async function handleAddGoal() {
     if (!newGoalTitle.trim()) return;
-    await addGoal({
-      title: newGoalTitle.trim(), timeframe: newGoalTimeframe,
-      parent_goal_id: newGoalParent || null, energy_impact: newGoalEnergy,
-    });
+    try {
+      await addGoal({
+        title: newGoalTitle.trim(), timeframe: newGoalTimeframe,
+        parent_goal_id: newGoalParent || null, energy_impact: newGoalEnergy,
+      });
+    } catch (err) {
+      // Most likely cause: v2_goals_cascade_and_filter_layer.sql hasn't
+      // been run yet, so timeframe/parent_goal_id/energy_impact don't
+      // exist as real columns. Surfaced instead of failing silently.
+      setGoalError(err.message || String(err));
+      return;
+    }
+    setGoalError(null);
     setNewGoalTitle('');
     setNewGoalTimeframe(null);
     setNewGoalParent('');
@@ -118,6 +128,11 @@ export default function ProjectsTab() {
           <input placeholder="New goal..." value={newGoalTitle} onChange={e => setNewGoalTitle(e.target.value)} />
           <Button size="sm" onClick={handleAddGoal}>+ Add goal</Button>
         </div>
+        {goalError && (
+          <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>
+            Couldn't add goal: {goalError}
+          </div>
+        )}
         <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
           <span className="muted" style={{ fontSize: 11, marginRight: 4 }}>Timeframe (optional):</span>
           {TIMEFRAMES.map(t => (

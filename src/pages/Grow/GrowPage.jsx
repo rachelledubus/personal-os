@@ -78,6 +78,8 @@ function HabitsTab() {
   const [pickingTimesFor, setPickingTimesFor] = useState(null);
   const [draftTimes, setDraftTimes] = useState([]);
   const [newTimeInput, setNewTimeInput] = useState('');
+  const [newSystemName, setNewSystemName] = useState('');
+  const [addError, setAddError] = useState(null);
 
   useEffect(() => { load(); getHabitPatternInsights().then(setInsights); }, []);
 
@@ -103,6 +105,20 @@ function HabitsTab() {
       streakMap[habit.id] = count;
     });
     setStreaks(streakMap);
+  }
+
+  async function handleAddSystem() {
+    const name = newSystemName.trim();
+    if (!name) return;
+    setAddError(null);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from('habits').insert({ user_id: user.id, name, archived: false });
+    if (error) {
+      setAddError(error.message);
+      return;
+    }
+    setNewSystemName('');
+    load();
   }
 
   async function toggle(habitId, checked) {
@@ -220,6 +236,17 @@ function HabitsTab() {
           </div>
         </div>
       )}
+
+      <div className="row" style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-soft, #e2ded4)' }}>
+        <input
+          placeholder="New system (e.g. Health Identity System)..."
+          value={newSystemName}
+          onChange={e => setNewSystemName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleAddSystem(); }}
+        />
+        <Button size="sm" onClick={handleAddSystem}>+ Add system</Button>
+      </div>
+      {addError && <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>Couldn't add: {addError}</div>}
     </Card>
   );
 }

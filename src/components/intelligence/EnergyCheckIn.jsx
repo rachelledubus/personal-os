@@ -16,12 +16,16 @@ export default function EnergyCheckIn({ onReplanned }) {
   const [logId, setLogId] = useState(null);
   const [momentum, setMomentum] = useState({ gain: '', drain: '' });
   const [momentumSaved, setMomentumSaved] = useState(false);
+  const [momentumError, setMomentumError] = useState(null);
 
   async function handleCheckIn(level) {
     setActive(level);
     setBusy(true);
     const row = await logEnergy(level);
     setLogId(row.id);
+    setMomentum({ gain: '', drain: '' }); // fresh row = fresh fields, not last check-in's leftover text
+    setMomentumSaved(false);
+    setMomentumError(null);
     await reassignForEnergyChange();
     setBusy(false);
     onReplanned?.();
@@ -29,9 +33,14 @@ export default function EnergyCheckIn({ onReplanned }) {
 
   async function saveMomentum() {
     if (!logId) return;
-    await logMomentum(logId, momentum.gain, momentum.drain);
-    setMomentumSaved(true);
-    setTimeout(() => setMomentumSaved(false), 1500);
+    try {
+      await logMomentum(logId, momentum.gain, momentum.drain);
+      setMomentumSaved(true);
+      setTimeout(() => setMomentumSaved(false), 1500);
+    } catch (err) {
+      // Most likely cause: v2_joy_tracking_layer.sql hasn't been run yet.
+      setMomentumError(err.message || String(err));
+    }
   }
 
   return (
@@ -65,6 +74,7 @@ export default function EnergyCheckIn({ onReplanned }) {
             onBlur={saveMomentum}
           />
           {momentumSaved && <span className="muted" style={{ fontSize: 11 }}>Saved</span>}
+          {momentumError && <span style={{ fontSize: 11, color: 'var(--danger)' }}>Couldn't save: {momentumError}</span>}
         </div>
       )}
     </div>

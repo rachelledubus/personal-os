@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import {
   listLifeRhythmTemplate, addLifeRhythmBlock, updateLifeRhythmBlock, deleteLifeRhythmBlock,
+  addTransitionStep, removeTransitionStep,
 } from '../../services/lifeRhythm.js';
 
 const DAYS = [
@@ -17,7 +18,8 @@ export default function ScheduleTemplateTab() {
   const [activeDay, setActiveDay] = useState(new Date().getDay());
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [drafts, setDrafts] = useState({}); // { [blockId]: { title, notes } } — local text buffer, saved on blur
+  const [drafts, setDrafts] = useState({}); // { [blockId]: { title, notes, steps } } — local text buffer, saved on blur
+  const [newStepInput, setNewStepInput] = useState({}); // { [blockId]: string }
 
   useEffect(() => { refresh(); }, []);
 
@@ -26,7 +28,7 @@ export default function ScheduleTemplateTab() {
     const data = await listLifeRhythmTemplate();
     setBlocks(data);
     const nextDrafts = {};
-    data.forEach(b => { nextDrafts[b.id] = { title: b.title, notes: b.notes || '' }; });
+    data.forEach(b => { nextDrafts[b.id] = { title: b.title, notes: b.notes || '', steps: [...(b.steps || [])] }; });
     setDrafts(nextDrafts);
     setLoading(false);
   }
@@ -62,6 +64,33 @@ export default function ScheduleTemplateTab() {
     refresh();
   }
 
+  // Step text editing — buffered locally like title/notes, but writes the
+  // whole steps array back on blur (steps are just an array of strings).
+  function handleStepDraft(blockId, index, value) {
+    setDrafts(d => {
+      const steps = [...(d[blockId]?.steps || [])];
+      steps[index] = value;
+      return { ...d, [blockId]: { ...d[blockId], steps } };
+    });
+  }
+  async function saveSteps(block) {
+    const steps = drafts[block.id]?.steps || [];
+    if (JSON.stringify(steps) === JSON.stringify(block.steps || [])) return; // unchanged, skip the write
+    await updateLifeRhythmBlock(block.id, { steps });
+    setBlocks(bs => bs.map(b => (b.id === block.id ? { ...b, steps } : b)));
+  }
+  async function handleAddStep(block) {
+    const label = (newStepInput[block.id] || '').trim();
+    if (!label) return;
+    await addTransitionStep(block.id, label);
+    setNewStepInput(s => ({ ...s, [block.id]: '' }));
+    refresh();
+  }
+  async function handleRemoveStep(block, index) {
+    await removeTransitionStep(block.id, index);
+    refresh();
+  }
+
   if (loading) return null;
 
   const dayBlocks = blocks.filter(b => b.day_of_week === activeDay).sort((a, b) => a.sort_order - b.sort_order);
@@ -70,6 +99,9 @@ export default function ScheduleTemplateTab() {
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
       <p className="muted" style={{ marginTop: -4 }}>
         This is your recurring weekly rhythm — edits here apply to every future occurrence of that day, not just today.
+        <br />
+        <strong>Not the same as Time Blocks:</strong> this edits the repeating pattern itself. Time Blocks (in Plan) shows what actually
+        got generated for a specific date, and is still where you add one-off events (like a dentist appointment) that shouldn't repeat.
       </p>
 
       <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap' }}>
@@ -119,6 +151,33 @@ export default function ScheduleTemplateTab() {
                 onBlur={() => saveDraft(block, 'notes')}
                 style={{ width: '100%', marginTop: 'var(--space-2)', minHeight: 40 }}
               />
+
+              <div style={{ marginTop: 'var(--space-2)' }}>
+                <span className="muted" style={{ fontSize: 11 }}>Checklist (applies to every future occurrence):</span>
+                <div className="stack" style={{ marginTop: 4, gap: 4 }}>
+                  {(drafts[block.id]?.steps || []).map((step, i) => (
+                    <div key={i} className="row" style={{ gap: 4, alignItems: 'center' }}>
+                      <input
+                        value={step}
+                        onChange={e => handleStepDraft(block.id, i, e.target.value)}
+                        onBlur={() => saveSteps(block)}
+                        style={{ flex: 1, fontSize: 13 }}
+                      />
+                      <button className="row-remove-btn" onClick={() => handleRemoveStep(block, i)}>×</button>
+                    </div>
+                  ))}
+                </div>
+                <div className="row" style={{ marginTop: 4, gap: 4 }}>
+                  <input
+                    placeholder="Add a checklist step..."
+                    value={newStepInput[block.id] || ''}
+                    onChange={e => setNewStepInput(s => ({ ...s, [block.id]: e.target.value }))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleAddStep(block); }}
+                    style={{ flex: 1, fontSize: 13 }}
+                  />
+                  <Button size="sm" variant="ghost" onClick={() => handleAddStep(block)}>+ Step</Button>
+                </div>
+              </div>
             </Card>
           ))}
         </div>
