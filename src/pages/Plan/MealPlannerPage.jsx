@@ -17,6 +17,10 @@ import {
   scaleIngredients, totalMacrosAtServings, addRecipeToGroceryList,
 } from '../../services/recipes.js';
 import { listGroceryItems, toggleGroceryItemPurchased, deleteGroceryItem, clearPurchasedGroceryItems } from '../../services/groceryList.js';
+import {
+  listShoppingUnitMappings, addShoppingUnitMapping, deleteShoppingUnitMapping,
+  listKitchenInventory, setInventoryItem, deleteInventoryItem, generateAggregatedGroceryList,
+} from '../../services/groceryAggregation.js';
 import './MealPlannerPage.css';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snacks'];
@@ -150,10 +154,13 @@ export default function MealPlannerPage({ embedded = false }) {
         <button className={`sub-tab ${viewMode === 'week' ? 'active' : ''}`} onClick={() => setViewMode('week')}>Plan the week</button>
         <button className={`sub-tab ${viewMode === 'recipes' ? 'active' : ''}`} onClick={() => setViewMode('recipes')}>Recipes</button>
         <button className={`sub-tab ${viewMode === 'grocery' ? 'active' : ''}`} onClick={() => setViewMode('grocery')}>Grocery List</button>
+        <button className={`sub-tab ${viewMode === 'inventory' ? 'active' : ''}`} onClick={() => setViewMode('inventory')}>Kitchen Inventory</button>
       </div>
 
       {viewMode === 'grocery' ? (
         <GroceryListTab />
+      ) : viewMode === 'inventory' ? (
+        <KitchenInventoryTab />
       ) : viewMode === 'recipes' ? (
         <RecipesTab />
       ) : viewMode === 'week' ? (
@@ -663,12 +670,105 @@ function QuickMealAdd({ onSaved }) {
   );
 }
 
+function KitchenInventoryTab() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [newItem, setNewItem] = useState({ name: '', quantity: '', unit: '' });
+  const [addError, setAddError] = useState(null);
+
+  useEffect(() => { refresh(); }, []);
+
+  async function refresh() {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      setItems(await listKitchenInventory());
+    } catch (err) {
+      // Most likely cause: v2_grocery_aggregation_and_inventory_layer.sql hasn't been run yet.
+      setLoadError(err.message || String(err));
+    }
+    setLoading(false);
+  }
+
+  async function handleAdd() {
+    if (!newItem.name.trim()) return;
+    try {
+      await setInventoryItem(newItem.name, newItem.quantity, newItem.unit);
+    } catch (err) {
+      setAddError(err.message || String(err));
+      return;
+    }
+    setAddError(null);
+    setNewItem({ name: '', quantity: '', unit: '' });
+    refresh();
+  }
+
+  async function handleDelete(id) {
+    await deleteInventoryItem(id);
+    refresh();
+  }
+
+  if (loading) return null;
+  if (loadError) {
+    return (
+      <Card>
+        <div className="section-label">Kitchen Inventory</div>
+        <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)', color: 'var(--danger)' }}>
+          Couldn't load: {loadError}
+          <br />If this mentions a missing table, the v2_grocery_aggregation_and_inventory_layer.sql migration likely hasn't been run yet.
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <div className="section-label">Kitchen Inventory</div>
+      <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+        What you already have on hand. "Generate list (with quantities)" on the Grocery List tab subtracts these amounts
+        before adding to the shopping list — so a full bag of flour means it won't ask you to buy more until it's gone.
+      </p>
+
+      {items.length === 0 ? (
+        <EmptyState icon="leaf" title="Nothing recorded yet" subtitle="Add what's currently in your kitchen below." />
+      ) : (
+        <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 4 }}>
+          {items.map(item => (
+            <div key={item.id} className="row-between" style={{ fontSize: 13 }}>
+              <span>{item.ingredient_name} <span className="faint">{item.quantity} {item.unit}</span></span>
+              <button className="row-remove-btn" onClick={() => handleDelete(item.id)}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 4 }}>
+        <input placeholder="Ingredient (e.g. Flour)" value={newItem.name} onChange={e => setNewItem(n => ({ ...n, name: e.target.value }))} style={{ flex: 2, minWidth: 120 }} />
+        <input type="number" placeholder="Qty" value={newItem.quantity} onChange={e => setNewItem(n => ({ ...n, quantity: e.target.value }))} style={{ width: 60 }} />
+        <input placeholder="Unit" value={newItem.unit} onChange={e => setNewItem(n => ({ ...n, unit: e.target.value }))} style={{ width: 90 }} />
+        <Button size="sm" onClick={handleAdd}>+ Add / update</Button>
+      </div>
+      {addError && <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>Couldn't save: {addError}</div>}
+    </Card>
+  );
+}
+
 function GroceryListTab() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [weekStart, setWeekStart] = useState(nextMonday());
+  const [generating, setGenerating] = useState(false);
+  const [genStatus, setGenStatus] = useState(null);
+  const [genError, setGenError] = useState(null);
+  const [showMappings, setShowMappings] = useState(false);
+  const [mappings, setMappings] = useState([]);
+  const [newMapping, setNewMapping] = useState({ ingredient_name: '', qty_per_shopping_unit: '', shopping_unit_label: '' });
+  const [mappingError, setMappingError] = useState(null);
 
   useEffect(() => { refresh(); }, []);
+  useEffect(() => { if (showMappings) loadMappings(); }, [showMappings]);
 
   async function refresh() {
     setLoading(true);
@@ -682,6 +782,58 @@ function GroceryListTab() {
       setLoadError(err.message || String(err));
     }
     setLoading(false);
+  }
+
+  function shiftWeek(days) {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + days);
+    setWeekStart(d.toISOString().slice(0, 10));
+  }
+
+  async function handleGenerateAggregated() {
+    setGenerating(true);
+    setGenError(null);
+    try {
+      const result = await generateAggregatedGroceryList(weekStart);
+      setGenStatus(`Added/updated ${result.added} ingredient${result.added === 1 ? '' : 's'} with real quantities` +
+        (result.skippedHaveEnough > 0 ? ` (${result.skippedHaveEnough} already covered by what's on hand).` : '.'));
+      refresh();
+    } catch (err) {
+      // Most likely cause: v2_grocery_aggregation_and_inventory_layer.sql hasn't been run yet.
+      setGenError(err.message || String(err));
+    }
+    setGenerating(false);
+    setTimeout(() => setGenStatus(null), 5000);
+  }
+
+  async function loadMappings() {
+    try {
+      setMappings(await listShoppingUnitMappings());
+    } catch (err) {
+      setMappingError(err.message || String(err));
+    }
+  }
+
+  async function handleAddMapping() {
+    if (!newMapping.ingredient_name.trim() || !newMapping.shopping_unit_label.trim()) return;
+    try {
+      await addShoppingUnitMapping({
+        ingredient_name: newMapping.ingredient_name.trim(),
+        qty_per_shopping_unit: Number(newMapping.qty_per_shopping_unit) || 1,
+        shopping_unit_label: newMapping.shopping_unit_label.trim(),
+      });
+    } catch (err) {
+      setMappingError(err.message || String(err));
+      return;
+    }
+    setMappingError(null);
+    setNewMapping({ ingredient_name: '', qty_per_shopping_unit: '', shopping_unit_label: '' });
+    loadMappings();
+  }
+
+  async function handleDeleteMapping(id) {
+    await deleteShoppingUnitMapping(id);
+    loadMappings();
   }
 
   async function handleToggle(item) {
@@ -717,6 +869,19 @@ function GroceryListTab() {
         {purchased.length > 0 && <Button size="sm" variant="text" onClick={handleClearPurchased}>Clear checked ({purchased.length})</Button>}
       </div>
 
+      <div className="row-between" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
+          <Button size="sm" variant="ghost" onClick={() => shiftWeek(-7)}>← </Button>
+          <span className="muted" style={{ fontSize: 12 }}>Week of {weekStart}</span>
+          <Button size="sm" variant="ghost" onClick={() => shiftWeek(7)}>→</Button>
+        </div>
+        <Button size="sm" variant="primary" onClick={handleGenerateAggregated} disabled={generating}>
+          {generating ? 'Calculating…' : 'Generate list (with quantities)'}
+        </Button>
+      </div>
+      {genStatus && <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{genStatus}</div>}
+      {genError && <div className="muted" style={{ fontSize: 12, marginTop: 4, color: 'var(--danger)' }}>Couldn't generate: {genError}</div>}
+
       {items.length === 0 ? (
         <EmptyState icon="leaf" title="Nothing on your list yet" subtitle="Use 'Generate grocery list' from Plan a day/week, or 'Add to grocery list' from a recipe." />
       ) : (
@@ -725,6 +890,7 @@ function GroceryListTab() {
             <label key={item.id} className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
               <input type="checkbox" checked={false} onChange={() => handleToggle(item)} />
               <span>{item.name}</span>
+              {item.total_quantity != null && <span className="faint">× {item.total_quantity} {item.unit}</span>}
               <span className="muted" style={{ fontSize: 11 }}>{item.category}</span>
               <button className="row-remove-btn" onClick={() => deleteGroceryItem(item.id).then(refresh)}>×</button>
             </label>
@@ -742,6 +908,40 @@ function GroceryListTab() {
           )}
         </div>
       )}
+
+      <div style={{ marginTop: 'var(--space-4)' }}>
+        <Button size="sm" variant="text" onClick={() => setShowMappings(!showMappings)}>
+          {showMappings ? 'Hide' : 'Manage'} shopping-unit conversions
+        </Button>
+        {showMappings && (
+          <div style={{ marginTop: 'var(--space-2)' }}>
+            <p className="muted" style={{ fontSize: 11 }}>
+              Define how a recipe quantity converts to what you actually buy — e.g. "4 cups flour" per "1 bag (5lb)."
+              Ingredients without a mapping just show their raw recipe quantity on the list.
+            </p>
+            {mappingError && <div className="muted" style={{ fontSize: 11, color: 'var(--danger)' }}>{mappingError}</div>}
+            {mappings.length > 0 && (
+              <div className="stack" style={{ gap: 4, marginTop: 'var(--space-2)' }}>
+                {mappings.map(m => (
+                  <div key={m.id} className="row-between" style={{ fontSize: 13 }}>
+                    <span>{m.ingredient_name}: {m.qty_per_shopping_unit} → 1 {m.shopping_unit_label}</span>
+                    <button className="row-remove-btn" onClick={() => handleDeleteMapping(m.id)}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
+              <input placeholder="Ingredient (e.g. Flour)" value={newMapping.ingredient_name}
+                onChange={e => setNewMapping(m => ({ ...m, ingredient_name: e.target.value }))} style={{ flex: 2, minWidth: 120 }} />
+              <input type="number" placeholder="Qty" value={newMapping.qty_per_shopping_unit}
+                onChange={e => setNewMapping(m => ({ ...m, qty_per_shopping_unit: e.target.value }))} style={{ width: 60 }} />
+              <input placeholder="= 1 shopping unit (e.g. bag)" value={newMapping.shopping_unit_label}
+                onChange={e => setNewMapping(m => ({ ...m, shopping_unit_label: e.target.value }))} style={{ flex: 2, minWidth: 140 }} />
+              <Button size="sm" variant="ghost" onClick={handleAddMapping}>+ Add</Button>
+            </div>
+          </div>
+        )}
+      </div>
     </Card>
   );
 }

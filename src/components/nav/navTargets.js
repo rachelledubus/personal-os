@@ -22,6 +22,7 @@ export const ZONES = [
       { path: '/plan/dream-life', label: 'Dream Life', keywords: 'vision north star ideal' },
       { path: '/plan/journal', label: 'Journal', keywords: 'habits mood energy grid' },
       { path: '/plan/schedule-template', label: 'Schedule Template', keywords: 'weekly rhythm routine edit' },
+      { path: '/plan/beliefs', label: 'Belief Tracker', keywords: 'limiting mindset situation evidence' },
     ],
   },
   {

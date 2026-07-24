@@ -10,11 +10,12 @@ import ProjectsTab from './ProjectsTab.jsx';
 import JournalTab from './JournalTab.jsx';
 import DreamLifeTab from './DreamLifeTab.jsx';
 import ScheduleTemplateTab from './ScheduleTemplateTab.jsx';
+import BeliefTrackerTab from './BeliefTrackerTab.jsx';
 
-const TABS = ['blocks', 'goals', 'dream-life', 'journal', 'schedule-template'];
+const TABS = ['blocks', 'goals', 'dream-life', 'journal', 'schedule-template', 'beliefs'];
 const TAB_LABELS = {
   blocks: 'Time Blocks', goals: 'Goals & Projects', 'dream-life': 'Dream Life',
-  journal: 'Journal', 'schedule-template': 'Schedule Template',
+  journal: 'Journal', 'schedule-template': 'Schedule Template', beliefs: 'Belief Tracker',
 };
 
 export default function PlannerPage() {
@@ -43,6 +44,7 @@ export default function PlannerPage() {
       {tab === 'dream-life' && <DreamLifeTab />}
       {tab === 'journal' && <JournalTab />}
       {tab === 'schedule-template' && <ScheduleTemplateTab />}
+      {tab === 'beliefs' && <BeliefTrackerTab />}
     </div>
   );
 }
