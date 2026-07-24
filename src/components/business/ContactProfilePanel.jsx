@@ -140,6 +140,33 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
           <span style={{ fontSize: 12, fontWeight: 700, color: STATUS_TONE[contact.status] }}>{contact.status}</span>
         </div>
 
+        {/* ---------- Contact info ---------- */}
+        <div>
+          <div className="row-between">
+            <div className="section-label" style={{ fontSize: 12 }}>Contact info</div>
+            <Button size="sm" variant="text" onClick={() => setEditingContactInfo(!editingContactInfo)}>{editingContactInfo ? 'Cancel' : 'Edit'}</Button>
+          </div>
+          {editingContactInfo ? (
+            <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+              <input placeholder="Phone" value={contactInfoForm.phone} onChange={e => setContactInfoForm({ ...contactInfoForm, phone: e.target.value })} />
+              <input placeholder="Email" value={contactInfoForm.email} onChange={e => setContactInfoForm({ ...contactInfoForm, email: e.target.value })} />
+              <input placeholder="Organization" value={contactInfoForm.organization} onChange={e => setContactInfoForm({ ...contactInfoForm, organization: e.target.value })} />
+              <input placeholder="How we connected" value={contactInfoForm.how_we_connected} onChange={e => setContactInfoForm({ ...contactInfoForm, how_we_connected: e.target.value })} />
+              <div><Button size="sm" onClick={handleSaveContactInfo}>Save</Button></div>
+            </div>
+          ) : (
+            <div className="stack" style={{ marginTop: 4, fontSize: 13, gap: 4 }}>
+              {contact.phone && <div>{contact.phone}</div>}
+              {contact.email && <div>{contact.email}</div>}
+              {contact.organization && <div className="muted">{contact.organization}</div>}
+              {contact.how_we_connected && <div className="muted">Connected via: {contact.how_we_connected}</div>}
+              {!contact.phone && !contact.email && !contact.organization && !contact.how_we_connected && (
+                <span className="muted">Nothing recorded yet.</span>
+              )}
+            </div>
+          )}
+        </div>
+
         {isPipelineCategory && (
           <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap' }}>
             <select value={contact.lead_stage || ''} onChange={e => applyField({ lead_stage: e.target.value || null })}>
@@ -156,24 +183,6 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
             </select>
           </div>
         )}
-
-        <div className="row" style={{ gap: 'var(--space-2)' }}>
-          <div style={{ flex: 1 }}>
-            <div className="section-label" style={{ fontSize: 11 }}>Relationship tier</div>
-            <select style={{ marginTop: 4, width: '100%' }} value={contact.relationship_tier || ''} onChange={e => applyField({ relationship_tier: e.target.value || null })}>
-              <option value="">No tier set</option>
-              {TIERS.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div style={{ flex: 1 }}>
-            <div className="section-label" style={{ fontSize: 11 }}>Prefers</div>
-            <select style={{ marginTop: 4, width: '100%' }} value={contact.preferred_contact_method || 'text'} onChange={e => applyField({ preferred_contact_method: e.target.value })}>
-              <option value="text">Text</option>
-              <option value="email">Email</option>
-              <option value="call_scheduled">Scheduled calls only</option>
-            </select>
-          </div>
-        </div>
 
         {/* ---------- Follow-up ---------- */}
         <div>
@@ -209,31 +218,22 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
           )}
         </div>
 
-        {/* ---------- Contact info ---------- */}
-        <div>
-          <div className="row-between">
-            <div className="section-label" style={{ fontSize: 12 }}>Contact info</div>
-            <Button size="sm" variant="text" onClick={() => setEditingContactInfo(!editingContactInfo)}>{editingContactInfo ? 'Cancel' : 'Edit'}</Button>
+        <div className="row" style={{ gap: 'var(--space-2)' }}>
+          <div style={{ flex: 1 }}>
+            <div className="section-label" style={{ fontSize: 11 }}>Relationship tier</div>
+            <select style={{ marginTop: 4, width: '100%' }} value={contact.relationship_tier || ''} onChange={e => applyField({ relationship_tier: e.target.value || null })}>
+              <option value="">No tier set</option>
+              {TIERS.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
           </div>
-          {editingContactInfo ? (
-            <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-              <input placeholder="Phone" value={contactInfoForm.phone} onChange={e => setContactInfoForm({ ...contactInfoForm, phone: e.target.value })} />
-              <input placeholder="Email" value={contactInfoForm.email} onChange={e => setContactInfoForm({ ...contactInfoForm, email: e.target.value })} />
-              <input placeholder="Organization" value={contactInfoForm.organization} onChange={e => setContactInfoForm({ ...contactInfoForm, organization: e.target.value })} />
-              <input placeholder="How we connected" value={contactInfoForm.how_we_connected} onChange={e => setContactInfoForm({ ...contactInfoForm, how_we_connected: e.target.value })} />
-              <div><Button size="sm" onClick={handleSaveContactInfo}>Save</Button></div>
-            </div>
-          ) : (
-            <div className="stack" style={{ marginTop: 4, fontSize: 13, gap: 4 }}>
-              {contact.phone && <div>{contact.phone}</div>}
-              {contact.email && <div>{contact.email}</div>}
-              {contact.organization && <div className="muted">{contact.organization}</div>}
-              {contact.how_we_connected && <div className="muted">Connected via: {contact.how_we_connected}</div>}
-              {!contact.phone && !contact.email && !contact.organization && !contact.how_we_connected && (
-                <span className="muted">Nothing recorded yet.</span>
-              )}
-            </div>
-          )}
+          <div style={{ flex: 1 }}>
+            <div className="section-label" style={{ fontSize: 11 }}>Prefers</div>
+            <select style={{ marginTop: 4, width: '100%' }} value={contact.preferred_contact_method || 'text'} onChange={e => applyField({ preferred_contact_method: e.target.value })}>
+              <option value="text">Text</option>
+              <option value="email">Email</option>
+              <option value="call_scheduled">Scheduled calls only</option>
+            </select>
+          </div>
         </div>
 
         {/* ---------- Buyer/seller profile ---------- */}
