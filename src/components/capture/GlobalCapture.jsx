@@ -24,11 +24,19 @@ export default function GlobalCapture() {
   const [type, setType] = useState(null);
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   async function handleSave() {
     if (!text.trim()) return;
     setSaving(true);
-    await quickCapture(text, type);
+    setSaveError(null);
+    try {
+      await quickCapture(text, type);
+    } catch (err) {
+      setSaving(false);
+      setSaveError("Couldn't save that — try again.");
+      return;
+    }
     setSaving(false);
     setText('');
     setType(null);
@@ -76,8 +84,8 @@ export default function GlobalCapture() {
             </div>
 
             <div className="row-between" style={{ marginTop: 'var(--space-3)' }}>
-              <div className="muted" style={{ fontSize: 12 }}>
-                {justSaved ? 'Captured ✓' : 'Sorted later in the Inbox'}
+              <div className="muted" style={{ fontSize: 12, color: saveError ? 'var(--danger)' : undefined }}>
+                {saveError || (justSaved ? 'Captured ✓' : 'Sorted later in the Inbox')}
               </div>
               <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving || !text.trim()}>
                 {saving ? 'Saving…' : 'Capture'}

@@ -64,20 +64,21 @@ export function inferStatus(startDate, endDate) {
 /** Re-syncs every dated roadmap item's status to today — call this on
  *  load so a week rolling over doesn't require anyone to remember to
  *  flip a status by hand.
- *  Never downgrades an item that's already 'Done' — this was the bug:
+ *  Never downgrades an item that's already 'Done', and never touches
+ *  one that's been manually set (status_manual) — this was the bug:
  *  a week finished early (all sub-tasks checked off, or checked off
  *  directly in Today's Schedule) would get silently flipped back to
  *  'In Progress' on the next page load, because date-inference alone
  *  doesn't know the difference between "not done yet" and "done
- *  early." Once something's Done, only an explicit action (unchecking
- *  a sub-task, editing status by hand) should move it off that. */
+ *  early." Once something's Done, or you've deliberately set its
+ *  status yourself, only an explicit action should move it off that. */
 export async function syncRoadmapStatuses() {
   const userId = await getUserId();
-  const { data, error } = await supabase.from('roadmap_items').select('id, start_date, end_date, status')
+  const { data, error } = await supabase.from('roadmap_items').select('id, start_date, end_date, status, status_manual')
     .eq('user_id', userId).not('start_date', 'is', null);
   if (error) throw error;
   const updates = (data || [])
-    .filter(item => item.status !== 'Done')
+    .filter(item => item.status !== 'Done' && !item.status_manual)
     .map(item => ({ id: item.id, status: inferStatus(item.start_date, item.end_date) }))
     .filter(u => u.status && u.status !== data.find(d => d.id === u.id).status);
   await Promise.all(updates.map(u => supabase.from('roadmap_items').update({ status: u.status }).eq('id', u.id)));
@@ -86,6 +87,30 @@ export async function syncRoadmapStatuses() {
 export async function updateRoadmapStatus(id, status) {
   const { error } = await supabase.from('roadmap_items').update({ status }).eq('id', id);
   if (error) throw error;
+}
+
+/** Explicitly marks one roadmap item as the one currently being
+ *  worked on — the manual override date-only tracking was missing.
+ *  Only one item is ever "In Progress" at a time (Today's Schedule
+ *  and This Week's Build both assume that), so this also demotes
+ *  whatever else was In Progress, protecting both choices from being
+ *  silently reverted by the next date sync. */
+export async function setRoadmapItemInProgress(id) {
+  const userId = await getUserId();
+  await supabase.from('roadmap_items').update({ status: 'Not Started', status_manual: true })
+    .eq('user_id', userId).eq('status', 'In Progress').neq('id', id);
+  await supabase.from('roadmap_items').update({ status: 'In Progress', status_manual: true }).eq('id', id);
+}
+
+export async function setRoadmapItemStatus(id, status) {
+  await supabase.from('roadmap_items').update({ status, status_manual: true }).eq('id', id);
+}
+
+/** Hands an item back to automatic, date-driven tracking. */
+export async function resetRoadmapItemToAutomatic(id) {
+  const { data: item } = await supabase.from('roadmap_items').select('start_date, end_date').eq('id', id).single();
+  const status = item ? (inferStatus(item.start_date, item.end_date) || 'Not Started') : 'Not Started';
+  await supabase.from('roadmap_items').update({ status, status_manual: false }).eq('id', id);
 }
 
 /** The other half of the fix: sub-task completion now actually drives

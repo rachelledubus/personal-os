@@ -20,6 +20,7 @@ import MealPlannerPage from './pages/Plan/MealPlannerPage.jsx';
 import GrowPage from './pages/Grow/GrowPage.jsx';
 
 import BusinessPage from './pages/Business/BusinessPage.jsx';
+import ContentPiecePage from './pages/Business/ContentPiecePage.jsx';
 import GuidedFlow from './pages/Business/GuidedFlow.jsx';
 
 import LibraryPage from './pages/Library/LibraryPage.jsx';
@@ -65,6 +66,7 @@ export default function App() {
 
             <Route path="/business" element={<BusinessPage />} />
             <Route path="/business/:tab" element={<BusinessPage />} />
+            <Route path="/business/content/:id" element={<ContentPiecePage />} />
             <Route path="/business/flows/:flowKey" element={<GuidedFlow />} />
 
             <Route path="/library" element={<LibraryPage />} />
