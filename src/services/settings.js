@@ -59,7 +59,7 @@ export const CATEGORY_LISTS = {
   },
   contact_timelines: {
     label: 'Pipeline — timeline / urgency',
-    default: ['Now (0-3mo)', 'Soon (3-6mo)', 'Future (6-12mo)', 'Long Term (12mo+)'],
+    default: ['Now (0-3 mo)', 'Soon (3-6 mo)', 'Future (6-12 mo)', 'Long Term (12+ mo)'],
   },
   marketing_activity_categories: {
     label: 'Marketing — activity categories',
