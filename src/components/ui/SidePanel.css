@@ -1,0 +1,31 @@
+.sidepanel-scrim {
+  position: fixed; inset: 0;
+  background: rgba(22, 50, 79, 0.35);
+  display: flex; align-items: stretch; justify-content: flex-end;
+  z-index: 100;
+  animation: sidepanelFadeIn var(--duration-modal) var(--ease-standard);
+}
+
+.sidepanel-panel {
+  background: var(--cream);
+  box-shadow: var(--shadow-modal);
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-5);
+  animation: sidepanelSlideIn var(--duration-modal) var(--ease-standard);
+}
+
+.sidepanel-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: var(--space-4);
+  position: sticky; top: 0; background: var(--cream); padding-bottom: var(--space-2);
+}
+.sidepanel-header h3 { font-size: var(--text-title); font-weight: 800; }
+.sidepanel-close { background: none; border: none; color: var(--ink-soft); padding: 4px; flex-shrink: 0; }
+
+.sidepanel-body { padding-bottom: var(--space-6); }
+
+@keyframes sidepanelFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sidepanelSlideIn { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }

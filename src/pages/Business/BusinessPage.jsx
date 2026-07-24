@@ -11,9 +11,11 @@ import { getCategoryList } from '../../services/settings.js';
 import Banner from '../../components/ui/Banner.jsx';
 import AiSuggestionBox from '../../components/ui/AiSuggestionBox.jsx';
 import {
-  listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, updateContact, deleteContact, requestFollowUpDraft,
-  inferDefaultTier, autoTagUntieredContacts,
+  listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, requestFollowUpDraft,
+  inferDefaultTier, autoTagUntieredContacts, getPipelineHealth, getRelationshipHealth,
 } from '../../services/contacts.js';
+import ContactProfilePanel from '../../components/business/ContactProfilePanel.jsx';
+import { FOLLOWUP_STANDARD_TYPES, getCadenceStandards, setCadenceStandards } from '../../services/followupStandards.js';
 import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals, getWeeklyReview, setWeeklyReview } from '../../services/dailyCheckin.js';
 import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses } from '../../services/timeline.js';
 import { listContentPieces, addContentPiece, advanceStatus, initRepurposeSlots, markRepurposed, requestRepurposeDrafts } from '../../services/contentEngine.js';
@@ -21,7 +23,6 @@ import { listMarketingActivities, addMarketingActivity, updateMarketingActivity,
 import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt } from '../../services/library.js';
 import { listTransactions, addTransaction } from '../../services/transactions.js';
 import { getAutonomyLevel } from '../../services/aiOperator.js';
-import InteractionTimeline from '../../components/business/InteractionTimeline.jsx';
 
 const TABS = ['dashboard', 'pipeline', 'relationships', 'content', 'marketing', 'library', 'clients', 'roadmap'];
 const TAB_LABELS = { dashboard: 'Dashboard', pipeline: 'Pipeline', relationships: 'Relationships', content: 'Content', marketing: 'Marketing', library: 'Library', clients: 'Clients', roadmap: 'Roadmap' };
@@ -75,19 +76,25 @@ function DashboardTab() {
   const [review, setReview] = useState(null);
   const [reviewForm, setReviewForm] = useState({ what_worked: '', what_didnt: '', needs_attention: '', next_week_priorities: '' });
   const [editingReview, setEditingReview] = useState(false);
+  const [pipelineHealth, setPipelineHealth] = useState(null);
+  const [relationshipHealth, setRelationshipHealth] = useState(null);
+  const [cadenceStandards, setCadenceStandardsState] = useState({});
+  const [editingStandards, setEditingStandards] = useState(false);
 
   useEffect(() => { seedMasterTimelineIfEmpty().then(syncRoadmapStatuses).then(refresh); getAutonomyLevel().then(setAutonomy); }, []);
 
   async function refresh() {
-    const [c, wc, t, r, w, ov, h, rv] = await Promise.all([
+    const [c, wc, t, r, w, ov, h, rv, ph, rh, cs] = await Promise.all([
       getTodayCheckin(), getWeekCheckins(), getWeeklyTargets(), getWeeklyRunningTotals(),
       getThisWeekBuild(), listOverdue(), getDatabaseHealth(), getWeeklyReview(),
+      getPipelineHealth(), getRelationshipHealth(), getCadenceStandards(),
     ]);
     setCheckin(c); setWeekCheckins(wc); setTargets(t); setRunning(r);
     setThisWeekBuild(w); setOverdue(ov); setHealth(h);
     if (t) setTargetForm(t);
     setReview(rv);
     if (rv) setReviewForm({ what_worked: rv.what_worked || '', what_didnt: rv.what_didnt || '', needs_attention: rv.needs_attention || '', next_week_priorities: rv.next_week_priorities || '' });
+    setPipelineHealth(ph); setRelationshipHealth(rh); setCadenceStandardsState(cs);
 
     // Autonomy "auto": overdue follow-ups draft themselves, no click
     // needed. This is the actual behavior the setting controls — see
@@ -116,6 +123,12 @@ function DashboardTab() {
   async function handleSaveReview() {
     await setWeeklyReview(reviewForm);
     setEditingReview(false);
+    refresh();
+  }
+
+  async function handleSaveStandards() {
+    await setCadenceStandards(cadenceStandards);
+    setEditingStandards(false);
     refresh();
   }
 
@@ -253,6 +266,72 @@ function DashboardTab() {
           </div>
         </Card>
       )}
+
+      {pipelineHealth && (
+        <Card>
+          <div className="section-label">Pipeline health</div>
+          <div className="row-between" style={{ fontSize: 13, marginTop: 'var(--space-2)' }}>
+            <span>{pipelineHealth.total} active (Lead / Future Client / Active Client)</span>
+            <span className="muted">{pipelineHealth.stalled} stalled</span>
+          </div>
+          <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
+            {Object.entries(pipelineHealth.byCategory).map(([cat, n]) => (
+              <span key={cat} className="muted" style={{ fontSize: 11, background: 'var(--sand)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>{cat}: {n}</span>
+            ))}
+          </div>
+          {Object.keys(pipelineHealth.byStage).length > 0 && (
+            <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
+              {Object.entries(pipelineHealth.byStage).map(([stage, n]) => (
+                <span key={stage} className="muted" style={{ fontSize: 11 }}>{stage}: {n} · </span>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {relationshipHealth && (
+        <Card>
+          <div className="section-label">Relationship health</div>
+          <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
+            {Object.entries(relationshipHealth).map(([tier, h]) => (
+              <div key={tier} className="row-between" style={{ fontSize: 13 }}>
+                <span>{tier.replace(' - ', ' — ')}</span>
+                <span className="muted">
+                  {h.total} total{h.overdue > 0 && ` · ${h.overdue} overdue`}
+                  {h.avgDaysSinceContact != null && ` · avg ${h.avgDaysSinceContact}d since contact`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Follow-up standards</div>
+          <Button size="sm" variant="text" onClick={() => setEditingStandards(!editingStandards)}>{editingStandards ? 'Cancel' : 'Edit'}</Button>
+        </div>
+        <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 6 }}>
+          {FOLLOWUP_STANDARD_TYPES.map(s => (
+            <div key={s.key} className="row-between" style={{ fontSize: 13 }}>
+              <div>
+                <div>{s.label}</div>
+                <div className="muted" style={{ fontSize: 11 }}>{s.appliesTo}</div>
+              </div>
+              {editingStandards ? (
+                <div className="row" style={{ alignItems: 'center', gap: 4 }}>
+                  <input type="number" style={{ width: 60 }} value={cadenceStandards[s.key] ?? ''}
+                    onChange={e => setCadenceStandardsState({ ...cadenceStandards, [s.key]: Number(e.target.value) })} />
+                  <span className="muted" style={{ fontSize: 11 }}>days</span>
+                </div>
+              ) : (
+                <span className="muted">every {cadenceStandards[s.key] ?? '—'} days</span>
+              )}
+            </div>
+          ))}
+          {editingStandards && <div><Button size="sm" onClick={handleSaveStandards}>Save standards</Button></div>}
+        </div>
+      </Card>
     </div>
   );
 }
@@ -274,9 +353,7 @@ function PipelineTab() {
   const [timelines, setTimelines] = useState([]);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '', timeline: '' });
-  const [expandedId, setExpandedId] = useState(null);
-  const [draft, setDraft] = useState(null);
-  const [drafting, setDrafting] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('All');
 
   async function refresh() {
@@ -294,30 +371,6 @@ function PipelineTab() {
     setForm({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '', timeline: '' });
     setAdding(false);
     refresh();
-  }
-
-  async function handleStageChange(contact, stage) {
-    await updateContact(contact.id, { lead_stage: stage || null });
-    refresh();
-  }
-
-  async function handleTimelineChange(contact, timeline) {
-    await updateContact(contact.id, { timeline: timeline || null });
-    refresh();
-  }
-
-  async function handleDelete(contact) {
-    if (!window.confirm(`Delete ${contact.name}? This removes the contact and can't be undone.`)) return;
-    await deleteContact(contact.id);
-    setExpandedId(null);
-    refresh();
-  }
-
-  async function handleDraftFollowUp(contact) {
-    setDrafting(contact.id);
-    const result = await requestFollowUpDraft(contact);
-    setDrafting(null);
-    setDraft(result ? { contactId: contact.id, ...result } : { contactId: contact.id, unavailable: true });
   }
 
   const filtered = filter === 'All' ? contacts : contacts.filter(c => c.category === filter);
@@ -379,65 +432,23 @@ function PipelineTab() {
             <div className="section-label">{cat} · {list.length}</div>
             <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
               {list.map(c => (
-                <div key={c.id} style={{ borderBottom: '1px solid var(--sand)', padding: '8px 0' }}>
-                  <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}>
-                    <div>
-                      <div style={{ fontWeight: 700 }}>
-                        {c.name}{c.organization && <span className="muted" style={{ fontWeight: 400 }}> · {c.organization}</span>}
-                        {c.lead_stage && <span className="muted" style={{ fontWeight: 400 }}> · {c.lead_stage}</span>}
-                      </div>
-                      <div className="muted" style={{ fontSize: 12 }}>{c.next_action || 'No next action set'}</div>
+                <div key={c.id} className="row-between" style={{ borderBottom: '1px solid var(--sand)', padding: '8px 0', cursor: 'pointer' }} onClick={() => setSelectedId(c.id)}>
+                  <div>
+                    <div style={{ fontWeight: 700 }}>
+                      {c.name}{c.organization && <span className="muted" style={{ fontWeight: 400 }}> · {c.organization}</span>}
+                      {c.lead_stage && <span className="muted" style={{ fontWeight: 400 }}> · {c.lead_stage}</span>}
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_TONE[c.status] }}>{c.status}</span>
+                    <div className="muted" style={{ fontSize: 12 }}>{c.next_action || 'No next action set'}</div>
                   </div>
-
-                  {expandedId === c.id && (
-                    <div style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
-                      <div className="muted" style={{ fontSize: 12 }}>
-                        {c.source && `Source: ${c.source} · `}Prefers {c.preferred_contact_method || 'text'}
-                      </div>
-                      {['Lead', 'Future Client'].includes(c.category) && (
-                        <div className="row" style={{ marginTop: 'var(--space-2)', alignItems: 'center', gap: 'var(--space-2)' }}>
-                          <span className="muted" style={{ fontSize: 12 }}>Stage:</span>
-                          <select value={c.lead_stage || ''} onChange={e => handleStageChange(c, e.target.value)}>
-                            <option value="">No stage set</option>
-                            {stages.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                        </div>
-                      )}
-                      {['Lead', 'Future Client'].includes(c.category) && (
-                        <div className="row" style={{ marginTop: 'var(--space-2)', alignItems: 'center', gap: 'var(--space-2)' }}>
-                          <span className="muted" style={{ fontSize: 12 }}>Timeline:</span>
-                          <select value={c.timeline || ''} onChange={e => handleTimelineChange(c, e.target.value)}>
-                            <option value="">Timeline unknown</option>
-                            {timelines.map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                        </div>
-                      )}
-                      {c.goals && <div style={{ fontSize: 13, marginTop: 4 }}><strong>Goals:</strong> {c.goals}</div>}
-                      {c.concerns && <div style={{ fontSize: 13, marginTop: 4 }}><strong>Concerns:</strong> {c.concerns}</div>}
-                      <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
-                        <Link to={`/business/flows/consultation?contact=${c.id}`}><Button size="sm" variant="ghost">Consultation</Button></Link>
-                        <Button size="sm" variant="ghost" onClick={() => handleDraftFollowUp(c)} disabled={drafting === c.id}>
-                          {drafting === c.id ? 'Drafting…' : '✨ Draft follow-up'}
-                        </Button>
-                        <Button size="sm" variant="text" onClick={() => handleDelete(c)}>Delete</Button>
-                      </div>
-                      {draft?.contactId === c.id && (
-                        <AiSuggestionBox unavailable={draft.unavailable} onDismiss={() => setDraft(null)}>
-                          <div style={{ fontSize: 13 }}>{draft.message}</div>
-                          <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draft.channel} · {draft.reasoning}</div>
-                        </AiSuggestionBox>
-                      )}
-                      <InteractionTimeline contact={c} />
-                    </div>
-                  )}
+                  <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_TONE[c.status] }}>{c.status}</span>
                 </div>
               ))}
             </div>
           </Card>
         ))
       )}
+
+      <ContactProfilePanel contactId={selectedId} onClose={() => setSelectedId(null)} onUpdated={refresh} />
     </div>
   );
 }
@@ -458,7 +469,7 @@ function RelationshipsTab() {
   const [byTier, setByTier] = useState({});
   const [untiered, setUntiered] = useState([]);
   const [tagging, setTagging] = useState(false);
-  const [expandedId, setExpandedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
 
   async function refresh() {
     const [t1, t2, t3, all] = await Promise.all([
@@ -496,19 +507,18 @@ function RelationshipsTab() {
           {(byTier[t.key] || []).length === 0 ? <EmptyState icon="sparkles" title="Nobody tagged to this tier yet" /> : (
             <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
               {byTier[t.key].map(c => (
-                <div key={c.id} style={{ borderBottom: '1px solid var(--sand)', padding: '4px 0' }}>
-                  <div className="row-between" style={{ fontSize: 13, cursor: 'pointer', padding: '4px 0' }}
-                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}>
-                    <span>{c.name}</span>
-                    <span className="muted" style={{ fontSize: 11 }}>{c.last_contact_date ? `Last: ${c.last_contact_date}` : 'No contact logged'}</span>
-                  </div>
-                  {expandedId === c.id && <InteractionTimeline contact={c} />}
+                <div key={c.id} className="row-between" style={{ fontSize: 13, cursor: 'pointer', padding: '4px 0', borderBottom: '1px solid var(--sand)' }}
+                  onClick={() => setSelectedId(c.id)}>
+                  <span>{c.name}</span>
+                  <span className="muted" style={{ fontSize: 11 }}>{c.last_contact_date ? `Last: ${c.last_contact_date}` : 'No contact logged'}</span>
                 </div>
               ))}
             </div>
           )}
         </Card>
       ))}
+
+      <ContactProfilePanel contactId={selectedId} onClose={() => setSelectedId(null)} onUpdated={refresh} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { getCustomAiInstructions } from './settings.js';
+import { getCadenceStandards, standardKeyForContact } from './followupStandards.js';
 
 // ============================================================
 // CRM — rebuilt to match System_07_CRM_Database.xlsx field-for-field.
@@ -14,12 +15,29 @@ async function getUserId() {
   return user?.id;
 }
 
-/** Mirrors the spreadsheet's Status column exactly: On Track / Due
- *  Soon / Overdue / No Next Action / No Date Set. */
-export function computeStatus(contact) {
+/** Mirrors the spreadsheet's Status column: On Track / Due Soon /
+ *  Overdue / No Next Action / No Date Set — plus one real change:
+ *  "Both, plus status changes" per the follow-up standards decision.
+ *  A contact with an explicit next_follow_up_date is judged against
+ *  that date exactly as before — unchanged. A contact with NO date
+ *  used to read as "No Next Action"/"No Date Set" forever, even after
+ *  months of silence. Now, if there's no explicit date, it's checked
+ *  against its category's cadence standard (see followupStandards.js)
+ *  first — measured from last contact, or creation if never
+ *  contacted — and only falls through to the old labels if it's still
+ *  within that window. That's what catches a Sphere contact nobody's
+ *  touched in 200 days instead of it staying silently invisible. */
+export function computeStatus(contact, cadenceDays = {}) {
+  const explicitDate = contact.next_follow_up_date;
+  if (!explicitDate) {
+    const standardKey = standardKeyForContact(contact);
+    const cadence = standardKey ? cadenceDays[standardKey] : null;
+    const anchor = contact.last_contact_date || contact.created_at;
+    if (cadence != null && anchor && daysSince(anchor) > cadence) return 'Overdue';
+  }
   if (!contact.next_action) return 'No Next Action';
-  if (!contact.next_follow_up_date) return 'No Date Set';
-  const days = daysUntil(contact.next_follow_up_date);
+  if (!explicitDate) return 'No Date Set';
+  const days = daysUntil(explicitDate);
   if (days < 0) return 'Overdue';
   if (days <= 3) return 'Due Soon';
   return 'On Track';
@@ -31,14 +49,23 @@ export function daysUntil(dateStr) {
   return Math.round(diffMs / 86400000);
 }
 
+/** Days elapsed since a past date (created_at, last_contact_date) —
+ *  the mirror of daysUntil, which is future-facing. */
+export function daysSince(dateStr) {
+  if (!dateStr) return null;
+  const diffMs = new Date(new Date().toISOString().slice(0, 10)) - new Date(String(dateStr).slice(0, 10));
+  return Math.round(diffMs / 86400000);
+}
+
 export async function listContacts(category = null) {
   const userId = await getUserId();
+  const cadence = await getCadenceStandards();
   let query = supabase.from('contacts').select('*').eq('user_id', userId)
     .order('next_follow_up_date', { ascending: true, nullsFirst: false });
   if (category) query = query.eq('category', category);
   const { data, error } = await query;
   if (error) throw error;
-  return (data || []).map(c => ({ ...c, status: computeStatus(c), daysUntilFollowup: daysUntil(c.next_follow_up_date) }));
+  return (data || []).map(c => ({ ...c, status: computeStatus(c, cadence), daysUntilFollowup: daysUntil(c.next_follow_up_date) }));
 }
 
 /** Filtered by relationship tier — this is what replaces having
@@ -46,11 +73,12 @@ export async function listContacts(category = null) {
  *  same contact, just a different lens on it. */
 export async function listByTier(tier) {
   const userId = await getUserId();
+  const cadence = await getCadenceStandards();
   const { data, error } = await supabase.from('contacts').select('*')
     .eq('user_id', userId).eq('relationship_tier', tier)
     .order('next_follow_up_date', { ascending: true, nullsFirst: false });
   if (error) throw error;
-  return (data || []).map(c => ({ ...c, status: computeStatus(c), daysUntilFollowup: daysUntil(c.next_follow_up_date) }));
+  return (data || []).map(c => ({ ...c, status: computeStatus(c, cadence), daysUntilFollowup: daysUntil(c.next_follow_up_date) }));
 }
 
 export async function listOverdue() {
@@ -63,14 +91,32 @@ export async function listOverdue() {
 }
 
 export async function getContact(id) {
+  const cadence = await getCadenceStandards();
   const { data, error } = await supabase.from('contacts').select('*').eq('id', id).single();
   if (error) throw error;
-  return { ...data, status: computeStatus(data), daysUntilFollowup: daysUntil(data.next_follow_up_date) };
+  return { ...data, status: computeStatus(data, cadence), daysUntilFollowup: daysUntil(data.next_follow_up_date) };
 }
 
+/** "Active" half of the follow-up standards decision: if the caller
+ *  didn't set a next_follow_up_date, suggest one from the contact's
+ *  cadence standard so you don't have to calculate it yourself. Never
+ *  overrides a date you did set. */
 export async function addContact(fields) {
   const userId = await getUserId();
-  const { data, error } = await supabase.from('contacts').insert({ ...fields, user_id: userId }).select().single();
+  let toInsert = { ...fields };
+  if (!toInsert.next_follow_up_date) {
+    const standardKey = standardKeyForContact(toInsert);
+    if (standardKey) {
+      const cadence = await getCadenceStandards();
+      const days = cadence[standardKey];
+      if (days != null) {
+        const suggested = new Date();
+        suggested.setDate(suggested.getDate() + days);
+        toInsert.next_follow_up_date = suggested.toISOString().slice(0, 10);
+      }
+    }
+  }
+  const { data, error } = await supabase.from('contacts').insert({ ...toInsert, user_id: userId }).select().single();
   if (error) throw error;
   return data;
 }
@@ -138,6 +184,47 @@ export async function requestFollowUpDraft(contact) {
   } catch {
     return null;
   }
+}
+
+// ---------- Pipeline health — counts, stage breakdown, stalled leads ----------
+export async function getPipelineHealth() {
+  const userId = await getUserId();
+  const cadence = await getCadenceStandards();
+  const { data, error } = await supabase.from('contacts')
+    .select('category, lead_stage, next_action, next_follow_up_date, last_contact_date, created_at')
+    .eq('user_id', userId).in('category', ['Lead', 'Future Client', 'Active Client']);
+  if (error) throw error;
+  const contacts = (data || []).map(c => ({ ...c, status: computeStatus(c, cadence) }));
+  const byCategory = {};
+  contacts.forEach(c => { byCategory[c.category] = (byCategory[c.category] || 0) + 1; });
+  const byStage = {};
+  contacts.filter(c => c.lead_stage).forEach(c => { byStage[c.lead_stage] = (byStage[c.lead_stage] || 0) + 1; });
+  return {
+    total: contacts.length,
+    byCategory,
+    byStage,
+    stalled: contacts.filter(c => c.status === 'Overdue').length,
+  };
+}
+
+// ---------- Relationship health — tier breakdown, on-track vs overdue ----------
+export async function getRelationshipHealth() {
+  const userId = await getUserId();
+  const cadence = await getCadenceStandards();
+  const { data, error } = await supabase.from('contacts')
+    .select('relationship_tier, category, next_action, next_follow_up_date, last_contact_date, created_at')
+    .eq('user_id', userId).not('relationship_tier', 'is', null);
+  if (error) throw error;
+  const contacts = (data || []).map(c => ({ ...c, status: computeStatus(c, cadence) }));
+  const byTier = {};
+  ['Tier 1 - Core', 'Tier 2 - Developing', 'Tier 3 - Strategic'].forEach(tier => {
+    const inTier = contacts.filter(c => c.relationship_tier === tier);
+    const overdue = inTier.filter(c => c.status === 'Overdue').length;
+    const recencies = inTier.map(c => daysSince(c.last_contact_date)).filter(d => d != null);
+    const avgDaysSinceContact = recencies.length ? Math.round(recencies.reduce((a, b) => a + b, 0) / recencies.length) : null;
+    byTier[tier] = { total: inTier.length, overdue, avgDaysSinceContact };
+  });
+  return byTier;
 }
 
 // ---------- Database health — the spreadsheet's own Dashboard sheet, computed live ----------

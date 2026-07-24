@@ -70,7 +70,7 @@ export async function setWeeklyTargets(fields) {
 export async function getWeeklyReview() {
   const userId = await getUserId();
   const monday = mondayOfWeek();
-  const { data, error } = await supabase.from('weekly_reviews').select('*')
+  const { data, error } = await supabase.from('weekly_business_reviews').select('*')
     .eq('user_id', userId).eq('week_start', monday).maybeSingle();
   if (error) throw error;
   return data;
@@ -79,7 +79,7 @@ export async function getWeeklyReview() {
 export async function setWeeklyReview(fields) {
   const userId = await getUserId();
   const monday = mondayOfWeek();
-  const { error } = await supabase.from('weekly_reviews').upsert({
+  const { error } = await supabase.from('weekly_business_reviews').upsert({
     user_id: userId, week_start: monday, ...fields, updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id,week_start' });
   if (error) throw error;
