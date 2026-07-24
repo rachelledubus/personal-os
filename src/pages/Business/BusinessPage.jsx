@@ -17,7 +17,7 @@ import {
 import ContactProfilePanel from '../../components/business/ContactProfilePanel.jsx';
 import { FOLLOWUP_STANDARD_TYPES, getCadenceStandards, setCadenceStandards } from '../../services/followupStandards.js';
 import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals, getWeeklyReview, setWeeklyReview } from '../../services/dailyCheckin.js';
-import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses } from '../../services/timeline.js';
+import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses, syncRoadmapItemFromSubtasks } from '../../services/timeline.js';
 import { listContentPieces, addContentPiece, advanceStatus, initRepurposeSlots, markRepurposed, requestRepurposeDrafts } from '../../services/contentEngine.js';
 import { listMarketingActivities, addMarketingActivity, updateMarketingActivity, completeMarketingActivity, deleteMarketingActivity } from '../../services/marketing.js';
 import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt } from '../../services/library.js';
@@ -1085,6 +1085,7 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
   const [splitPreview, setSplitPreview] = useState(null);
+  const [celebrating, setCelebrating] = useState(false);
 
   useEffect(() => { if (expanded) listMilestones({ roadmapId: item.id }).then(setSubtasks); }, [expanded, item.id]);
 
@@ -1093,6 +1094,17 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
     await addMilestone({ roadmap_item_id: item.id, title: newSubtask.trim(), sort_order: subtasks.length });
     setNewSubtask('');
     setSubtasks(await listMilestones({ roadmapId: item.id }));
+  }
+
+  async function handleToggleSubtask(subtaskId, value) {
+    await toggleMilestone(subtaskId, value);
+    setSubtasks(await listMilestones({ roadmapId: item.id }));
+    const justCompleted = await syncRoadmapItemFromSubtasks(item.id);
+    onLinked(); // refresh the parent list so the header status (Done) shows immediately
+    if (justCompleted) {
+      setCelebrating(true);
+      setTimeout(() => { setCelebrating(false); onToggleExpand(); }, 1500);
+    }
   }
 
   function startEditSubtask(s) {
@@ -1160,7 +1172,15 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
         </div>
       </div>
 
-      {expanded && (
+      {expanded && celebrating && (
+        <div className="completion-celebration">
+          {['🎉', '✨', '🎊', '⭐', '🎉'].map((emoji, i) => (
+            <span key={i} className="confetti-particle" style={{ left: `${20 + i * 15}%`, '--drift': `${(i - 2) * 30}px`, animationDelay: `${i * 60}ms` }}>{emoji}</span>
+          ))}
+          Completed!
+        </div>
+      )}
+      {expanded && !celebrating && (
         <div style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
           {!item.link_to && !pickingLink && <Button size="sm" variant="text" onClick={() => setPickingLink(true)}>+ Link this to a page</Button>}
           {pickingLink && (
@@ -1215,7 +1235,7 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
                 </div>
               ) : (
                 <div key={s.id} className="row-between">
-                  <Checkbox checked={s.completed} onChange={v => toggleMilestone(s.id, v).then(() => listMilestones({ roadmapId: item.id }).then(setSubtasks))} label={s.title} />
+                  <Checkbox checked={s.completed} onChange={v => handleToggleSubtask(s.id, v)} label={s.title} />
                   <div className="row" style={{ gap: 'var(--space-1)' }}>
                     <Button size="sm" variant="text" onClick={() => startEditSubtask(s)}>Edit</Button>
                     <Button size="sm" variant="text" onClick={() => handleDeleteSubtask(s.id)}>Delete</Button>

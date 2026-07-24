@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabaseClient.js';
 import { todayStr } from '../utils/date.js';
 import { listDueSoon, completeMaintenanceItem } from './maintenance.js';
 import { logActivity } from './goals.js';
+import { syncRoadmapItemFromSubtasks } from './timeline.js';
 
 // ============================================================
 // TODAY ITEMS ENGINE (renamed from "Mission Engine")
@@ -187,17 +188,44 @@ async function fetchRoadmapItem(userId) {
   const { data } = await supabase
     .from('roadmap_items').select('*').eq('user_id', userId).eq('status', 'In Progress')
     .limit(1);
-  return (data || []).map(r => ({
-    id: `roadmap-${r.id}`,
+  const items = data || [];
+  if (items.length === 0) return [];
+  const parent = items[0];
+
+  const { data: subtasks } = await supabase
+    .from('milestones').select('*').eq('roadmap_item_id', parent.id).eq('completed', false).order('sort_order');
+
+  // Real sub-tasks exist — surface those individually instead of one
+  // vague "this week's build" blob. Checking one off actually means
+  // something now (see toggleTodayItem's 'milestones' case).
+  if (subtasks && subtasks.length > 0) {
+    return subtasks.map(s => ({
+      id: `milestone-${s.id}`,
+      sourceTable: 'milestones',
+      sourceId: s.id,
+      roadmapItemId: parent.id,
+      track: 'business',
+      icon: 'map',
+      title: s.title,
+      context: `${parent.phase} · Wk ${parent.week_number || ''} · ${parent.title}`,
+      done: false,
+      linkTo: '/business/roadmap',
+    }));
+  }
+
+  // No sub-tasks broken out yet — fall back to the parent item itself,
+  // same as before.
+  return [{
+    id: `roadmap-${parent.id}`,
     sourceTable: 'roadmap_items',
-    sourceId: r.id,
+    sourceId: parent.id,
     track: 'business',
     icon: 'map',
-    title: r.title,
-    context: `${r.phase} · this week's build`,
-    done: r.status === 'Done',
+    title: parent.title,
+    context: `${parent.phase} · this week's build`,
+    done: parent.status === 'Done',
     linkTo: '/business/roadmap',
-  }));
+  }];
 }
 
 async function fetchNudgeItems(userId) {
@@ -343,6 +371,12 @@ export async function toggleTodayItem(item, done) {
     }
     case 'roadmap_items':
       await supabase.from('roadmap_items').update({ status: done ? 'Done' : 'Not Started' }).eq('id', item.sourceId);
+      return;
+    case 'milestones':
+      await supabase.from('milestones').update({
+        completed: done, completed_date: done ? todayStr() : null,
+      }).eq('id', item.sourceId);
+      if (item.roadmapItemId) await syncRoadmapItemFromSubtasks(item.roadmapItemId);
       return;
     case 'custom_missions':
       await supabase.from('custom_missions').update({ done }).eq('id', item.sourceId);

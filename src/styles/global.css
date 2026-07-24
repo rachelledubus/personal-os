@@ -117,3 +117,23 @@ input, textarea, select {
 .reset-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .reset-field span { font-family: var(--font-display); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--sage); }
 .reset-field textarea { min-height: 70px; resize: vertical; }
+
+/* Completion celebration — sub-task checklists hitting 100%. Plain
+   CSS, no confetti library: a handful of emoji particles that pop up
+   and fall away, plus the "Completed!" banner they sit behind. */
+.completion-celebration {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-4) 0; font-family: var(--font-display); font-weight: 800;
+  font-size: var(--text-card-title); color: var(--sage);
+  animation: celebrationFadeIn var(--duration-base) var(--ease-standard);
+}
+.confetti-particle {
+  position: absolute; top: 40%; font-size: 18px; opacity: 0;
+  animation: confettiBurst 1.3s var(--ease-standard) forwards;
+}
+@keyframes celebrationFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes confettiBurst {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--drift, 0px), 70px) rotate(200deg); }
+}

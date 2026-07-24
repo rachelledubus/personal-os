@@ -7,6 +7,7 @@ const TYPE_OPTIONS = [
   { value: null, label: "Not sure yet" },
   { value: 'task', label: 'Task' },
   { value: 'idea', label: 'Idea' },
+  { value: 'backlog', label: 'Backlog idea' },
   { value: 'content_idea', label: 'Content idea' },
   { value: 'buyer_question', label: 'Buyer question' },
   { value: 'note', label: 'Note' },

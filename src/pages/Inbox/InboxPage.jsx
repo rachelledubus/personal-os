@@ -8,6 +8,7 @@ import Banner from '../../components/ui/Banner.jsx';
 import {
   listUnsorted, archiveCapture, requestSuggestion,
   resolveToTask, resolveToNote, resolveToContentIdea, resolveToContact, resolveToMaintenance, resolveToBuyerQuestion,
+  resolveToBacklogIdea,
 } from '../../services/capture.js';
 import { searchContactsByName } from '../../services/contacts.js';
 import './InboxPage.css';
@@ -21,6 +22,7 @@ const RESOLVE_ACTIONS = [
   { key: 'content', label: 'Content idea', fn: resolveToContentIdea, destLabel: 'Business → Content', destLink: '/business/content' },
   { key: 'buyer_question', label: 'Buyer question', fn: resolveToBuyerQuestion, destLabel: 'Business → Content', destLink: '/business/content' },
   { key: 'maintenance', label: 'Reminder', fn: resolveToMaintenance, destLabel: 'Grow → Maintenance', destLink: '/grow/maintenance' },
+  { key: 'backlog', label: 'Backlog idea', fn: resolveToBacklogIdea, destLabel: 'Library → Backlog', destLink: '/library/backlog' },
 ];
 
 export default function InboxPage() {

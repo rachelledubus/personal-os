@@ -35,8 +35,10 @@ export async function addBacklogIdea(idea, category = null) {
   const { data: existing } = await supabase.from('product_backlog_ideas').select('sort_order')
     .eq('user_id', userId).order('sort_order', { ascending: false }).limit(1);
   const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
-  const { error } = await supabase.from('product_backlog_ideas').insert({ user_id: userId, idea, category, sort_order: nextOrder });
+  const { data, error } = await supabase.from('product_backlog_ideas')
+    .insert({ user_id: userId, idea, category, sort_order: nextOrder }).select().single();
   if (error) throw error;
+  return data;
 }
 
 export async function updateBacklogIdea(id, fields) {

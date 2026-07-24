@@ -42,6 +42,7 @@ export default function LibraryPage() {
 // this degrades to an honest empty state instead of a silent crash
 // until that's either created or this tab is merged into Documents.
 function ReferenceTab() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState('');
   const [tableMissing, setTableMissing] = useState(false);
@@ -59,7 +60,10 @@ function ReferenceTab() {
     return (
       <Card>
         <EmptyState icon="leaf" title="Reference library isn't set up yet"
-          subtitle="Your scripts/prompts/CTAs live in Business → Library instead — check there first." />
+          subtitle="Your scripts/prompts/CTAs live in Business → Library instead." />
+        <div style={{ textAlign: 'center', marginTop: 'var(--space-3)' }}>
+          <Button size="sm" onClick={() => navigate('/business/library')}>Go to Business → Library →</Button>
+        </div>
       </Card>
     );
   }
@@ -92,11 +96,13 @@ function DocumentsTab() {
   const [expandedId, setExpandedId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
+  const [tableMissing, setTableMissing] = useState(false);
   const docRefs = useRef({});
 
   async function refresh() {
     const { data: { user } } = await supabase.auth.getUser();
-    const { data } = await supabase.from('bos_documents').select('*').eq('user_id', user.id).order('category');
+    const { data, error } = await supabase.from('bos_documents').select('*').eq('user_id', user.id).order('category');
+    if (error) { setTableMissing(true); return; }
     setDocs(data || []);
   }
   useEffect(() => { refresh(); }, []);
@@ -129,11 +135,20 @@ function DocumentsTab() {
   const byCategory = {};
   filtered.forEach(d => { (byCategory[d.category || 'Uncategorized'] ||= []).push(d); });
 
+  if (tableMissing) {
+    return (
+      <Card>
+        <EmptyState icon="leaf" title="Document library isn't set up yet"
+          subtitle="The bos_documents table doesn't exist in your database yet — nothing's been imported." />
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <div className="section-label">Business manual</div>
       <input placeholder="Search documents..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', margin: '8px 0 16px' }} />
-      {filtered.length === 0 ? <EmptyState icon="coffee" title="Nothing here yet" /> : (
+      {filtered.length === 0 ? <EmptyState icon="coffee" title="No documents imported yet" subtitle="The table exists but is empty." /> : (
         Object.entries(byCategory).map(([cat, items]) => (
           <div key={cat} style={{ marginBottom: 'var(--space-4)' }}>
             <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{cat}</div>

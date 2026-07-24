@@ -63,16 +63,54 @@ export function inferStatus(startDate, endDate) {
 
 /** Re-syncs every dated roadmap item's status to today — call this on
  *  load so a week rolling over doesn't require anyone to remember to
- *  flip a status by hand. */
+ *  flip a status by hand.
+ *  Never downgrades an item that's already 'Done' — this was the bug:
+ *  a week finished early (all sub-tasks checked off, or checked off
+ *  directly in Today's Schedule) would get silently flipped back to
+ *  'In Progress' on the next page load, because date-inference alone
+ *  doesn't know the difference between "not done yet" and "done
+ *  early." Once something's Done, only an explicit action (unchecking
+ *  a sub-task, editing status by hand) should move it off that. */
 export async function syncRoadmapStatuses() {
   const userId = await getUserId();
   const { data, error } = await supabase.from('roadmap_items').select('id, start_date, end_date, status')
     .eq('user_id', userId).not('start_date', 'is', null);
   if (error) throw error;
   const updates = (data || [])
+    .filter(item => item.status !== 'Done')
     .map(item => ({ id: item.id, status: inferStatus(item.start_date, item.end_date) }))
     .filter(u => u.status && u.status !== data.find(d => d.id === u.id).status);
   await Promise.all(updates.map(u => supabase.from('roadmap_items').update({ status: u.status }).eq('id', u.id)));
+}
+
+export async function updateRoadmapStatus(id, status) {
+  const { error } = await supabase.from('roadmap_items').update({ status }).eq('id', id);
+  if (error) throw error;
+}
+
+/** The other half of the fix: sub-task completion now actually drives
+ *  the parent's status instead of doing nothing. Finishing the last
+ *  sub-task marks the parent Done; unchecking one after full
+ *  completion reverts it to whatever the date alone would say, so it
+ *  isn't stuck Done if you realize something wasn't actually finished.
+ *  Returns true if this call just completed the item (so callers —
+ *  the Roadmap tab, Today's Schedule — know when to show the
+ *  completion moment vs. a routine toggle). */
+export async function syncRoadmapItemFromSubtasks(roadmapItemId) {
+  const { data: siblings, error } = await supabase.from('milestones').select('completed').eq('roadmap_item_id', roadmapItemId);
+  if (error) throw error;
+  if (!siblings.length) return false;
+  const allDone = siblings.every(s => s.completed);
+  const { data: item } = await supabase.from('roadmap_items').select('start_date, end_date, status').eq('id', roadmapItemId).single();
+  if (!item) return false;
+  if (allDone && item.status !== 'Done') {
+    await updateRoadmapStatus(roadmapItemId, 'Done');
+    return true;
+  }
+  if (!allDone && item.status === 'Done') {
+    await updateRoadmapStatus(roadmapItemId, inferStatus(item.start_date, item.end_date) || 'Not Started');
+  }
+  return false;
 }
 
 export async function getThisWeekBuild() {

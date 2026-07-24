@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { addInteraction } from './interactions.js';
+import { addBacklogIdea } from './backlog.js';
 
 // ============================================================
 // UNIVERSAL CAPTURE INBOX
@@ -197,6 +198,16 @@ export async function resolveToContact(item, fields = {}, contactId = null) {
   }).select().single();
   if (error) throw error;
   await markResolved(item.id, 'contacts', data.id);
+  return data;
+}
+
+/** Backlog idea — the actual missing sixth resolution path.
+ *  backlog.js/product_backlog_ideas already existed and was already
+ *  wired to Library -> Backlog; quick capture just never had a way
+ *  to land there. */
+export async function resolveToBacklogIdea(item, fields = {}) {
+  const data = await addBacklogIdea(fields.idea || item.raw_text, fields.category || null);
+  await markResolved(item.id, 'product_backlog_ideas', data.id);
   return data;
 }
 
