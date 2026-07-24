@@ -260,7 +260,7 @@ async function fetchNudgeItems(userId) {
       sourceId: null,
       track: 'business',
       icon: 'megaphone',
-      title: `${overdueCount} business relationship${overdueCount === 1 ? '' : 's'} need attention`,
+      title: `You have ${overdueCount} overdue Business task${overdueCount === 1 ? '' : 's'}`,
       context: 'Overdue for follow-up — see who in Business Dashboard',
       done: false,
       linkTo: '/business/dashboard',

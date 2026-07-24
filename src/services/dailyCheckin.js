@@ -45,6 +45,36 @@ export async function getWeekCheckins() {
   return data || [];
 }
 
+/** Business half of the Monthly Snapshot — every number here is a
+ *  real count against existing tables, nothing typed in by hand.
+ *  Covers the completed previous month, not the in-progress current
+ *  one — this fires in the first week of a new month, so "this month"
+ *  would barely have any data yet. */
+export async function getBusinessMonthlySnapshot() {
+  const userId = await getUserId();
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 10);
+  const end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().slice(0, 10);
+
+  const [{ count: contactsAdded }, { count: dealsClosed }, { count: contentPublished }, { count: marketingCompleted }] = await Promise.all([
+    supabase.from('contacts').select('id', { count: 'exact', head: true })
+      .eq('user_id', userId).gte('created_at', start).lte('created_at', end + 'T23:59:59'),
+    supabase.from('transactions').select('id', { count: 'exact', head: true })
+      .eq('user_id', userId).gte('closing_date', start).lte('closing_date', end),
+    supabase.from('content_pieces').select('id', { count: 'exact', head: true })
+      .eq('user_id', userId).eq('status', 'published').gte('published_date', start).lte('published_date', end),
+    supabase.from('marketing_activities').select('id', { count: 'exact', head: true })
+      .eq('user_id', userId).eq('status', 'completed').gte('activity_date', start).lte('activity_date', end),
+  ]);
+
+  return {
+    contactsAdded: contactsAdded || 0,
+    dealsClosed: dealsClosed || 0,
+    contentPublished: contentPublished || 0,
+    marketingCompleted: marketingCompleted || 0,
+  };
+}
+
 export async function getWeeklyTargets() {
   const userId = await getUserId();
   const monday = mondayOfWeek();

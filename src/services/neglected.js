@@ -22,9 +22,14 @@ function daysSince(dateStr) {
 export async function getNeglectedPriorities() {
   const userId = await getUserId();
 
-  const [{ data: goals }, { data: contacts }, { data: habits }, { data: habitLogs }, { data: maintenance }] = await Promise.all([
+  // Contacts used to be checked here too (Tier 1, 45+ days) — removed.
+  // That's now handled by the dedicated Business-overdue nudge in
+  // todayItems.js, which uses the real per-category cadence standards
+  // instead of one flat 45-day rule, and surfaces as a count + link
+  // rather than individual names. Two signals disagreeing about who's
+  // "neglected" was worse than one correct one.
+  const [{ data: goals }, { data: habits }, { data: habitLogs }, { data: maintenance }] = await Promise.all([
     supabase.from('goals').select('id, title, updated_at, status').eq('user_id', userId).eq('status', 'In Progress'),
-    supabase.from('contacts').select('id, name, last_contact_date, relationship_tier').eq('user_id', userId).eq('relationship_tier', 'Tier 1 - Core'),
     supabase.from('habits').select('id, name').eq('user_id', userId),
     supabase.from('habit_logs').select('habit_id, log_date').eq('user_id', userId).gte('log_date', new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)),
     supabase.from('maintenance_items').select('id, title, next_due_date').eq('user_id', userId),
@@ -35,11 +40,6 @@ export async function getNeglectedPriorities() {
   (goals || []).forEach(g => {
     const days = daysSince(g.updated_at);
     if (days >= 21) results.push({ type: 'goal', id: g.id, label: g.title, days, detail: `No movement in ${days} days`, link: '/plan/goals' });
-  });
-
-  (contacts || []).forEach(c => {
-    const days = daysSince(c.last_contact_date);
-    if (days >= 45) results.push({ type: 'relationship', id: c.id, label: c.name, days, detail: c.last_contact_date ? `Last contact ${days} days ago` : 'No contact logged yet', link: '/business/relationships' });
   });
 
   const loggedHabitIds = new Set((habitLogs || []).map(l => l.habit_id));
