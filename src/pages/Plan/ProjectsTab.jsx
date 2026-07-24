@@ -12,6 +12,7 @@ import {
 import {
   listMissions, addMission, completeMission, deleteMission, listTasksForMission, addTaskToMission, toggleMissionTask,
 } from '../../services/missions.js';
+import MonthlyThemeCard from './MonthlyThemeCard.jsx';
 
 async function getUserId() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -74,6 +75,8 @@ export default function ProjectsTab() {
 
   return (
     <div className="stack" style={{ gap: 'var(--space-5)' }}>
+      <MonthlyThemeCard />
+
       <Card>
         <div className="row-between">
           <div className="section-label">Goals</div>

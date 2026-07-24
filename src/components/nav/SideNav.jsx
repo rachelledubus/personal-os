@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Inbox, CalendarDays, Sprout, Briefcase, BookOpen, LogOut, Settings, ClipboardCheck } from 'lucide-react';
+import { Home, Inbox, CalendarDays, Sprout, Briefcase, BookOpen, LogOut, Settings, ClipboardCheck, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { getAssetUrl } from '../../services/assets.js';
 import CozyClock from './CozyClock.jsx';
@@ -37,6 +37,14 @@ export default function SideNav() {
         <div className="side-nav-brand-title">Rachelle's System</div>
         {user && <div className="side-nav-brand-email">{user.email}</div>}
       </div>
+      <button
+        className="side-nav-link side-nav-link-utility side-nav-quickjump"
+        onClick={() => window.dispatchEvent(new Event('quickjump:open'))}
+        title="Quick jump (Ctrl/Cmd+K)"
+      >
+        <Search size={16} strokeWidth={2} /> <span>Search / Jump</span>
+      </button>
+
       <div className="side-nav-links">
         {ZONES.map(({ path, label, icon: Icon }) => (
           <NavLink

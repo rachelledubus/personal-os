@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import { TimerProvider } from './context/TimerContext.jsx';
 import SideNav from './components/nav/SideNav.jsx';
+import Breadcrumb from './components/nav/Breadcrumb.jsx';
+import QuickJump from './components/nav/QuickJump.jsx';
 import GlobalCapture from './components/capture/GlobalCapture.jsx';
 import KawaiiBackdrop from './components/ui/KawaiiBackdrop.jsx';
 import Companion from './components/companion/Companion.jsx';
@@ -49,6 +51,7 @@ export default function App() {
       <SideNav />
       <TimerProvider>
         <div className="app-content">
+          <Breadcrumb />
           <Routes>
             <Route path="/" element={<Navigate to="/today" replace />} />
 
@@ -83,6 +86,7 @@ export default function App() {
       </TimerProvider>
       {showDecorations && <Companion />}
       <GlobalCapture />
+      <QuickJump />
     </div>
   );
 }

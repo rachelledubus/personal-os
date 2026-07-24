@@ -8,9 +8,10 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import Banner from '../../components/ui/Banner.jsx';
 import ProjectsTab from './ProjectsTab.jsx';
 import JournalTab from './JournalTab.jsx';
+import DreamLifeTab from './DreamLifeTab.jsx';
 
-const TABS = ['blocks', 'goals', 'journal', 'meals'];
-const TAB_LABELS = { blocks: 'Time Blocks', goals: 'Goals & Projects', journal: 'Journal', meals: 'Meal Planner' };
+const TABS = ['blocks', 'goals', 'dream-life', 'journal', 'meals'];
+const TAB_LABELS = { blocks: 'Time Blocks', goals: 'Goals & Projects', 'dream-life': 'Dream Life', journal: 'Journal', meals: 'Meal Planner' };
 
 export default function PlannerPage() {
   const { tab = 'blocks' } = useParams();
@@ -35,6 +36,7 @@ export default function PlannerPage() {
 
       {tab === 'blocks' && <TimeBlocksTab />}
       {tab === 'goals' && <ProjectsTab />}
+      {tab === 'dream-life' && <DreamLifeTab />}
       {tab === 'journal' && <JournalTab />}
     </div>
   );

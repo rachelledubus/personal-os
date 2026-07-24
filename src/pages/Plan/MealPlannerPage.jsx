@@ -17,14 +17,15 @@ import {
   listRecipes, addRecipe, deleteRecipe, updateRecipeServings, listIngredients, addIngredient, deleteIngredient,
   scaleIngredients, totalMacrosAtServings, addRecipeToGroceryList,
 } from '../../services/recipes.js';
+import { ZONES as NAV_ZONES } from '../../components/nav/navTargets.js';
 import './MealPlannerPage.css';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snacks'];
-const PLAN_TABS = [
-  { label: 'Time Blocks', to: '/plan' },
-  { label: 'Goals & Projects', to: '/plan/goals' },
-  { label: 'Meal Planner', to: '/plan/meals' },
-];
+// Was a separate hardcoded list that had already drifted from
+// PlannerPage's own tabs (missing Journal). Derived from navTargets
+// now so there's exactly one place that defines "what tabs does Plan
+// have" — both this page and PlannerPage read the same list.
+const PLAN_TABS = NAV_ZONES.find(z => z.path === '/plan').tabs.map(t => ({ label: t.label, to: t.path }));
 
 function formatFullDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
