@@ -11,7 +11,7 @@ import { getCategoryList } from '../../services/settings.js';
 import Banner from '../../components/ui/Banner.jsx';
 import AiSuggestionBox from '../../components/ui/AiSuggestionBox.jsx';
 import {
-  listContacts, listByTier, listOverdue, getDatabaseHealth, addContact, requestFollowUpDraft,
+  listContacts, listByTier, listOverdueContacts, getDatabaseHealth, addContact, requestFollowUpDraft,
   inferDefaultTier, autoTagUntieredContacts, getPipelineHealth, getRelationshipHealth,
 } from '../../services/contacts.js';
 import ContactProfilePanel from '../../components/business/ContactProfilePanel.jsx';
@@ -86,7 +86,7 @@ function DashboardTab() {
   async function refresh() {
     const [c, wc, t, r, w, ov, h, rv, ph, rh, cs] = await Promise.all([
       getTodayCheckin(), getWeekCheckins(), getWeeklyTargets(), getWeeklyRunningTotals(),
-      getThisWeekBuild(), listOverdue(), getDatabaseHealth(), getWeeklyReview(),
+      getThisWeekBuild(), listOverdueContacts(), getDatabaseHealth(), getWeeklyReview(),
       getPipelineHealth(), getRelationshipHealth(), getCadenceStandards(),
     ]);
     setCheckin(c); setWeekCheckins(wc); setTargets(t); setRunning(r);
@@ -191,33 +191,48 @@ function DashboardTab() {
 
       <Card>
         <div className="row-between">
-          <div className="section-label">Weekly reflection</div>
+          <div>
+            <div className="section-label">Weekly reflection</div>
+            <Link to="/review" className="muted" style={{ fontSize: 11 }}>🪞 All reviews →</Link>
+          </div>
           <Button size="sm" variant="text" onClick={() => setEditingReview(!editingReview)}>
             {editingReview ? 'Cancel' : (review ? 'Edit' : 'Add reflection')}
           </Button>
         </div>
         {editingReview ? (
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            <label className="reset-field"><span>What worked?</span>
-              <textarea value={reviewForm.what_worked} onChange={e => setReviewForm({ ...reviewForm, what_worked: e.target.value })} style={{ minHeight: 50 }} />
+            <label className="reset-field">
+              <span>One thing that went well</span>
+              <div className="muted" style={{ fontSize: 11, marginTop: -2, marginBottom: 2 }}>A specific conversation, follow-up, or activity — not a general feeling.</div>
+              <textarea placeholder="e.g. Called Sarah back within an hour of her question" value={reviewForm.what_worked}
+                onChange={e => setReviewForm({ ...reviewForm, what_worked: e.target.value })} style={{ minHeight: 44 }} />
             </label>
-            <label className="reset-field"><span>What didn't?</span>
-              <textarea value={reviewForm.what_didnt} onChange={e => setReviewForm({ ...reviewForm, what_didnt: e.target.value })} style={{ minHeight: 50 }} />
+            <label className="reset-field">
+              <span>One thing that was a struggle</span>
+              <div className="muted" style={{ fontSize: 11, marginTop: -2, marginBottom: 2 }}>Name the specific thing, not just "I was busy."</div>
+              <textarea placeholder="e.g. Put off following up with 3 leads until Thursday" value={reviewForm.what_didnt}
+                onChange={e => setReviewForm({ ...reviewForm, what_didnt: e.target.value })} style={{ minHeight: 44 }} />
             </label>
-            <label className="reset-field"><span>What needs attention?</span>
-              <textarea value={reviewForm.needs_attention} onChange={e => setReviewForm({ ...reviewForm, needs_attention: e.target.value })} style={{ minHeight: 50 }} />
+            <label className="reset-field">
+              <span>Anyone or anything that needs attention now</span>
+              <div className="muted" style={{ fontSize: 11, marginTop: -2, marginBottom: 2 }}>A specific contact, deal, or task — not a category.</div>
+              <textarea placeholder="e.g. The Ramirez listing — haven't heard back in 5 days" value={reviewForm.needs_attention}
+                onChange={e => setReviewForm({ ...reviewForm, needs_attention: e.target.value })} style={{ minHeight: 44 }} />
             </label>
-            <label className="reset-field"><span>Next week's priorities</span>
-              <textarea value={reviewForm.next_week_priorities} onChange={e => setReviewForm({ ...reviewForm, next_week_priorities: e.target.value })} style={{ minHeight: 50 }} />
+            <label className="reset-field">
+              <span>The ONE priority for next week</span>
+              <div className="muted" style={{ fontSize: 11, marginTop: -2, marginBottom: 2 }}>Just one. Not a list.</div>
+              <textarea placeholder="e.g. Get the Real Payment Guide drafted" value={reviewForm.next_week_priorities}
+                onChange={e => setReviewForm({ ...reviewForm, next_week_priorities: e.target.value })} style={{ minHeight: 44 }} />
             </label>
             <div><Button size="sm" onClick={handleSaveReview}>Save reflection</Button></div>
           </div>
         ) : review ? (
           <div className="stack" style={{ marginTop: 'var(--space-2)', fontSize: 13 }}>
-            {review.what_worked && <div><strong>What worked:</strong> {review.what_worked}</div>}
-            {review.what_didnt && <div><strong>What didn't:</strong> {review.what_didnt}</div>}
+            {review.what_worked && <div><strong>Went well:</strong> {review.what_worked}</div>}
+            {review.what_didnt && <div><strong>Struggle:</strong> {review.what_didnt}</div>}
             {review.needs_attention && <div><strong>Needs attention:</strong> {review.needs_attention}</div>}
-            {review.next_week_priorities && <div><strong>Next week:</strong> {review.next_week_priorities}</div>}
+            {review.next_week_priorities && <div><strong>Next week's one thing:</strong> {review.next_week_priorities}</div>}
           </div>
         ) : (
           <div className="muted" style={{ fontSize: 13, marginTop: 'var(--space-2)' }}>No reflection recorded for this week yet.</div>
@@ -236,7 +251,7 @@ function DashboardTab() {
                 <div className="row-between">
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{c.name}</div>
-                    <div className="muted" style={{ fontSize: 12 }}>{c.next_action}</div>
+                    <div className="muted" style={{ fontSize: 12 }}>{c.next_action || 'No next action set — overdue by relationship cadence'}</div>
                   </div>
                   {autonomy !== 'auto' && (
                     <Button size="sm" variant="ghost" onClick={() => handleDraftFollowUp(c)} disabled={drafting === c.id}>
@@ -355,6 +370,7 @@ function PipelineTab() {
   const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '', timeline: '' });
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('All');
+  const [saveError, setSaveError] = useState(null);
 
   async function refresh() {
     setContacts(await listContacts());
@@ -367,7 +383,13 @@ function PipelineTab() {
 
   async function handleAdd() {
     if (!form.name.trim()) return;
-    await addContact({ ...form, lead_stage: form.lead_stage || null, source: form.source || null, timeline: form.timeline || null, relationship_tier: inferDefaultTier(form.category) });
+    setSaveError(null);
+    try {
+      await addContact({ ...form, lead_stage: form.lead_stage || null, source: form.source || null, timeline: form.timeline || null, relationship_tier: inferDefaultTier(form.category) });
+    } catch (err) {
+      setSaveError(err.message || 'Something went wrong saving this contact.');
+      return;
+    }
     setForm({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '', timeline: '' });
     setAdding(false);
     refresh();
@@ -416,6 +438,7 @@ function PipelineTab() {
               </select>
             )}
             <Button size="sm" onClick={handleAdd}>Save</Button>
+            {saveError && <div style={{ fontSize: 12, color: 'var(--danger)', width: '100%' }}>{saveError}</div>}
           </div>
         )}
 
@@ -612,6 +635,11 @@ function ContentTab() {
 // this tab is dated, real-world activities that aren't "content" —
 // a mailer drop, a client appreciation call, a networking event.
 // ============================================================
+function truncateGoalTitle(title, max = 34) {
+  if (!title) return '';
+  return title.length > max ? title.slice(0, max).trim() + '…' : title;
+}
+
 function MarketingTab() {
   const [activities, setActivities] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -619,6 +647,7 @@ function MarketingTab() {
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ title: '', category: '', activity_date: '', notes: '', goal_id: '' });
   const [filter, setFilter] = useState('All');
+  const [linkingGoalFor, setLinkingGoalFor] = useState(null);
 
   async function refresh() {
     setActivities(await listMarketingActivities());
@@ -637,6 +666,7 @@ function MarketingTab() {
 
   async function handleLinkGoal(activity, goalId) {
     await updateMarketingActivity(activity.id, { goal_id: goalId || null });
+    setLinkingGoalFor(null);
     refresh();
   }
 
@@ -673,7 +703,7 @@ function MarketingTab() {
             {goals.length > 0 && (
               <select value={form.goal_id} onChange={e => setForm({ ...form, goal_id: e.target.value })}>
                 <option value="">Not linked to a goal</option>
-                {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
+                {goals.map(g => <option key={g.id} value={g.id}>{truncateGoalTitle(g.title)}</option>)}
               </select>
             )}
             <Button size="sm" onClick={handleAdd}>Save</Button>
@@ -702,12 +732,18 @@ function MarketingTab() {
                   <div className="muted" style={{ fontSize: 12 }}>{a.category}{a.activity_date && ` · ${a.activity_date}`}</div>
                   {a.notes && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{a.notes}</div>}
                   {goals.length > 0 && (
-                    <div className="row" style={{ marginTop: 4, alignItems: 'center', gap: 4 }}>
-                      <span className="muted" style={{ fontSize: 11 }}>{a.goals?.title ? `Goal: ${a.goals.title}` : 'No goal linked'}</span>
-                      <select style={{ fontSize: 11 }} value={a.goal_id || ''} onChange={e => handleLinkGoal(a, e.target.value)}>
-                        <option value="">Not linked</option>
-                        {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
-                      </select>
+                    <div style={{ marginTop: 4 }}>
+                      {linkingGoalFor === a.id ? (
+                        <select style={{ fontSize: 11 }} autoFocus value={a.goal_id || ''}
+                          onChange={e => handleLinkGoal(a, e.target.value)} onBlur={() => setLinkingGoalFor(null)}>
+                          <option value="">Not linked</option>
+                          {goals.map(g => <option key={g.id} value={g.id}>{truncateGoalTitle(g.title)}</option>)}
+                        </select>
+                      ) : (
+                        <button className="sub-tab" style={{ fontSize: 11 }} onClick={() => setLinkingGoalFor(a.id)}>
+                          {a.goals?.title ? `🎯 ${truncateGoalTitle(a.goals.title)}` : '+ Link goal'}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -727,7 +763,7 @@ function MarketingTab() {
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {completed.map(a => (
               <div key={a.id} className="row-between" style={{ padding: '4px 0' }}>
-                <span className="muted" style={{ fontSize: 13 }}>{a.title} · {a.category}{a.goals?.title && ` · ${a.goals.title}`}</span>
+                <span className="muted" style={{ fontSize: 13 }}>{a.title} · {a.category}{a.goals?.title && ` · 🎯 ${truncateGoalTitle(a.goals.title)}`}</span>
                 <span className="muted" style={{ fontSize: 11 }}>{a.activity_date}</span>
               </div>
             ))}

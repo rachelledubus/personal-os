@@ -90,6 +90,21 @@ export async function listOverdue() {
   return data || [];
 }
 
+/** The complete picture, not just contacts with an explicit overdue
+ *  date — includes anyone flagged Overdue purely by cadence (no date
+ *  ever set, but past their category's standard). This is what the
+ *  Today nudge count and the Business Dashboard's overdue list both
+ *  need to agree on, so "click through to see specifics" actually
+ *  shows everyone the nudge counted. */
+export async function listOverdueContacts() {
+  const contacts = await listContacts();
+  return contacts.filter(c => c.status === 'Overdue');
+}
+
+export async function countOverdue() {
+  return (await listOverdueContacts()).length;
+}
+
 export async function getContact(id) {
   const cadence = await getCadenceStandards();
   const { data, error } = await supabase.from('contacts').select('*').eq('id', id).single();

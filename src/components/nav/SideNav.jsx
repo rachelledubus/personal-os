@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Inbox, CalendarDays, Sprout, Briefcase, BookOpen, LogOut, Settings } from 'lucide-react';
+import { Home, Inbox, CalendarDays, Sprout, Briefcase, BookOpen, LogOut, Settings, ClipboardCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { getAssetUrl } from '../../services/assets.js';
 import CozyClock from './CozyClock.jsx';
@@ -13,6 +13,7 @@ const ZONES = [
   { path: '/grow', label: 'Grow', icon: Sprout },
   { path: '/business', label: 'Business', icon: Briefcase },
   { path: '/library', label: 'Library', icon: BookOpen },
+  { path: '/review', label: 'Review', icon: ClipboardCheck },
 ];
 
 export default function SideNav() {
