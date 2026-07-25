@@ -80,7 +80,7 @@ export default function GuidedFlow() {
     <div>
       <div className="page-title">{flow.label}</div>
       <Card>
-        <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Step {stepIndex + 1} of {flow.steps.length}</div>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)', marginBottom: 4 }}>Step {stepIndex + 1} of {flow.steps.length}</div>
         <h3 style={{ marginBottom: 'var(--space-4)' }}>{step.title}</h3>
 
         <div className="stack">

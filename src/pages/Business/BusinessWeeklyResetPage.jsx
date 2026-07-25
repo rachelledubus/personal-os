@@ -68,17 +68,17 @@ export default function BusinessWeeklyResetPage() {
       <Card>
         <div className="section-label">Overdue · {overdue.length}</div>
         {overdue.length === 0 ? (
-          <div className="muted" style={{ fontSize: 13, marginTop: 'var(--space-2)' }}>Nobody's overdue right now.</div>
+          <div className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-2)' }}>Nobody's overdue right now.</div>
         ) : (
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {overdue.map(c => (
               <div key={c.id} className="row-between" style={{ borderBottom: '1px solid var(--sand)', padding: '6px 0', cursor: 'pointer' }}
                 onClick={() => setSelectedId(c.id)}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>{c.name}</div>
-                  <div className="muted" style={{ fontSize: 12 }}>{c.next_action || 'No next action set'}</div>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-compact)' }}>{c.name}</div>
+                  <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.next_action || 'No next action set'}</div>
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_TONE.Overdue }}>Overdue</span>
+                <span style={{ fontSize: 'var(--text-micro)', fontWeight: 700, color: STATUS_TONE.Overdue }}>Overdue</span>
               </div>
             ))}
           </div>
@@ -90,13 +90,13 @@ export default function BusinessWeeklyResetPage() {
         {thisWeekBuild ? (
           <div className="row-between" style={{ marginTop: 'var(--space-2)' }}>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>{thisWeekBuild.title}</div>
-              <div className="muted" style={{ fontSize: 12 }}>{thisWeekBuild.phase}</div>
+              <div style={{ fontWeight: 700, fontSize: 'var(--text-compact)' }}>{thisWeekBuild.title}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{thisWeekBuild.phase}</div>
             </div>
             <Link to="/business/roadmap"><Button size="sm" variant="ghost">Open →</Button></Link>
           </div>
         ) : (
-          <div className="muted" style={{ fontSize: 13, marginTop: 'var(--space-2)' }}>Nothing marked In Progress on the roadmap this week.</div>
+          <div className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-2)' }}>Nothing marked In Progress on the roadmap this week.</div>
         )}
       </Card>
 
@@ -117,10 +117,10 @@ export default function BusinessWeeklyResetPage() {
           </div>
         ) : (
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            <div className="row-between" style={{ fontSize: 13 }}><span>Meaningful conversations</span><span className="muted">{running.conversations} / {targets?.conversations_target ?? 10}</span></div>
-            <div className="row-between" style={{ fontSize: 13 }}><span>Relationship boxes checked</span><span className="muted">{weekDoneCount('relationship')} / 5</span></div>
-            <div className="row-between" style={{ fontSize: 13 }}><span>Authority boxes checked</span><span className="muted">{weekDoneCount('authority')} / 5</span></div>
-            <div className="row-between" style={{ fontSize: 13 }}><span>Consultations booked</span><span className="muted">{running.consultations} / {targets?.consultations_target ?? 0}</span></div>
+            <div className="row-between" style={{ fontSize: 'var(--text-small)' }}><span>Meaningful conversations</span><span className="muted">{running.conversations} / {targets?.conversations_target ?? 10}</span></div>
+            <div className="row-between" style={{ fontSize: 'var(--text-small)' }}><span>Relationship boxes checked</span><span className="muted">{weekDoneCount('relationship')} / 5</span></div>
+            <div className="row-between" style={{ fontSize: 'var(--text-small)' }}><span>Authority boxes checked</span><span className="muted">{weekDoneCount('authority')} / 5</span></div>
+            <div className="row-between" style={{ fontSize: 'var(--text-small)' }}><span>Consultations booked</span><span className="muted">{running.consultations} / {targets?.consultations_target ?? 0}</span></div>
           </div>
         )}
       </Card>

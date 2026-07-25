@@ -37,7 +37,7 @@
 .today-item-context { font-size: var(--text-caption); color: var(--ink-soft); margin-top: 2px; }
 
 .today-item-dismiss {
-  background: none; border: none; color: var(--ink-faint); font-size: 18px; line-height: 1; padding: 4px;
+  background: none; border: none; color: var(--ink-faint); font-size: var(--text-subtitle); line-height: 1; padding: 4px;
 }
 
 .today-item-done {

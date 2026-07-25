@@ -9,7 +9,7 @@
 .today-add-custom { margin-top: var(--space-4); }
 .today-add-custom input {
   flex: 1; border: 1px solid var(--border-default); border-radius: var(--radius-sm);
-  padding: 9px 12px; font-size: 14px;
+  padding: 9px 12px; font-size: var(--text-compact);
 }
 
 .guardian-strip {
@@ -23,7 +23,7 @@
   width: 40px; height: 40px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
+  font-size: var(--text-subtitle);
   margin-bottom: 6px;
   box-shadow: var(--shadow-resting);
   border: 2px solid var(--white);
@@ -33,7 +33,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  font-size: 12px;
+  font-size: var(--text-caption);
   font-weight: 600;
   margin-bottom: 4px;
   white-space: nowrap;

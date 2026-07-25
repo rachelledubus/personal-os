@@ -97,7 +97,7 @@ export default function WeeklyResetModal({ promptType, marker, onClose }) {
             <span>This week's one priority</span>
             <input value={fields.priority || ''} onChange={e => set('priority', e.target.value)} />
           </label>
-          <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>
+          <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>
             This stays personal — overdue contacts, this week's build, and your business targets live in the Business Weekly Reset.
           </div>
           <Link to="/business/weekly-reset" onClick={onClose}>
@@ -129,21 +129,21 @@ export default function WeeklyResetModal({ promptType, marker, onClose }) {
       {promptType === 'monthly_snapshot' && (
         <div className="stack">
           <div>
-            <div className="section-label" style={{ fontSize: 12 }}>Personal</div>
-            <div style={{ marginTop: 4, fontSize: 13 }}>
+            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Personal</div>
+            <div style={{ marginTop: 4, fontSize: 'var(--text-small)' }}>
               {goalsAchieved == null ? 'Loading…' : `${goalsAchieved} goal${goalsAchieved === 1 ? '' : 's'} achieved this month`}
             </div>
           </div>
           <div style={{ marginTop: 'var(--space-3)' }}>
-            <div className="section-label" style={{ fontSize: 12 }}>Business</div>
+            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Business</div>
             {businessSnapshot ? (
-              <div className="stack" style={{ marginTop: 4, fontSize: 13, gap: 2 }}>
+              <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 2 }}>
                 <div>{businessSnapshot.contactsAdded} contacts added</div>
                 <div>{businessSnapshot.dealsClosed} deals closed</div>
                 <div>{businessSnapshot.contentPublished} pieces of content published</div>
                 <div>{businessSnapshot.marketingCompleted} marketing activities completed</div>
               </div>
-            ) : <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Loading…</div>}
+            ) : <div className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>Loading…</div>}
           </div>
         </div>
       )}

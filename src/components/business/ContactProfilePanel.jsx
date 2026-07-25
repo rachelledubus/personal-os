@@ -138,13 +138,13 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
           <select value={contact.category} onChange={e => applyField({ category: e.target.value, relationship_tier: contact.relationship_tier || inferDefaultTier(e.target.value) })}>
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <span style={{ fontSize: 12, fontWeight: 700, color: STATUS_TONE[contact.status] }}>{contact.status}</span>
+          <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: STATUS_TONE[contact.status] }}>{contact.status}</span>
         </div>
 
         {/* ---------- Contact info ---------- */}
         <div>
           <div className="row-between">
-            <div className="section-label" style={{ fontSize: 12 }}>Contact info</div>
+            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Contact info</div>
             <Button size="sm" variant="text" onClick={() => setEditingContactInfo(!editingContactInfo)}>{editingContactInfo ? 'Cancel' : 'Edit'}</Button>
           </div>
           {editingContactInfo ? (
@@ -156,7 +156,7 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               <div><Button size="sm" onClick={handleSaveContactInfo}>Save</Button></div>
             </div>
           ) : (
-            <div className="stack" style={{ marginTop: 4, fontSize: 13, gap: 4 }}>
+            <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
               {contact.phone && <div>{contact.phone}</div>}
               {contact.email && <div>{contact.email}</div>}
               {contact.organization && <div className="muted">{contact.organization}</div>}
@@ -188,11 +188,11 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
         {/* ---------- Follow-up ---------- */}
         <div>
           <div className="row-between">
-            <div className="section-label" style={{ fontSize: 12 }}>Follow-up</div>
+            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Follow-up</div>
             <Button size="sm" variant="text" onClick={() => setEditingFollowUp(!editingFollowUp)}>{editingFollowUp ? 'Cancel' : 'Edit'}</Button>
           </div>
           {standard && (
-            <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 2 }}>
               Standard: {standard.label} · every {cadence[standardKey] ?? '—'} days
             </div>
           )}
@@ -211,24 +211,24 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               <div><Button size="sm" onClick={handleSaveFollowUp}>Save</Button></div>
             </div>
           ) : (
-            <div style={{ marginTop: 4, fontSize: 13 }}>
+            <div style={{ marginTop: 4, fontSize: 'var(--text-small)' }}>
               {contact.next_action || <span className="muted">No next action set</span>}
-              {contact.next_follow_up_date && <div className="muted" style={{ fontSize: 12 }}>Due {contact.next_follow_up_date}</div>}
-              {contact.last_contact_date && <div className="muted" style={{ fontSize: 12 }}>Last contacted {contact.last_contact_date}</div>}
+              {contact.next_follow_up_date && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>Due {contact.next_follow_up_date}</div>}
+              {contact.last_contact_date && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>Last contacted {contact.last_contact_date}</div>}
             </div>
           )}
         </div>
 
         <div className="row" style={{ gap: 'var(--space-2)' }}>
           <div style={{ flex: 1 }}>
-            <div className="section-label" style={{ fontSize: 11 }}>Relationship tier</div>
+            <div className="section-label" style={{ fontSize: 'var(--text-micro)' }}>Relationship tier</div>
             <select style={{ marginTop: 4, width: '100%' }} value={contact.relationship_tier || ''} onChange={e => applyField({ relationship_tier: e.target.value || null })}>
               <option value="">No tier set</option>
               {TIERS.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div style={{ flex: 1 }}>
-            <div className="section-label" style={{ fontSize: 11 }}>Prefers</div>
+            <div className="section-label" style={{ fontSize: 'var(--text-micro)' }}>Prefers</div>
             <select style={{ marginTop: 4, width: '100%' }} value={contact.preferred_contact_method || 'text'} onChange={e => applyField({ preferred_contact_method: e.target.value })}>
               <option value="text">Text</option>
               <option value="email">Email</option>
@@ -241,7 +241,7 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
         {isTransactionCategory && (
           <div>
             <div className="row-between">
-              <div className="section-label" style={{ fontSize: 12 }}>Buyer/seller profile</div>
+              <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Buyer/seller profile</div>
               <Button size="sm" variant="text" onClick={() => setEditingProfile(!editingProfile)}>{editingProfile ? 'Cancel' : 'Edit'}</Button>
             </div>
             {editingProfile ? (
@@ -257,7 +257,7 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
                 <div><Button size="sm" onClick={handleSaveProfile}>Save</Button></div>
               </div>
             ) : (
-              <div className="stack" style={{ marginTop: 4, fontSize: 13, gap: 4 }}>
+              <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
                 {contact.buyer_seller && <div>{contact.buyer_seller}</div>}
                 {contact.persona && <div><strong>Persona:</strong> {contact.persona}</div>}
                 {contact.location_interest && <div><strong>Looking in:</strong> {contact.location_interest}</div>}
@@ -272,7 +272,7 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
         {/* ---------- Notes ---------- */}
         <div>
           <div className="row-between">
-            <div className="section-label" style={{ fontSize: 12 }}>Notes</div>
+            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Notes</div>
             <Button size="sm" variant="text" onClick={() => setEditingNotes(!editingNotes)}>{editingNotes ? 'Cancel' : 'Edit'}</Button>
           </div>
           {editingNotes ? (
@@ -288,7 +288,7 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               <div><Button size="sm" onClick={handleSaveNotes}>Save</Button></div>
             </div>
           ) : (
-            <div className="stack" style={{ marginTop: 4, fontSize: 13, gap: 4 }}>
+            <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
               {contact.goals && <div><strong>Goals:</strong> {contact.goals}</div>}
               {contact.concerns && <div><strong>Concerns:</strong> {contact.concerns}</div>}
               {contact.important_personal_details && <div>{contact.important_personal_details}</div>}
@@ -308,14 +308,14 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
         </div>
         {draft && (
           <AiSuggestionBox unavailable={draft.unavailable} onDismiss={() => setDraft(null)}>
-            <div style={{ fontSize: 13 }}>{draft.message}</div>
-            {draft.channel && <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draft.channel}</div>}
+            <div style={{ fontSize: 'var(--text-small)' }}>{draft.message}</div>
+            {draft.channel && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{draft.channel}</div>}
           </AiSuggestionBox>
         )}
 
         <InteractionTimeline contact={contact} />
 
-        <div className="muted" style={{ fontSize: 11, borderTop: '1px solid var(--sand)', paddingTop: 'var(--space-2)' }}>
+        <div className="muted" style={{ fontSize: 'var(--text-micro)', borderTop: '1px solid var(--sand)', paddingTop: 'var(--space-2)' }}>
           Added {contact.date_added || contact.created_at?.slice(0, 10)}
         </div>
       </div>

@@ -56,7 +56,7 @@ export default function DreamLifeTab() {
             onBlur={() => save(s.key)}
             style={{ width: '100%', minHeight: 90, marginTop: 'var(--space-2)' }}
           />
-          {savedKey === s.key && <div className="muted" style={{ fontSize: 11 }}>Saved</div>}
+          {savedKey === s.key && <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Saved</div>}
         </Card>
       ))}
     </div>

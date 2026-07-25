@@ -135,8 +135,8 @@ export default function ScheduleTemplateTab() {
       </p>
 
       <div style={{ border: '1px dashed var(--sand)', borderRadius: 8, padding: 'var(--space-3)' }}>
-        <div style={{ fontWeight: 700, fontSize: 13 }}>New Mon–Sun + weekend schedule available</div>
-        <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+        <div style={{ fontWeight: 700, fontSize: 'var(--text-small)' }}>New Mon–Sun + weekend schedule available</div>
+        <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
           Loads your real weekly rhythm — gym arrival times computed from drive time, weekday work blocks, and a real
           Saturday/Sunday structure instead of unstructured weekend days. <strong>This replaces your entire current template</strong> —
           you'll be asked to confirm before anything is deleted.
@@ -144,7 +144,7 @@ export default function ScheduleTemplateTab() {
         <Button size="sm" variant="ghost" onClick={handleApplyNewTemplate} disabled={applyingNewTemplate} style={{ marginTop: 'var(--space-2)' }}>
           {applyingNewTemplate ? 'Applying…' : 'Load new weekly schedule'}
         </Button>
-        {applyError && <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>Couldn't apply: {applyError}</div>}
+        {applyError && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, color: 'var(--danger)' }}>Couldn't apply: {applyError}</div>}
       </div>
 
       <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap' }}>
@@ -175,7 +175,7 @@ export default function ScheduleTemplateTab() {
               </div>
 
               {block.schedule_mode !== 'fixed' && (
-                <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+                <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 2 }}>
                   Computed: {computedById[block.id]?.effective_start_time || '—'} – {computedById[block.id]?.effective_end_time || '—'}
                   {computedById[block.id]?.conflict_minutes != null && (
                     <span style={{ color: 'var(--danger)', marginLeft: 6 }}>
@@ -186,20 +186,20 @@ export default function ScheduleTemplateTab() {
               )}
 
               <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
-                <span className="muted" style={{ fontSize: 11, marginRight: 4 }}>Type:</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)', marginRight: 4 }}>Type:</span>
                 {BLOCK_TYPES.map(t => (
-                  <button key={t} className={`sub-tab ${block.block_type === t ? 'active' : ''}`} style={{ fontSize: 11 }}
+                  <button key={t} className={`sub-tab ${block.block_type === t ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
                     onClick={() => handleField(block, 'block_type', t)}>{t}</button>
                 ))}
-                <span className="muted" style={{ fontSize: 11, margin: '0 4px 0 12px' }}>Track:</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)', margin: '0 4px 0 12px' }}>Track:</span>
                 {TRACKS.map(t => (
-                  <button key={t} className={`sub-tab ${block.track === t ? 'active' : ''}`} style={{ fontSize: 11 }}
+                  <button key={t} className={`sub-tab ${block.track === t ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
                     onClick={() => handleField(block, 'track', t)}>{t}</button>
                 ))}
               </div>
 
               <div className="row" style={{ marginTop: 'var(--space-3)', paddingTop: 'var(--space-2)', borderTop: '1px dashed var(--sand)', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 12, fontWeight: 700 }}>Schedule mode:</span>
+                <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700 }}>Schedule mode:</span>
                 <select
                   value={block.schedule_mode || 'fixed'}
                   onChange={e => handleField(block, 'schedule_mode', e.target.value)}
@@ -207,7 +207,7 @@ export default function ScheduleTemplateTab() {
                 >
                   {SCHEDULE_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
-                <button className={`sub-tab ${block.is_anchor ? 'active' : ''}`} style={{ fontSize: 12 }}
+                <button className={`sub-tab ${block.is_anchor ? 'active' : ''}`} style={{ fontSize: 'var(--text-caption)' }}
                   onClick={() => handleField(block, 'is_anchor', !block.is_anchor)}>
                   {block.is_anchor ? <><Anchor size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Day anchor</> : 'Mark as day anchor'}
                 </button>
@@ -215,26 +215,26 @@ export default function ScheduleTemplateTab() {
 
               {block.schedule_mode === 'anchored' && (
                 <div className="row" style={{ marginTop: 4, flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
-                  <span className="muted" style={{ fontSize: 11 }}>After:</span>
+                  <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>After:</span>
                   <select value={block.depends_on_block_id || ''} onChange={e => handleField(block, 'depends_on_block_id', e.target.value || null)}>
                     <option value="">Previous block in order</option>
                     {dayBlocks.filter(b => b.id !== block.id).map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
                   </select>
-                  <span className="muted" style={{ fontSize: 11 }}>Takes</span>
+                  <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Takes</span>
                   <input type="number" style={{ width: 56 }} value={block.estimated_duration_minutes ?? ''}
                     onChange={e => handleField(block, 'estimated_duration_minutes', e.target.value ? Number(e.target.value) : null)} />
-                  <span className="muted" style={{ fontSize: 11 }}>min</span>
+                  <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>min</span>
                 </div>
               )}
 
               {block.schedule_mode === 'commute' && (
                 <div className="row" style={{ marginTop: 4, flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
-                  <span className="muted" style={{ fontSize: 11 }}>Arrive by</span>
+                  <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Arrive by</span>
                   <input type="time" value={block.target_arrival_time || ''} onChange={e => handleField(block, 'target_arrival_time', e.target.value || null)} />
-                  <span className="muted" style={{ fontSize: 11 }}>Travel time</span>
+                  <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Travel time</span>
                   <input type="number" style={{ width: 56 }} value={block.travel_minutes ?? ''}
                     onChange={e => handleField(block, 'travel_minutes', e.target.value ? Number(e.target.value) : null)} />
-                  <span className="muted" style={{ fontSize: 11 }}>min</span>
+                  <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>min</span>
                 </div>
               )}
 
@@ -247,7 +247,7 @@ export default function ScheduleTemplateTab() {
               />
 
               <div style={{ marginTop: 'var(--space-2)' }}>
-                <span className="muted" style={{ fontSize: 11 }}>Checklist (applies to every future occurrence):</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Checklist (applies to every future occurrence):</span>
                 <div className="stack" style={{ marginTop: 4, gap: 4 }}>
                   {(drafts[block.id]?.steps || []).map((step, i) => (
                     <div key={i} className="row" style={{ gap: 4, alignItems: 'center' }}>
@@ -255,7 +255,7 @@ export default function ScheduleTemplateTab() {
                         value={step}
                         onChange={e => handleStepDraft(block.id, i, e.target.value)}
                         onBlur={() => saveSteps(block)}
-                        style={{ flex: 1, fontSize: 13 }}
+                        style={{ flex: 1, fontSize: 'var(--text-small)' }}
                       />
                       <button className="row-remove-btn" onClick={() => handleRemoveStep(block, i)}>×</button>
                     </div>
@@ -267,7 +267,7 @@ export default function ScheduleTemplateTab() {
                     value={newStepInput[block.id] || ''}
                     onChange={e => setNewStepInput(s => ({ ...s, [block.id]: e.target.value }))}
                     onKeyDown={e => { if (e.key === 'Enter') handleAddStep(block); }}
-                    style={{ flex: 1, fontSize: 13 }}
+                    style={{ flex: 1, fontSize: 'var(--text-small)' }}
                   />
                   <Button size="sm" variant="ghost" onClick={() => handleAddStep(block)}>+ Step</Button>
                 </div>

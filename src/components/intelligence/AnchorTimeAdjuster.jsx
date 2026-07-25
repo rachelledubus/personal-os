@@ -32,18 +32,18 @@ export default function AnchorTimeAdjuster({ onRecalculated }) {
   return (
     <div className="energy-checkin">
       <Clock size={14} />
-      <span className="muted" style={{ fontSize: 12 }}>Actually woke up at:</span>
-      <input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ fontSize: 12, padding: '2px 6px' }} />
+      <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>Actually woke up at:</span>
+      <input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ fontSize: 'var(--text-caption)', padding: '2px 6px' }} />
       <button className="energy-chip" onClick={handleUpdate} disabled={busy}>
         {busy ? 'Updating…' : 'Update today\'s schedule'}
       </button>
       {result && (
-        <span className="muted" style={{ fontSize: 11 }}>
+        <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>
           {result.updated === 0 ? 'Nothing to reflow yet' : `${result.updated} block${result.updated === 1 ? '' : 's'} updated`}
           {result.conflicts > 0 && <span style={{ color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: 3 }}> — <AlertTriangle size={12} />{result.conflicts} running tight</span>}
         </span>
       )}
-      {error && <span style={{ fontSize: 11, color: 'var(--danger)' }}>Couldn't update: {error}</span>}
+      {error && <span style={{ fontSize: 'var(--text-micro)', color: 'var(--danger)' }}>Couldn't update: {error}</span>}
     </div>
   );
 }

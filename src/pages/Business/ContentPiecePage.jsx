@@ -178,7 +178,7 @@ export default function ContentPiecePage() {
           )}
           <button onClick={handleCycleStatus} style={{
             background: 'none', border: `1.5px solid ${STATUS_TONE[piece.status]}`, color: STATUS_TONE[piece.status],
-            borderRadius: 'var(--radius-pill)', padding: '4px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+            borderRadius: 'var(--radius-pill)', padding: '4px 14px', fontSize: 'var(--text-caption)', fontWeight: 700, cursor: 'pointer', flexShrink: 0,
           }}>
             {STATUS_LABEL[piece.status]} →
           </button>
@@ -230,7 +230,7 @@ export default function ContentPiecePage() {
               <div><Button size="sm" onClick={handleSaveBrief}>Save brief</Button></div>
             </div>
           ) : (
-            <div className="stack" style={{ marginTop: 'var(--space-2)', fontSize: 13, gap: 4 }}>
+            <div className="stack" style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-small)', gap: 4 }}>
               {piece.buyer_question && <div><strong>Question:</strong> {piece.buyer_question}</div>}
               <div className="muted">{piece.audience || 'No audience set'} · {piece.pillar || 'No pillar set'} · {piece.content_type || 'No content type set'} · {piece.funnel_stage}</div>
               {piece.goal && <div><strong>Goal:</strong> {piece.goal}</div>}
@@ -243,22 +243,22 @@ export default function ContentPiecePage() {
           {picking && (
             <div style={{ marginTop: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--cream)', borderRadius: 'var(--radius-sm)' }}>
               <div className="row-between">
-                <span className="muted" style={{ fontSize: 11 }}>Pull brief fields from...</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Pull brief fields from...</span>
                 <Button size="sm" variant="text" onClick={() => setPicking(false)}>Close</Button>
               </div>
               {templates.length === 0 && ideas.length === 0 ? (
-                <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+                <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 6 }}>
                   Nothing to pull from yet — add a prompt tagged "Content Template" in Business → Library, or leave other pieces sitting as ideas.
                 </div>
               ) : (
                 <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 6 }}>
                   {templates.map(t => (
-                    <button key={t.id} className="sub-tab" style={{ fontSize: 12, textAlign: 'left', width: '100%' }} onClick={() => pullFromTemplate(t)}>
+                    <button key={t.id} className="sub-tab" style={{ fontSize: 'var(--text-caption)', textAlign: 'left', width: '100%' }} onClick={() => pullFromTemplate(t)}>
                       <FileText size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />{t.title}
                     </button>
                   ))}
                   {ideas.map(i => (
-                    <button key={i.id} className="sub-tab" style={{ fontSize: 12, textAlign: 'left', width: '100%' }} onClick={() => pullFromIdea(i)}>
+                    <button key={i.id} className="sub-tab" style={{ fontSize: 'var(--text-caption)', textAlign: 'left', width: '100%' }} onClick={() => pullFromIdea(i)}>
                       <Lightbulb size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />{i.title}
                     </button>
                   ))}
@@ -282,7 +282,7 @@ export default function ContentPiecePage() {
             <AiSuggestionBox unavailable={aiResult.unavailable} onDismiss={() => setAiResult(null)}>
               {!aiResult.unavailable && (
                 <>
-                  <div style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>{aiResult.draft}</div>
+                  <div style={{ fontSize: 'var(--text-small)', whiteSpace: 'pre-wrap' }}>{aiResult.draft}</div>
                   <div style={{ marginTop: 'var(--space-2)' }}><Button size="sm" onClick={acceptAiDraft}>Use this draft</Button></div>
                 </>
               )}
@@ -295,8 +295,8 @@ export default function ContentPiecePage() {
               <div><Button size="sm" onClick={handleSaveDraft}>Save draft</Button></div>
             </div>
           ) : (
-            <div style={{ marginTop: 'var(--space-2)', fontSize: 14, whiteSpace: 'pre-wrap' }}>
-              {piece.draft_body || <span className="muted" style={{ fontSize: 13 }}>No draft written yet.</span>}
+            <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-compact)', whiteSpace: 'pre-wrap' }}>
+              {piece.draft_body || <span className="muted" style={{ fontSize: 'var(--text-small)' }}>No draft written yet.</span>}
             </div>
           )}
         </div>
@@ -313,7 +313,7 @@ export default function ContentPiecePage() {
             ))}
           </div>
           {checklist.length > 0 && (
-            <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>
               {checklist.filter(c => c.checked).length}/{checklist.length} before publishing
             </div>
           )}
@@ -329,12 +329,12 @@ export default function ContentPiecePage() {
               {repurposing ? 'Drafting…' : <><Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />Regenerate drafts</>}
             </Button>
           </div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+          <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
             {(piece.content_repurpose_items || []).filter(r => r.published).length} / {(piece.content_repurpose_items || []).length} formats published
           </div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {(piece.content_repurpose_items || []).map(item => (
-              <div key={item.id} className="row-between" style={{ fontSize: 12 }}>
+              <div key={item.id} className="row-between" style={{ fontSize: 'var(--text-caption)' }}>
                 <span className="muted" style={{ textTransform: 'uppercase' }}>{item.format.replace('_', ' ')}</span>
                 {item.published ? <span style={{ color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={13} />Published</span> : (
                   <Button size="sm" variant="text" onClick={() => handleMarkRepurposed(item.id)}>Mark published</Button>
@@ -347,8 +347,8 @@ export default function ContentPiecePage() {
               <div className="stack" style={{ gap: 'var(--space-2)' }}>
                 {Object.entries(repurposeDrafts).filter(([k]) => k !== 'unavailable').map(([format, text]) => (
                   <div key={format}>
-                    <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase' }}>{format.replace('_', ' ')}</div>
-                    <div style={{ fontSize: 13 }}>{text}</div>
+                    <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase' }}>{format.replace('_', ' ')}</div>
+                    <div style={{ fontSize: 'var(--text-small)' }}>{text}</div>
                   </div>
                 ))}
               </div>

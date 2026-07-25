@@ -49,7 +49,7 @@ export default function MonthlyThemeCard() {
         onBlur={() => save()}
         style={{ width: '100%', marginTop: 'var(--space-2)' }}
       />
-      <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-3)', marginBottom: 'var(--space-2)' }}>
+      <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-3)', marginBottom: 'var(--space-2)' }}>
         Desired feelings this month — evaluate decisions against these
       </div>
       <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
@@ -57,14 +57,14 @@ export default function MonthlyThemeCard() {
           <button
             key={f}
             className={`sub-tab ${feelings.includes(f) ? 'active' : ''}`}
-            style={{ fontSize: 12 }}
+            style={{ fontSize: 'var(--text-caption)' }}
             onClick={() => toggleFeeling(f)}
           >
             {f}
           </button>
         ))}
       </div>
-      {saved && <div className="muted" style={{ fontSize: 11, marginTop: 6 }}>Saved</div>}
+      {saved && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 6 }}>Saved</div>}
     </Card>
   );
 }

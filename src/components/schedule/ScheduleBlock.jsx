@@ -115,7 +115,7 @@ export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggle
           addingStep ? (
             <div className="row" style={{ marginTop: 4, gap: 4 }}>
               <input placeholder="Add a step..." value={newStep} onChange={e => setNewStep(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddStep()} style={{ fontSize: 12, padding: '4px 8px' }} />
+                onKeyDown={e => e.key === 'Enter' && handleAddStep()} style={{ fontSize: 'var(--text-caption)', padding: '4px 8px' }} />
               <button className="schedule-step-link" onClick={handleAddStep}>Add</button>
               <button className="schedule-step-link" onClick={() => setAddingStep(false)}>Cancel</button>
             </div>

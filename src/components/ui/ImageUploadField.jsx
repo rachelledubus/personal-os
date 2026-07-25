@@ -58,7 +58,7 @@ export default function ImageUploadField({ value, onChange, folder = 'general', 
           <Button size="sm" onClick={handleUrlSave}>Save</Button>
         </div>
       )}
-      {error && <div style={{ fontSize: 12, color: 'var(--danger)', marginTop: 4 }}>{error}</div>}
+      {error && <div style={{ fontSize: 'var(--text-caption)', color: 'var(--danger)', marginTop: 4 }}>{error}</div>}
     </div>
   );
 }

@@ -197,7 +197,7 @@ export default function MealPlannerPage({ embedded = false }) {
         <Card key={mt} style={{ marginTop: 'var(--space-4)' }}>
           <div className="section-label" style={{ textTransform: 'capitalize' }}>{mt}</div>
           <div className="stack">
-            {planned[mt].length === 0 && <div className="muted" style={{ fontSize: 13 }}>Nothing planned yet.</div>}
+            {planned[mt].length === 0 && <div className="muted" style={{ fontSize: 'var(--text-small)' }}>Nothing planned yet.</div>}
             {planned[mt].map(item => (
               <div key={item.planId} className="row-between meal-plan-row">
                 <span>{item.name} <span className="faint">× {item.servings}</span></span>
@@ -218,7 +218,7 @@ export default function MealPlannerPage({ embedded = false }) {
       <Card style={{ marginTop: 'var(--space-4)' }}>
         <div className="section-label">To help fill remaining macros</div>
         {suggestions.length === 0 ? (
-          <div className="muted" style={{ fontSize: 13 }}>You're close to your targets — nice work.</div>
+          <div className="muted" style={{ fontSize: 'var(--text-small)' }}>You're close to your targets — nice work.</div>
         ) : (
           <div className="row" style={{ flexWrap: 'wrap' }}>
             {suggestions.map(f => (
@@ -238,7 +238,7 @@ export default function MealPlannerPage({ embedded = false }) {
       {planDate === todayStr() && (
         <Card style={{ marginTop: 'var(--space-5)' }}>
           <div className="section-label">Actual vs. planned (today)</div>
-          <div className="row-between" style={{ fontSize: 14 }}>
+          <div className="row-between" style={{ fontSize: 'var(--text-compact)' }}>
             <span>Planned: {Math.round(plannedTotals.calories)} kcal / {Math.round(plannedTotals.protein)}p</span>
             <span>Actual so far: {Math.round(actualTotals.calories)} kcal / {Math.round(actualTotals.protein)}p</span>
           </div>
@@ -327,7 +327,7 @@ function WeekPlanner({ foods, recipes }) {
             {generating ? 'Adding…' : 'Generate grocery list for this week'}
           </Button>
         </div>
-        {groceryStatus && <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>{groceryStatus}</div>}
+        {groceryStatus && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>{groceryStatus}</div>}
       </Card>
 
       <div className="stack" style={{ marginTop: 'var(--space-4)', gap: 'var(--space-3)' }}>
@@ -358,15 +358,15 @@ function DayCard({ date, dayPlan, foods, recipes, templates, onAdd, onAddRecipe,
   return (
     <Card>
       <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setExpanded(!expanded)}>
-        <div style={{ fontWeight: 700 }}>{weekday} <span className="muted" style={{ fontWeight: 400, fontSize: 12 }}>{date}</span></div>
-        <div className="muted" style={{ fontSize: 12 }}>{totalItems === 0 ? 'Nothing planned' : `${totalItems} item${totalItems === 1 ? '' : 's'} planned`}</div>
+        <div style={{ fontWeight: 700 }}>{weekday} <span className="muted" style={{ fontWeight: 400, fontSize: 'var(--text-caption)' }}>{date}</span></div>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{totalItems === 0 ? 'Nothing planned' : `${totalItems} item${totalItems === 1 ? '' : 's'} planned`}</div>
       </div>
 
       {expanded && (
         <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
           {MEAL_TYPES.map(mt => (
             <div key={mt}>
-              <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase' }}>{mt}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase' }}>{mt}</div>
               <div className="stack" style={{ marginTop: 2 }}>
                 {dayPlan[mt].map(item => (
                   <div key={item.planId} className="row-between meal-plan-row">
@@ -491,12 +491,12 @@ function MealBuilder({ foods, onFoodsChanged }) {
   return (
     <Card>
       <div className="section-label">Build your own meal</div>
-      <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+      <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
         Pick one from each slot, or hit shuffle for a random combo. Tag foods in your Food Database below with a slot to see real macros here instead of just ideas.
       </p>
 
       {!anyTagged && (
-        <div className="muted" style={{ fontSize: 12, margin: '8px 0' }}>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)', margin: '8px 0' }}>
           No foods tagged with a slot yet — expand "Manage food slots" below to tag a few, or just type freely in each box.
         </div>
       )}
@@ -504,7 +504,7 @@ function MealBuilder({ foods, onFoodsChanged }) {
       <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         {SLOTS.map(s => (
           <div key={s.key} style={{ minWidth: 180 }}>
-            <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
             {bySlot[s.key].length > 0 ? (
               <select value={selection[s.key]?.id || ''} onChange={e => handlePick(s.key, e.target.value, bySlot[s.key])} style={{ width: '100%' }}>
                 <option value="">Choose {s.label.toLowerCase()}...</option>
@@ -523,12 +523,12 @@ function MealBuilder({ foods, onFoodsChanged }) {
                 <input
                   type="number" placeholder="Qty" value={quantities[s.key]?.amount ?? ''}
                   onChange={e => handleQuantityChange(s.key, 'amount', e.target.value)}
-                  style={{ width: 56, fontSize: 12 }}
+                  style={{ width: 56, fontSize: 'var(--text-caption)' }}
                 />
                 <input
                   placeholder="Unit (tbsp, cup...)" value={quantities[s.key]?.unit ?? ''}
                   onChange={e => handleQuantityChange(s.key, 'unit', e.target.value)}
-                  style={{ flex: 1, fontSize: 12 }}
+                  style={{ flex: 1, fontSize: 'var(--text-caption)' }}
                 />
               </div>
             )}
@@ -537,11 +537,11 @@ function MealBuilder({ foods, onFoodsChanged }) {
       </div>
 
       <div style={{ marginTop: 'var(--space-3)' }}>
-        <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', marginBottom: 4 }}>Extra ingredients (optional)</div>
+        <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase', marginBottom: 4 }}>Extra ingredients (optional)</div>
         {extraIngredients.length > 0 && (
           <div className="stack" style={{ gap: 4, marginBottom: 'var(--space-2)' }}>
             {extraIngredients.map((ing, i) => (
-              <div key={i} className="row-between" style={{ fontSize: 13 }}>
+              <div key={i} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
                 <span>{ing.name} <span className="faint">{ing.amount} {ing.unit}</span></span>
                 <button className="row-remove-btn" onClick={() => removeExtraIngredient(i)}>×</button>
               </div>
@@ -554,7 +554,7 @@ function MealBuilder({ foods, onFoodsChanged }) {
           <input placeholder="Unit" value={newExtra.unit} onChange={e => setNewExtra(n => ({ ...n, unit: e.target.value }))} style={{ width: 90 }} />
           <Button size="sm" variant="ghost" onClick={addExtraIngredient}>+ Add ingredient</Button>
         </div>
-        <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+        <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>
           Macros for extra ingredients default to 0 — edit them precisely from the Recipes tab after saving, if needed.
         </div>
       </div>
@@ -562,11 +562,11 @@ function MealBuilder({ foods, onFoodsChanged }) {
       {name && <div style={{ marginTop: 'var(--space-3)', fontWeight: 700 }}>{name}</div>}
 
       {macros ? (
-        <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
           {Math.round(macros.calories)} kcal · {Math.round(macros.protein)}p · {Math.round(macros.carbs)}c · {Math.round(macros.fat)}f
         </div>
       ) : (
-        <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
           Tag foods in your Food Database with a slot to see real macros here.
         </div>
       )}
@@ -580,7 +580,7 @@ function MealBuilder({ foods, onFoodsChanged }) {
         <input placeholder="Name this recipe (e.g. Weeknight bowl)" value={saveName} onChange={e => setSaveName(e.target.value)} style={{ flex: 1 }} />
         <Button size="sm" onClick={handleSave} disabled={!name}>{saved ? <>Saved <Check size={14} style={{ verticalAlign: 'middle' }} /></> : 'Save as Recipe'}</Button>
       </div>
-      {saveError && <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>Couldn't save: {saveError}</div>}
+      {saveError && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, color: 'var(--danger)' }}>Couldn't save: {saveError}</div>}
 
       <div style={{ marginTop: 'var(--space-4)' }}>
         <Button size="sm" variant="text" onClick={() => setManagingSlots(!managingSlots)}>
@@ -588,13 +588,13 @@ function MealBuilder({ foods, onFoodsChanged }) {
         </Button>
         {managingSlots && (
           foods.length === 0 ? (
-            <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>
+            <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>
               No foods in your database yet — add one from a meal slot above, or below.
             </div>
           ) : (
             <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 6 }}>
               {foods.map(f => (
-                <div key={f.id} style={{ fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--sand)' }}>
+                <div key={f.id} style={{ fontSize: 'var(--text-small)', padding: '4px 0', borderBottom: '1px solid var(--sand)' }}>
                   <div className="row-between">
                     <span>{f.name}</span>
                     <select value={f.meal_slot || ''} onChange={e => handleTag(f.id, e.target.value)}>
@@ -659,7 +659,7 @@ function QuickMealAdd({ onSaved }) {
   return (
     <Card style={{ marginTop: 'var(--space-4)' }}>
       <div className="section-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Sparkles size={14} />Quick meal (AI-estimated)</div>
-      <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+      <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
         For premade/packaged things — frozen pizza, boxed tortellini, a takeout order. AI estimates the calories so
         you don't have to look it up, then it's saved as a real food you can use anywhere.
       </p>
@@ -675,16 +675,16 @@ function QuickMealAdd({ onSaved }) {
         </Button>
       </div>
       {estimate && estimate.error && (
-        <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>
           AI estimate unavailable right now — try again shortly.
         </div>
       )}
       {estimate && !estimate.error && (
         <div style={{ marginTop: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--cream)', borderRadius: 'var(--radius-sm)' }}>
-          <div style={{ fontSize: 13 }}>
+          <div style={{ fontSize: 'var(--text-small)' }}>
             {estimate.calories} kcal · {estimate.protein}p · {estimate.carbs}c · {estimate.fat}f
           </div>
-          {estimate.serving_note && <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{estimate.serving_note}</div>}
+          {estimate.serving_note && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 2 }}>{estimate.serving_note}</div>}
           <Button size="sm" style={{ marginTop: 'var(--space-2)' }} onClick={handleSave}>
             {saved ? <>Saved <Check size={14} style={{ verticalAlign: 'middle' }} /></> : 'Save to my foods'}
           </Button>
@@ -720,7 +720,7 @@ function MealQuickAdd({ mealType, foods, recipes, onAddFood, onAddRecipe }) {
           ))}
         </div>
       ) : (
-        <div className="muted" style={{ fontSize: 11 }}>
+        <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>
           No regulars tagged for {mealType} yet — tag some as "Regular" (Manage food slots / Recipes tab), or search below.
         </div>
       )}
@@ -729,7 +729,7 @@ function MealQuickAdd({ mealType, foods, recipes, onAddFood, onAddRecipe }) {
         placeholder={`Search foods & recipes to add to ${mealType}...`}
         value={query}
         onChange={e => setQuery(e.target.value)}
-        style={{ width: '100%', marginTop: 'var(--space-2)', fontSize: 13 }}
+        style={{ width: '100%', marginTop: 'var(--space-2)', fontSize: 'var(--text-small)' }}
       />
       {searchResults.length > 0 && (
         <div className="row" style={{ flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
@@ -792,7 +792,7 @@ function KitchenInventoryTab() {
     return (
       <Card>
         <div className="section-label">Kitchen Inventory</div>
-        <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)', color: 'var(--danger)' }}>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)', color: 'var(--danger)' }}>
           Couldn't load: {loadError}
           <br />If this mentions a missing table, the v2_grocery_aggregation_and_inventory_layer.sql migration likely hasn't been run yet.
         </div>
@@ -803,7 +803,7 @@ function KitchenInventoryTab() {
   return (
     <Card>
       <div className="section-label">Kitchen Inventory</div>
-      <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+      <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
         What you already have on hand. "Generate list (with quantities)" on the Grocery List tab subtracts these amounts
         before adding to the shopping list — so a full bag of flour means it won't ask you to buy more until it's gone.
       </p>
@@ -813,7 +813,7 @@ function KitchenInventoryTab() {
       ) : (
         <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 4 }}>
           {items.map(item => (
-            <div key={item.id} className="row-between" style={{ fontSize: 13 }}>
+            <div key={item.id} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
               <span>{item.ingredient_name} <span className="faint">{item.quantity} {item.unit}</span></span>
               <button className="row-remove-btn" onClick={() => handleDelete(item.id)}>×</button>
             </div>
@@ -827,7 +827,7 @@ function KitchenInventoryTab() {
         <input placeholder="Unit" value={newItem.unit} onChange={e => setNewItem(n => ({ ...n, unit: e.target.value }))} style={{ width: 90 }} />
         <Button size="sm" onClick={handleAdd}>+ Add / update</Button>
       </div>
-      {addError && <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>Couldn't save: {addError}</div>}
+      {addError && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, color: 'var(--danger)' }}>Couldn't save: {addError}</div>}
     </Card>
   );
 }
@@ -929,7 +929,7 @@ function GroceryListTab() {
     return (
       <Card>
         <div className="section-label">Grocery List</div>
-        <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)', color: 'var(--danger)' }}>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)', color: 'var(--danger)' }}>
           Couldn't load the grocery list: {loadError}
           <br />If this mentions a missing column, the v2_grocery_list_display_layer.sql migration likely hasn't been run yet.
         </div>
@@ -950,15 +950,15 @@ function GroceryListTab() {
       <div className="row-between" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
         <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
           <Button size="sm" variant="ghost" onClick={() => shiftWeek(-7)}>← </Button>
-          <span className="muted" style={{ fontSize: 12 }}>Week of {weekStart}</span>
+          <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>Week of {weekStart}</span>
           <Button size="sm" variant="ghost" onClick={() => shiftWeek(7)}>→</Button>
         </div>
         <Button size="sm" variant="primary" onClick={handleGenerateAggregated} disabled={generating}>
           {generating ? 'Calculating…' : 'Generate list (with quantities)'}
         </Button>
       </div>
-      {genStatus && <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{genStatus}</div>}
-      {genError && <div className="muted" style={{ fontSize: 12, marginTop: 4, color: 'var(--danger)' }}>Couldn't generate: {genError}</div>}
+      {genStatus && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>{genStatus}</div>}
+      {genError && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4, color: 'var(--danger)' }}>Couldn't generate: {genError}</div>}
 
       {items.length === 0 ? (
         <EmptyState icon="leaf" title="Nothing on your list yet" subtitle="Use 'Generate grocery list' from Plan a day/week, or 'Add to grocery list' from a recipe." />
@@ -969,13 +969,13 @@ function GroceryListTab() {
               <input type="checkbox" checked={false} onChange={() => handleToggle(item)} />
               <span>{item.name}</span>
               {item.total_quantity != null && <span className="faint">× {item.total_quantity} {item.unit}</span>}
-              <span className="muted" style={{ fontSize: 11 }}>{item.category}</span>
+              <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{item.category}</span>
               <button className="row-remove-btn" onClick={() => deleteGroceryItem(item.id).then(refresh)}>×</button>
             </label>
           ))}
           {purchased.length > 0 && (
             <>
-              <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-3)' }}>Checked off</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 'var(--space-3)' }}>Checked off</div>
               {purchased.map(item => (
                 <label key={item.id} className="row" style={{ gap: 'var(--space-2)', alignItems: 'center', opacity: 0.5 }}>
                   <input type="checkbox" checked={true} onChange={() => handleToggle(item)} />
@@ -993,15 +993,15 @@ function GroceryListTab() {
         </Button>
         {showMappings && (
           <div style={{ marginTop: 'var(--space-2)' }}>
-            <p className="muted" style={{ fontSize: 11 }}>
+            <p className="muted" style={{ fontSize: 'var(--text-micro)' }}>
               Define how a recipe quantity converts to what you actually buy — e.g. "4 cups flour" per "1 bag (5lb)."
               Ingredients without a mapping just show their raw recipe quantity on the list.
             </p>
-            {mappingError && <div className="muted" style={{ fontSize: 11, color: 'var(--danger)' }}>{mappingError}</div>}
+            {mappingError && <div className="muted" style={{ fontSize: 'var(--text-micro)', color: 'var(--danger)' }}>{mappingError}</div>}
             {mappings.length > 0 && (
               <div className="stack" style={{ gap: 4, marginTop: 'var(--space-2)' }}>
                 {mappings.map(m => (
-                  <div key={m.id} className="row-between" style={{ fontSize: 13 }}>
+                  <div key={m.id} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
                     <span>{m.ingredient_name}: {m.qty_per_shopping_unit} → 1 {m.shopping_unit_label}</span>
                     <button className="row-remove-btn" onClick={() => handleDeleteMapping(m.id)}>×</button>
                   </div>
@@ -1051,12 +1051,12 @@ function RecipesTab() {
   return (
     <Card>
       <div className="section-label">Recipes</div>
-      <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+      <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
         Set ingredients once at a base serving size — adjusting servings scales every quantity and the total
         macros automatically. Add the scaled ingredients straight to your grocery list.
       </p>
       {recipes.length === 0 ? (
-        <div className="muted" style={{ fontSize: 12, margin: '12px 0' }}>No recipes yet — add your first below.</div>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)', margin: '12px 0' }}>No recipes yet — add your first below.</div>
       ) : (
         <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-2)' }}>
           {recipes.map(r => (
@@ -1143,9 +1143,9 @@ function RecipeRow({ recipe, expanded, onToggleExpand, onDelete, onServingsChang
   return (
     <div style={{ background: 'var(--cream)', borderRadius: 'var(--radius-sm)', padding: 'var(--space-2)' }}>
       <div className="row-between" onClick={onToggleExpand} style={{ cursor: 'pointer' }}>
-        <span style={{ fontWeight: 700, fontSize: 14 }}>{recipe.name}</span>
+        <span style={{ fontWeight: 700, fontSize: 'var(--text-compact)' }}>{recipe.name}</span>
         <div className="row" style={{ gap: 4 }}>
-          <span className="muted" style={{ fontSize: 11 }}>base {recipe.base_servings} servings</span>
+          <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>base {recipe.base_servings} servings</span>
           <Button size="sm" variant="text" onClick={e => { e.stopPropagation(); onDelete(); }}>Delete</Button>
         </div>
       </div>
@@ -1169,7 +1169,7 @@ function RecipeRow({ recipe, expanded, onToggleExpand, onDelete, onServingsChang
       {expanded && (
         <div style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
           <div className="row" style={{ alignItems: 'center', gap: 'var(--space-2)' }}>
-            <span style={{ fontSize: 12 }}>Servings:</span>
+            <span style={{ fontSize: 'var(--text-caption)' }}>Servings:</span>
             <input
               type="number" min="1" value={servings}
               onChange={e => setServings(Number(e.target.value) || 1)}
@@ -1182,16 +1182,16 @@ function RecipeRow({ recipe, expanded, onToggleExpand, onDelete, onServingsChang
             <>
               <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 4 }}>
                 {scaled.map(ing => (
-                  <div key={ing.id} className="row-between" style={{ fontSize: 13 }}>
+                  <div key={ing.id} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
                     <span>{ing.name} — {ing.scaledQuantity} {ing.unit}</span>
                     <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                      <span className="muted" style={{ fontSize: 11 }}>{ing.scaledCalories} kcal</span>
+                      <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{ing.scaledCalories} kcal</span>
                       <Button size="sm" variant="text" onClick={() => handleDeleteIngredient(ing.id)}>×</Button>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>
+              <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>
                 Total at {servings} servings: {totals.calories} kcal · {totals.protein}p · {totals.carbs}c · {totals.fat}f
               </div>
               <Button size="sm" style={{ marginTop: 'var(--space-2)' }} onClick={handleAddToGrocery}>
@@ -1201,7 +1201,7 @@ function RecipeRow({ recipe, expanded, onToggleExpand, onDelete, onServingsChang
           )}
 
           <div style={{ marginTop: 'var(--space-3)', paddingTop: 'var(--space-2)', borderTop: '1px solid rgba(22,50,79,0.08)' }}>
-            <div className="muted" style={{ fontSize: 11, marginBottom: 4 }}>Add ingredient (values per 1 serving)</div>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', marginBottom: 4 }}>Add ingredient (values per 1 serving)</div>
             <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
               <input placeholder="Name" value={newIng.name} onChange={e => setNewIng({ ...newIng, name: e.target.value })} style={{ width: 130 }} />
               <input placeholder="Qty" value={newIng.quantity_per_serving} onChange={e => setNewIng({ ...newIng, quantity_per_serving: e.target.value })} style={{ width: 60 }} />

@@ -15,7 +15,7 @@
 .mini-timer-info { display: flex; align-items: center; gap: 8px; }
 .mini-timer-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sage); flex-shrink: 0; }
 .mini-timer-dot.break { background: var(--gold); }
-.mini-timer-time { font-family: var(--font-display); font-weight: 800; font-size: 14px; min-width: 44px; }
+.mini-timer-time { font-family: var(--font-display); font-weight: 800; font-size: var(--text-compact); min-width: 44px; }
 .mini-timer-label { font-size: 11.5px; color: rgba(255,255,255,0.65); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .mini-timer-actions { display: flex; gap: 2px; }

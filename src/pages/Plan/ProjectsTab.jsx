@@ -130,25 +130,25 @@ export default function ProjectsTab() {
           <Button size="sm" onClick={handleAddGoal}>+ Add goal</Button>
         </div>
         {goalError && (
-          <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>
+          <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, color: 'var(--danger)' }}>
             Couldn't add goal: {goalError}
           </div>
         )}
         <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
-          <span className="muted" style={{ fontSize: 11, marginRight: 4 }}>Timeframe (optional):</span>
+          <span className="muted" style={{ fontSize: 'var(--text-micro)', marginRight: 4 }}>Timeframe (optional):</span>
           {TIMEFRAMES.map(t => (
-            <button key={t} className={`sub-tab ${newGoalTimeframe === t ? 'active' : ''}`} style={{ fontSize: 11 }}
+            <button key={t} className={`sub-tab ${newGoalTimeframe === t ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
               onClick={() => setNewGoalTimeframe(newGoalTimeframe === t ? null : t)}>{t}</button>
           ))}
-          <span className="muted" style={{ fontSize: 11, margin: '0 4px 0 12px' }}>Energy impact (optional):</span>
+          <span className="muted" style={{ fontSize: 'var(--text-micro)', margin: '0 4px 0 12px' }}>Energy impact (optional):</span>
           {ENERGY_IMPACTS.map(e => (
-            <button key={e} className={`sub-tab ${newGoalEnergy === e ? 'active' : ''}`} style={{ fontSize: 11 }}
+            <button key={e} className={`sub-tab ${newGoalEnergy === e ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
               onClick={() => setNewGoalEnergy(newGoalEnergy === e ? null : e)}>{e}</button>
           ))}
         </div>
         {newGoalTimeframe && newGoalTimeframe !== 'Year' && (
           <div className="row" style={{ marginTop: 'var(--space-2)' }}>
-            <span className="muted" style={{ fontSize: 11, marginRight: 4 }}>Rolls up under (optional):</span>
+            <span className="muted" style={{ fontSize: 'var(--text-micro)', marginRight: 4 }}>Rolls up under (optional):</span>
             <select value={newGoalParent} onChange={e => setNewGoalParent(e.target.value)}>
               <option value="">No parent goal</option>
               {goals.filter(g => g.timeframe && g.timeframe !== newGoalTimeframe).map(g => (
@@ -182,14 +182,14 @@ export default function ProjectsTab() {
           <Button size="sm" onClick={handleAddProject}>+ Add project</Button>
         </div>
         <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
-          <span className="muted" style={{ fontSize: 11, marginRight: 4 }}>Connects to (optional):</span>
+          <span className="muted" style={{ fontSize: 'var(--text-micro)', marginRight: 4 }}>Connects to (optional):</span>
           {DREAM_LIFE_SECTIONS.map(s => (
-            <button key={s.key} className={`sub-tab ${newProjectVision === s.key ? 'active' : ''}`} style={{ fontSize: 11 }}
+            <button key={s.key} className={`sub-tab ${newProjectVision === s.key ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
               onClick={() => setNewProjectVision(newProjectVision === s.key ? '' : s.key)}>{s.label}</button>
           ))}
-          <span className="muted" style={{ fontSize: 11, margin: '0 4px 0 12px' }}>Energy impact (optional):</span>
+          <span className="muted" style={{ fontSize: 'var(--text-micro)', margin: '0 4px 0 12px' }}>Energy impact (optional):</span>
           {ENERGY_IMPACTS.map(e => (
-            <button key={e} className={`sub-tab ${newProjectEnergy === e ? 'active' : ''}`} style={{ fontSize: 11 }}
+            <button key={e} className={`sub-tab ${newProjectEnergy === e ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
               onClick={() => setNewProjectEnergy(newProjectEnergy === e ? null : e)}>{e}</button>
           ))}
         </div>
@@ -234,7 +234,7 @@ function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved }) {
       <div className="row-between" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }} onClick={onToggleExpand}>
         <div>
           <div style={{ fontWeight: 700 }}>{goal.title}</div>
-          <div className="muted" style={{ fontSize: 12 }}>
+          <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>
             {goal.category} · {goal.status}
             {goal.timeframe && ` · ${goal.timeframe}`}
             {goal.energy_impact && ` · ${goal.energy_impact}`}
@@ -242,7 +242,7 @@ function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved }) {
           </div>
         </div>
         <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
-          {goal.target_date && <div className="muted" style={{ fontSize: 12 }}>{goal.target_date}</div>}
+          {goal.target_date && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{goal.target_date}</div>}
           {goal.status !== 'Achieved' && (
             <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); onMarkAchieved(); }}>Mark achieved</Button>
           )}
@@ -251,18 +251,18 @@ function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved }) {
       {goal.target_value != null && (
         <div style={{ marginTop: 6 }} onClick={e => e.stopPropagation()}>
           <ProgressBar value={goal.current_value || 0} max={goal.target_value} />
-          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{goal.current_value || 0} / {goal.target_value}</div>
+          <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 2 }}>{goal.current_value || 0} / {goal.target_value}</div>
         </div>
       )}
 
       {expanded && (
         <div style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
           <div className="section-label">Missions</div>
-          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+          <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 2 }}>
             Optional — a Mission groups a few Tasks under one outcome, like "Prepare for consultation."
           </div>
           {missions.length === 0 ? (
-            <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>No missions yet — not every goal needs one.</div>
+            <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>No missions yet — not every goal needs one.</div>
           ) : (
             <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
               {missions.map(m => (
@@ -318,10 +318,10 @@ function MissionRow({ mission, expanded, onToggleExpand, onComplete, onDelete })
     <div style={{ background: 'var(--cream)', borderRadius: 'var(--radius-sm)', padding: 'var(--space-2)' }}>
       <div className="row-between" onClick={onToggleExpand} style={{ cursor: 'pointer' }}>
         <div>
-          <span style={{ fontWeight: 700, fontSize: 13, textDecoration: mission.status === 'completed' ? 'line-through' : 'none' }}>
+          <span style={{ fontWeight: 700, fontSize: 'var(--text-small)', textDecoration: mission.status === 'completed' ? 'line-through' : 'none' }}>
             {mission.title}
           </span>
-          {tasks.length > 0 && <span className="muted" style={{ fontSize: 11 }}> · {doneCount}/{tasks.length} tasks</span>}
+          {tasks.length > 0 && <span className="muted" style={{ fontSize: 'var(--text-micro)' }}> · {doneCount}/{tasks.length} tasks</span>}
         </div>
         {mission.status !== 'completed' && (
           <div className="row" style={{ gap: 4 }}>
@@ -391,14 +391,14 @@ function ProjectRow({ project, expanded, onToggleExpand }) {
       <div className="row-between" onClick={onToggleExpand}>
         <div>
           <div style={{ fontWeight: 700 }}>{project.title}</div>
-          <div className="muted" style={{ fontSize: 12 }}>
+          <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>
             {project.status}
             {project.goals?.title && ` · ${project.goals.title}`}
             {tasks.length > 0 && ` · ${doneTasks}/${tasks.length} tasks`}
             {progressPct !== null && ` · ${progressPct}% milestones`}
           </div>
         </div>
-        {project.due_date && <div className="muted" style={{ fontSize: 12 }}>{project.due_date}</div>}
+        {project.due_date && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{project.due_date}</div>}
       </div>
 
       {expanded && (
@@ -416,16 +416,16 @@ function ProjectRow({ project, expanded, onToggleExpand }) {
 
           <div className="section-label" style={{ marginTop: 'var(--space-4)' }}>Tasks</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            {tasks.length === 0 && <div className="muted" style={{ fontSize: 12 }}>No tasks linked yet — add project_id when creating a task.</div>}
+            {tasks.length === 0 && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>No tasks linked yet — add project_id when creating a task.</div>}
             {tasks.map(t => (
-              <div key={t.id} className="muted" style={{ fontSize: 13 }}>{t.completed ? <Check size={12} style={{ verticalAlign: 'middle' }} /> : '○ '}{t.title}</div>
+              <div key={t.id} className="muted" style={{ fontSize: 'var(--text-small)' }}>{t.completed ? <Check size={12} style={{ verticalAlign: 'middle' }} /> : '○ '}{t.title}</div>
             ))}
           </div>
 
           <div className="section-label" style={{ marginTop: 'var(--space-4)' }}>Resources</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {resources.map(r => (
-              <div key={r.id} style={{ fontSize: 13 }}>
+              <div key={r.id} style={{ fontSize: 'var(--text-small)' }}>
                 {r.url ? <a href={r.url} target="_blank" rel="noreferrer">{r.title}</a> : r.title}
               </div>
             ))}
@@ -438,8 +438,8 @@ function ProjectRow({ project, expanded, onToggleExpand }) {
 
           <div className="section-label" style={{ marginTop: 'var(--space-4)' }}>Notes</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            {notes.length === 0 && <div className="muted" style={{ fontSize: 12 }}>No notes yet — capture one from the Inbox and attach it here.</div>}
-            {notes.map(n => <div key={n.id} className="muted" style={{ fontSize: 13, borderBottom: '1px solid var(--sand)', padding: '4px 0' }}>{n.content}</div>)}
+            {notes.length === 0 && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>No notes yet — capture one from the Inbox and attach it here.</div>}
+            {notes.map(n => <div key={n.id} className="muted" style={{ fontSize: 'var(--text-small)', borderBottom: '1px solid var(--sand)', padding: '4px 0' }}>{n.content}</div>)}
           </div>
         </div>
       )}

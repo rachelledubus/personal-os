@@ -193,7 +193,7 @@ export default function TodayPage() {
       {overrunningBlock && (
         <Card className="hyperfocus-nudge">
           <div className="row-between">
-            <div style={{ fontSize: 13 }}>
+            <div style={{ fontSize: 'var(--text-small)' }}>
               You've been deep in <strong>{overrunningBlock.title}</strong> — it was set to wrap up at{' '}
               {overrunningBlock.end_time?.slice(0, 5)}. Totally fine to keep going.
             </div>
@@ -222,15 +222,15 @@ export default function TodayPage() {
           <div className="row-between">
             <div className="section-label">Business</div>
           </div>
-          <Link to="/business/weekly-reset" className="row-between neglected-link" style={{ fontSize: 13, padding: '4px 0' }}>
+          <Link to="/business/weekly-reset" className="row-between neglected-link" style={{ fontSize: 'var(--text-small)', padding: '4px 0' }}>
             <span>You have {businessOverdueCount} overdue Business task{businessOverdueCount === 1 ? '' : 's'}</span>
-            <span className="muted" style={{ fontSize: 11 }}>See who →</span>
+            <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>See who →</span>
           </Link>
         </Card>
       )}
       {neglectedError && (
         <Card style={{ marginTop: 'var(--space-4)', borderLeft: '3px solid var(--danger)' }}>
-          <div style={{ fontSize: 13 }}>"Might be worth a look" couldn't load: {neglectedError}</div>
+          <div style={{ fontSize: 'var(--text-small)' }}>"Might be worth a look" couldn't load: {neglectedError}</div>
         </Card>
       )}
       {neglected.length > 0 && (
@@ -238,9 +238,9 @@ export default function TodayPage() {
           <div className="section-label">Might be worth a look</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {neglected.map(item => (
-              <Link key={`${item.type}-${item.id}`} to={item.link} className="row-between neglected-link" style={{ fontSize: 13, padding: '4px 0' }}>
+              <Link key={`${item.type}-${item.id}`} to={item.link} className="row-between neglected-link" style={{ fontSize: 'var(--text-small)', padding: '4px 0' }}>
                 <span>{item.label}</span>
-                <span className="muted" style={{ fontSize: 11 }}>{item.detail}</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{item.detail}</span>
               </Link>
             ))}
           </div>
@@ -267,8 +267,8 @@ export default function TodayPage() {
           />
           {scheduleError && (
             <Card style={{ marginTop: 'var(--space-3)', borderLeft: '3px solid var(--danger)' }}>
-              <div style={{ fontSize: 13 }}>Schedule couldn't load: {scheduleError}</div>
-              <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+              <div style={{ fontSize: 'var(--text-small)' }}>Schedule couldn't load: {scheduleError}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>
                 Most likely cause: the newest database migration (v2_executive_function_layer.sql) hasn't been run yet in Supabase.
               </div>
             </Card>

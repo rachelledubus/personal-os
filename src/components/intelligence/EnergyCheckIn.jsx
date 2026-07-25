@@ -45,7 +45,7 @@ export default function EnergyCheckIn({ onReplanned }) {
 
   return (
     <div className="energy-checkin">
-      <span className="muted" style={{ fontSize: 12 }}>Energy right now:</span>
+      <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>Energy right now:</span>
       {LEVELS.map(({ value, label, icon: Icon }) => (
         <button
           key={value}
@@ -56,7 +56,7 @@ export default function EnergyCheckIn({ onReplanned }) {
           <Icon size={13} /> {label}
         </button>
       ))}
-      {busy && <span className="muted" style={{ fontSize: 11 }}>Adjusting today's plan…</span>}
+      {busy && <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Adjusting today's plan…</span>}
 
       {/* Joy Tracking — optional, appears only after a level is picked, never blocks the tap-and-go flow above */}
       {logId && (
@@ -73,8 +73,8 @@ export default function EnergyCheckIn({ onReplanned }) {
             onChange={e => setMomentum(m => ({ ...m, drain: e.target.value }))}
             onBlur={saveMomentum}
           />
-          {momentumSaved && <span className="muted" style={{ fontSize: 11 }}>Saved</span>}
-          {momentumError && <span style={{ fontSize: 11, color: 'var(--danger)' }}>Couldn't save: {momentumError}</span>}
+          {momentumSaved && <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Saved</span>}
+          {momentumError && <span style={{ fontSize: 'var(--text-micro)', color: 'var(--danger)' }}>Couldn't save: {momentumError}</span>}
         </div>
       )}
     </div>

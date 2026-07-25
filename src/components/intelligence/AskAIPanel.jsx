@@ -54,14 +54,14 @@ export default function AskAIPanel({ onApplied }) {
           </div>
 
           {unavailable && (
-            <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>
+            <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>
               AI replanning isn't set up yet (needs GOOGLE_AI_API_KEY on Netlify). Nothing broke — try again once it's configured.
             </div>
           )}
 
           {proposal && (
             <div className="ask-ai-proposal">
-              <div style={{ fontSize: 13 }}>{proposal.summary}</div>
+              <div style={{ fontSize: 'var(--text-small)' }}>{proposal.summary}</div>
               {(proposal.actions || []).length > 0 && (
                 <ul className="ask-ai-actions">
                   {proposal.actions.map((a, i) => (

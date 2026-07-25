@@ -71,7 +71,7 @@ export default function BeliefTrackerTab() {
     return (
       <Card>
         <div className="section-label">Limiting Belief Tracker</div>
-        <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)', color: 'var(--danger)' }}>
+        <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)', color: 'var(--danger)' }}>
           Couldn't load: {loadError}
           <br />If this mentions a missing table, the v2_limiting_belief_tracker_layer.sql migration likely hasn't been run yet.
         </div>
@@ -92,13 +92,13 @@ export default function BeliefTrackerTab() {
           {beliefs.map(belief => (
             <Card key={belief.id}>
               <div className="row-between">
-                <span className="muted" style={{ fontSize: 11 }}>{new Date(belief.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{new Date(belief.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 <button className="row-remove-btn" onClick={() => handleDelete(belief.id)}>×</button>
               </div>
               <div className="stack" style={{ gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
                 {FIELDS.map(f => (
                   <div key={f.key}>
-                    <div className="muted" style={{ fontSize: 11, marginBottom: 2 }}>{f.label}</div>
+                    <div className="muted" style={{ fontSize: 'var(--text-micro)', marginBottom: 2 }}>{f.label}</div>
                     <input
                       value={drafts[belief.id]?.[f.key] ?? ''}
                       placeholder={f.placeholder}
@@ -119,7 +119,7 @@ export default function BeliefTrackerTab() {
         <div className="stack" style={{ gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
           {FIELDS.map(f => (
             <div key={f.key}>
-              <div className="muted" style={{ fontSize: 11, marginBottom: 2 }}>{f.label}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginBottom: 2 }}>{f.label}</div>
               <input
                 placeholder={f.placeholder}
                 value={newEntry[f.key]}
@@ -130,7 +130,7 @@ export default function BeliefTrackerTab() {
           ))}
         </div>
         <Button size="sm" onClick={handleAdd} style={{ marginTop: 'var(--space-3)' }}>+ Add entry</Button>
-        {addError && <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>Couldn't add: {addError}</div>}
+        {addError && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, color: 'var(--danger)' }}>Couldn't add: {addError}</div>}
       </Card>
     </div>
   );

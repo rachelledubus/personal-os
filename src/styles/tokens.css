@@ -35,10 +35,14 @@
 
   --text-display: 28px;
   --text-title: 22px;
+  --text-subtitle: 18px;     /* new — 19 real uses, previously undocumented */
   --text-card-title: 16px;
   --text-body: 15px;
+  --text-compact: 14px;      /* new — 20 real uses, previously undocumented */
   --text-caption: 12px;
   --text-label: 12px;
+  --text-small: 13px;        /* new — 107 real uses, more common than --text-caption */
+  --text-micro: 11px;        /* new — 145 real uses, the app's most-used undocumented size */
 
   /* --- Spacing (8px base unit) --- */
   --space-1: 4px;

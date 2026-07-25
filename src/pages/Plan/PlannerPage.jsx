@@ -81,7 +81,7 @@ function TimeBlocksTab() {
           <div key={b.id} className={`row-between planner-block track-${b.track}`}>
             <div>
               <div style={{ fontWeight: 700 }}>{b.title}</div>
-              <div className="muted" style={{ fontSize: 12 }}>
+              <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>
                 {b.start_time ? `${b.start_time}${b.end_time ? ' – ' + b.end_time : ''}` : 'No time set'}
                 {b.tasks?.title && ' · linked task'}
                 {b.auto_generated && ' · from Life Rhythm'}

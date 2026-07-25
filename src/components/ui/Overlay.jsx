@@ -52,7 +52,7 @@ export default function Overlay({ open, onClose, variant = 'sheet', title, subti
           <div className="overlay-header">
             <div>
               {title && <h3>{title}</h3>}
-              {subtitle && <div className="muted" style={{ fontSize: 13 }}>{subtitle}</div>}
+              {subtitle && <div className="muted" style={{ fontSize: 'var(--text-small)' }}>{subtitle}</div>}
             </div>
             {dismissible && (
               <button className="overlay-close" onClick={onClose} aria-label="Close">

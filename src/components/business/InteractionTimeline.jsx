@@ -72,7 +72,7 @@ export default function InteractionTimeline({ contact }) {
 
       {summary && (
         <AiSuggestionBox unavailable={summary.unavailable} onDismiss={() => setSummary(null)}>
-          <div style={{ fontSize: 13 }}>{summary.summary}</div>
+          <div style={{ fontSize: 'var(--text-small)' }}>{summary.summary}</div>
         </AiSuggestionBox>
       )}
 

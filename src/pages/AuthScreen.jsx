@@ -33,7 +33,7 @@ export default function AuthScreen() {
       <Card style={{ width: '100%', maxWidth: 360 }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>Rachelle's System</h1>
-          <p className="muted" style={{ fontSize: 12 }}>Personal operating system</p>
+          <p className="muted" style={{ fontSize: 'var(--text-caption)' }}>Personal operating system</p>
         </div>
         <form onSubmit={handleSubmit} className="stack">
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
@@ -46,7 +46,7 @@ export default function AuthScreen() {
           onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}>
           {mode === 'signin' ? 'New here? Create an account' : 'Already have an account? Log in'}
         </button>
-        {error && <p style={{ color: 'var(--accent)', fontSize: 12, textAlign: 'center', marginTop: 10 }}>{error}</p>}
+        {error && <p style={{ color: 'var(--accent)', fontSize: 'var(--text-caption)', textAlign: 'center', marginTop: 10 }}>{error}</p>}
       </Card>
     </div>
   );

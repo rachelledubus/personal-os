@@ -10,11 +10,11 @@ import Button from './Button.jsx';
 // ============================================================
 export default function AiSuggestionBox({ loading, unavailable, envVar = 'GOOGLE_AI_API_KEY', children, onDismiss }) {
   if (loading) {
-    return <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>Thinking…</div>;
+    return <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>Thinking…</div>;
   }
   if (unavailable) {
     return (
-      <div className="muted" style={{ fontSize: 12, marginTop: 'var(--space-2)' }}>
+      <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>
         AI isn't set up yet (needs {envVar} on Netlify). Nothing broke — everything else still works.
       </div>
     );

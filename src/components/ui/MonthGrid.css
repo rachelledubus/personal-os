@@ -2,7 +2,7 @@
 .month-grid-label {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--text-small);
   color: var(--navy);
   margin-bottom: 6px;
 }

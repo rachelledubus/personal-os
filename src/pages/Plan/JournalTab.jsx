@@ -17,8 +17,8 @@ function StatCard({ label, current, previous, unit = '' }) {
   const trendLabel = previous === 0 ? null : (diff === 0 ? 'same as last month' : `${diff > 0 ? '+' : ''}${diff}${unit} vs last month`);
   return (
     <div style={{ padding: 'var(--space-3)', background: 'var(--cream)', borderRadius: 'var(--radius-md)', minWidth: 130 }}>
-      <div className="muted" style={{ fontSize: 11 }}>{label}</div>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, color: 'var(--navy)' }}>{current}{unit}</div>
+      <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>{label}</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--text-title)', color: 'var(--navy)' }}>{current}{unit}</div>
       {trendLabel && <div className="muted" style={{ fontSize: 10 }}>{trendLabel}</div>}
     </div>
   );
@@ -79,7 +79,7 @@ export default function JournalTab() {
       <Card>
         <div className="row-between">
           <Button size="sm" variant="text" onClick={() => changeMonth(-1)}>← Prev</Button>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 16, color: 'var(--navy)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--text-card-title)', color: 'var(--navy)' }}>
             {MONTH_NAMES[month - 1]} {year}
           </div>
           <Button size="sm" variant="text" onClick={() => changeMonth(1)}>Next →</Button>
@@ -93,7 +93,7 @@ export default function JournalTab() {
               <div className="section-label">☁️ Sora's observations</div>
               <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 6 }}>
                 {observations.map((o, i) => (
-                  <div key={i} style={{ fontSize: 13, color: 'var(--navy)' }}>{o}</div>
+                  <div key={i} style={{ fontSize: 'var(--text-small)', color: 'var(--navy)' }}>{o}</div>
                 ))}
               </div>
             </Card>

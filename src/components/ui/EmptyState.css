@@ -22,7 +22,7 @@
   color: var(--navy);
   opacity: 0.5;
 }
-.empty-state-title { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--navy); }
+.empty-state-title { font-family: var(--font-display); font-weight: 700; font-size: var(--text-compact); color: var(--navy); }
 .empty-state-scribble-underline {
   width: 64px; height: 6px;
   display: block;

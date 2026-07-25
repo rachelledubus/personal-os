@@ -11,7 +11,7 @@
   letter-spacing: 0.02em;
 }
 .interaction-timeline-empty {
-  font-size: 12px;
+  font-size: var(--text-caption);
   margin-top: var(--space-2);
 }
 
@@ -25,7 +25,7 @@
   border-radius: var(--radius-sm);
 }
 .interaction-add-form select { align-self: flex-start; }
-.interaction-add-form textarea { width: 100%; resize: vertical; font-size: 13px; padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); }
+.interaction-add-form textarea { width: 100%; resize: vertical; font-size: var(--text-small); padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); }
 
 .interaction-list {
   margin-top: var(--space-2);
@@ -43,8 +43,8 @@
   align-items: center;
   gap: var(--space-2);
 }
-.interaction-date { font-size: 11px; flex: 1; }
-.interaction-notes { font-size: 13px; margin-top: 2px; color: var(--navy); }
+.interaction-date { font-size: var(--text-micro); flex: 1; }
+.interaction-notes { font-size: var(--text-small); margin-top: 2px; color: var(--navy); }
 
 .interaction-type-tag {
   font-size: 10px;

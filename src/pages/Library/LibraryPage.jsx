@@ -100,7 +100,7 @@ function NotesTab() {
                 </div>
               </div>
             ) : (
-              <div className="muted" style={{ fontSize: 13, cursor: 'pointer' }} onClick={() => openNote(n)}>
+              <div className="muted" style={{ fontSize: 'var(--text-small)', cursor: 'pointer' }} onClick={() => openNote(n)}>
                 {n.content}
               </div>
             )}
@@ -226,7 +226,7 @@ function BacklogTab() {
                     </div>
                   ) : (
                     <div className="row-between">
-                      <span style={{ fontSize: 13, cursor: 'pointer' }} onClick={() => startEdit(i)}>
+                      <span style={{ fontSize: 'var(--text-small)', cursor: 'pointer' }} onClick={() => startEdit(i)}>
                         <span className="muted" style={{ marginRight: 6 }}>⠿</span>{i.idea}
                       </span>
                       <button className="row-remove-btn" onClick={() => deleteBacklogIdea(i.id).then(refresh)}>×</button>
@@ -264,11 +264,11 @@ function AILogTab() {
           {decisions.map(d => (
             <div key={d.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--sand)' }}>
               <div className="row-between">
-                <span className="muted" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>{d.decision_type.replace('_', ' ')}</span>
-                <span className="muted" style={{ fontSize: 11 }}>{RESPONSE_LABEL[d.user_response]}</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{d.decision_type.replace('_', ' ')}</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{RESPONSE_LABEL[d.user_response]}</span>
               </div>
-              <div style={{ fontSize: 13, marginTop: 2 }}>{d.reasoning}</div>
-              <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{new Date(d.proposed_at).toLocaleString()}</div>
+              <div style={{ fontSize: 'var(--text-small)', marginTop: 2 }}>{d.reasoning}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 2 }}>{new Date(d.proposed_at).toLocaleString()}</div>
             </div>
           ))}
         </div>

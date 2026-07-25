@@ -173,9 +173,9 @@ function DashboardTab() {
       <Card>
         <div className="row-between">
           <div className="section-label">This week's one build task</div>
-          {thisWeekBuild?.date_range && <span className="muted" style={{ fontSize: 12 }}>{thisWeekBuild.date_range}</span>}
+          {thisWeekBuild?.date_range && <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>{thisWeekBuild.date_range}</span>}
         </div>
-        {thisWeekBuild ? <div style={{ marginTop: 'var(--space-2)' }}>{thisWeekBuild.title}</div> : <div className="muted" style={{ fontSize: 13 }}>No build currently in progress — check Roadmap.</div>}
+        {thisWeekBuild ? <div style={{ marginTop: 'var(--space-2)' }}>{thisWeekBuild.title}</div> : <div className="muted" style={{ fontSize: 'var(--text-small)' }}>No build currently in progress — check Roadmap.</div>}
         <Link to="/business/roadmap"><Button size="sm" variant="text">Open Roadmap →</Button></Link>
       </Card>
 
@@ -193,10 +193,10 @@ function DashboardTab() {
           </div>
         ) : (
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            <div className="row-between" style={{ fontSize: 13 }}><span>Meaningful conversations</span><span className="muted">{running.conversations} / {targets?.conversations_target ?? 10}</span></div>
-            <div className="row-between" style={{ fontSize: 13 }}><span>Relationship boxes checked</span><span className="muted">{weekDoneCount('relationship')} / 5</span></div>
-            <div className="row-between" style={{ fontSize: 13 }}><span>Authority boxes checked</span><span className="muted">{weekDoneCount('authority')} / 5</span></div>
-            <div className="row-between" style={{ fontSize: 13 }}><span>Consultations booked</span><span className="muted">{running.consultations} / {targets?.consultations_target ?? 0}</span></div>
+            <div className="row-between" style={{ fontSize: 'var(--text-small)' }}><span>Meaningful conversations</span><span className="muted">{running.conversations} / {targets?.conversations_target ?? 10}</span></div>
+            <div className="row-between" style={{ fontSize: 'var(--text-small)' }}><span>Relationship boxes checked</span><span className="muted">{weekDoneCount('relationship')} / 5</span></div>
+            <div className="row-between" style={{ fontSize: 'var(--text-small)' }}><span>Authority boxes checked</span><span className="muted">{weekDoneCount('authority')} / 5</span></div>
+            <div className="row-between" style={{ fontSize: 'var(--text-small)' }}><span>Consultations booked</span><span className="muted">{running.consultations} / {targets?.consultations_target ?? 0}</span></div>
           </div>
         )}
       </Card>
@@ -205,7 +205,7 @@ function DashboardTab() {
         <div className="row-between">
           <div>
             <div className="section-label">Weekly reflection</div>
-            <Link to="/review" className="muted" style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 3 }}><RotateCcw size={12} />All reviews →</Link>
+            <Link to="/review" className="muted" style={{ fontSize: 'var(--text-micro)', display: 'inline-flex', alignItems: 'center', gap: 3 }}><RotateCcw size={12} />All reviews →</Link>
           </div>
           <Button size="sm" variant="text" onClick={() => setEditingReview(!editingReview)}>
             {editingReview ? 'Cancel' : (review ? 'Edit' : 'Add reflection')}
@@ -215,39 +215,39 @@ function DashboardTab() {
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             <label className="reset-field">
               <span>One thing that went well</span>
-              <div className="muted" style={{ fontSize: 11, marginTop: -2, marginBottom: 2 }}>A specific conversation, follow-up, or activity — not a general feeling.</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: -2, marginBottom: 2 }}>A specific conversation, follow-up, or activity — not a general feeling.</div>
               <textarea placeholder="e.g. Called Sarah back within an hour of her question" value={reviewForm.what_worked}
                 onChange={e => setReviewForm({ ...reviewForm, what_worked: e.target.value })} style={{ minHeight: 44 }} />
             </label>
             <label className="reset-field">
               <span>One thing that was a struggle</span>
-              <div className="muted" style={{ fontSize: 11, marginTop: -2, marginBottom: 2 }}>Name the specific thing, not just "I was busy."</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: -2, marginBottom: 2 }}>Name the specific thing, not just "I was busy."</div>
               <textarea placeholder="e.g. Put off following up with 3 leads until Thursday" value={reviewForm.what_didnt}
                 onChange={e => setReviewForm({ ...reviewForm, what_didnt: e.target.value })} style={{ minHeight: 44 }} />
             </label>
             <label className="reset-field">
               <span>Anyone or anything that needs attention now</span>
-              <div className="muted" style={{ fontSize: 11, marginTop: -2, marginBottom: 2 }}>A specific contact, deal, or task — not a category.</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: -2, marginBottom: 2 }}>A specific contact, deal, or task — not a category.</div>
               <textarea placeholder="e.g. The Ramirez listing — haven't heard back in 5 days" value={reviewForm.needs_attention}
                 onChange={e => setReviewForm({ ...reviewForm, needs_attention: e.target.value })} style={{ minHeight: 44 }} />
             </label>
             <label className="reset-field">
               <span>The ONE priority for next week</span>
-              <div className="muted" style={{ fontSize: 11, marginTop: -2, marginBottom: 2 }}>Just one. Not a list.</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: -2, marginBottom: 2 }}>Just one. Not a list.</div>
               <textarea placeholder="e.g. Get the Real Payment Guide drafted" value={reviewForm.next_week_priorities}
                 onChange={e => setReviewForm({ ...reviewForm, next_week_priorities: e.target.value })} style={{ minHeight: 44 }} />
             </label>
             <div><Button size="sm" onClick={handleSaveReview}>Save reflection</Button></div>
           </div>
         ) : review ? (
-          <div className="stack" style={{ marginTop: 'var(--space-2)', fontSize: 13 }}>
+          <div className="stack" style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-small)' }}>
             {review.what_worked && <div><strong>Went well:</strong> {review.what_worked}</div>}
             {review.what_didnt && <div><strong>Struggle:</strong> {review.what_didnt}</div>}
             {review.needs_attention && <div><strong>Needs attention:</strong> {review.needs_attention}</div>}
             {review.next_week_priorities && <div><strong>Next week's one thing:</strong> {review.next_week_priorities}</div>}
           </div>
         ) : (
-          <div className="muted" style={{ fontSize: 13, marginTop: 'var(--space-2)' }}>No reflection recorded for this week yet.</div>
+          <div className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-2)' }}>No reflection recorded for this week yet.</div>
         )}
       </Card>
 
@@ -255,15 +255,15 @@ function DashboardTab() {
         <Card>
           <div className="row-between">
             <div className="section-label">Overdue follow-ups</div>
-            {autonomy === 'auto' && <span className="muted" style={{ fontSize: 11 }}>✨ Auto-drafting enabled</span>}
+            {autonomy === 'auto' && <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>✨ Auto-drafting enabled</span>}
           </div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {overdue.map(c => (
               <div key={c.id} style={{ padding: '4px 0' }}>
                 <div className="row-between">
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>{c.name}</div>
-                    <div className="muted" style={{ fontSize: 12 }}>{c.next_action || 'No next action set — overdue by relationship cadence'}</div>
+                    <div style={{ fontSize: 'var(--text-small)', fontWeight: 700 }}>{c.name}</div>
+                    <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.next_action || 'No next action set — overdue by relationship cadence'}</div>
                   </div>
                   {autonomy !== 'auto' && (
                     <Button size="sm" variant="ghost" onClick={() => handleDraftFollowUp(c)} disabled={drafting === c.id}>
@@ -274,8 +274,8 @@ function DashboardTab() {
                 {draftsByContact[c.id] && (
                   <AiSuggestionBox unavailable={draftsByContact[c.id].unavailable}
                     onDismiss={() => setDraftsByContact(prev => { const next = { ...prev }; delete next[c.id]; return next; })}>
-                    <div style={{ fontSize: 13 }}>{draftsByContact[c.id].message}</div>
-                    <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>{draftsByContact[c.id].channel}</div>
+                    <div style={{ fontSize: 'var(--text-small)' }}>{draftsByContact[c.id].message}</div>
+                    <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{draftsByContact[c.id].channel}</div>
                   </AiSuggestionBox>
                 )}
               </div>
@@ -287,7 +287,7 @@ function DashboardTab() {
       {health && (
         <Card>
           <div className="section-label">Database health</div>
-          <div className="row-between" style={{ fontSize: 13, marginTop: 'var(--space-2)' }}>
+          <div className="row-between" style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-2)' }}>
             <span>{health.total} contacts</span>
             <span className="muted">{health.completeness}% have a next action</span>
           </div>
@@ -297,19 +297,19 @@ function DashboardTab() {
       {pipelineHealth && (
         <Card>
           <div className="section-label">Pipeline health</div>
-          <div className="row-between" style={{ fontSize: 13, marginTop: 'var(--space-2)' }}>
+          <div className="row-between" style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-2)' }}>
             <span>{pipelineHealth.total} active (Lead / Future Client / Active Client)</span>
             <span className="muted">{pipelineHealth.stalled} stalled</span>
           </div>
           <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
             {Object.entries(pipelineHealth.byCategory).map(([cat, n]) => (
-              <span key={cat} className="muted" style={{ fontSize: 11, background: 'var(--sand)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>{cat}: {n}</span>
+              <span key={cat} className="muted" style={{ fontSize: 'var(--text-micro)', background: 'var(--sand)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>{cat}: {n}</span>
             ))}
           </div>
           {Object.keys(pipelineHealth.byStage).length > 0 && (
             <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
               {Object.entries(pipelineHealth.byStage).map(([stage, n]) => (
-                <span key={stage} className="muted" style={{ fontSize: 11 }}>{stage}: {n} · </span>
+                <span key={stage} className="muted" style={{ fontSize: 'var(--text-micro)' }}>{stage}: {n} · </span>
               ))}
             </div>
           )}
@@ -321,7 +321,7 @@ function DashboardTab() {
           <div className="section-label">Relationship health</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
             {Object.entries(relationshipHealth).map(([tier, h]) => (
-              <div key={tier} className="row-between" style={{ fontSize: 13 }}>
+              <div key={tier} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
                 <span>{tier.replace(' - ', ' — ')}</span>
                 <span className="muted">
                   {h.total} total{h.overdue > 0 && ` · ${h.overdue} overdue`}
@@ -340,16 +340,16 @@ function DashboardTab() {
         </div>
         <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 6 }}>
           {FOLLOWUP_STANDARD_TYPES.map(s => (
-            <div key={s.key} className="row-between" style={{ fontSize: 13 }}>
+            <div key={s.key} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
               <div>
                 <div>{s.label}</div>
-                <div className="muted" style={{ fontSize: 11 }}>{s.appliesTo}</div>
+                <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>{s.appliesTo}</div>
               </div>
               {editingStandards ? (
                 <div className="row" style={{ alignItems: 'center', gap: 4 }}>
                   <input type="number" style={{ width: 60 }} value={cadenceStandards[s.key] ?? ''}
                     onChange={e => setCadenceStandardsState({ ...cadenceStandards, [s.key]: Number(e.target.value) })} />
-                  <span className="muted" style={{ fontSize: 11 }}>days</span>
+                  <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>days</span>
                 </div>
               ) : (
                 <span className="muted">every {cadenceStandards[s.key] ?? '—'} days</span>
@@ -450,13 +450,13 @@ function PipelineTab() {
               </select>
             )}
             <Button size="sm" onClick={handleAdd}>Save</Button>
-            {saveError && <div style={{ fontSize: 12, color: 'var(--danger)', width: '100%' }}>{saveError}</div>}
+            {saveError && <div style={{ fontSize: 'var(--text-caption)', color: 'var(--danger)', width: '100%' }}>{saveError}</div>}
           </div>
         )}
 
         <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 4 }}>
           {['All', ...categories].map(c => (
-            <button key={c} className={`sub-tab ${filter === c ? 'active' : ''}`} style={{ fontSize: 11 }} onClick={() => setFilter(c)}>{c}</button>
+            <button key={c} className={`sub-tab ${filter === c ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => setFilter(c)}>{c}</button>
           ))}
         </div>
       </Card>
@@ -473,9 +473,9 @@ function PipelineTab() {
                       {c.name}{c.organization && <span className="muted" style={{ fontWeight: 400 }}> · {c.organization}</span>}
                       {c.lead_stage && <span className="muted" style={{ fontWeight: 400 }}> · {c.lead_stage}</span>}
                     </div>
-                    <div className="muted" style={{ fontSize: 12 }}>{c.next_action || 'No next action set'}</div>
+                    <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.next_action || 'No next action set'}</div>
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_TONE[c.status] }}>{c.status}</span>
+                  <span style={{ fontSize: 'var(--text-micro)', fontWeight: 700, color: STATUS_TONE[c.status] }}>{c.status}</span>
                 </div>
               ))}
             </div>
@@ -527,7 +527,7 @@ function RelationshipsTab() {
       {untiered.length > 0 && (
         <Card className="track-personal">
           <div className="row-between">
-            <div style={{ fontSize: 13 }}>{untiered.length} contact{untiered.length === 1 ? '' : 's'} without a relationship tier — Sphere defaults to Tier 2, Partner/Agent Referral default to Tier 3.</div>
+            <div style={{ fontSize: 'var(--text-small)' }}>{untiered.length} contact{untiered.length === 1 ? '' : 's'} without a relationship tier — Sphere defaults to Tier 2, Partner/Agent Referral default to Tier 3.</div>
             <Button size="sm" onClick={handleAutoTag} disabled={tagging}>{tagging ? 'Tagging…' : 'Auto-tag all'}</Button>
           </div>
         </Card>
@@ -537,15 +537,15 @@ function RelationshipsTab() {
         <Card key={t.key}>
           <div className="row-between">
             <div className="section-label">{t.label}</div>
-            <span className="muted" style={{ fontSize: 11 }}>{t.cadence}</span>
+            <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{t.cadence}</span>
           </div>
           {(byTier[t.key] || []).length === 0 ? <EmptyState icon="sparkles" title="Nobody tagged to this tier yet" /> : (
             <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
               {byTier[t.key].map(c => (
-                <div key={c.id} className="row-between" style={{ fontSize: 13, cursor: 'pointer', padding: '4px 0', borderBottom: '1px solid var(--sand)' }}
+                <div key={c.id} className="row-between" style={{ fontSize: 'var(--text-small)', cursor: 'pointer', padding: '4px 0', borderBottom: '1px solid var(--sand)' }}
                   onClick={() => setSelectedId(c.id)}>
                   <span>{c.name}</span>
-                  <span className="muted" style={{ fontSize: 11 }}>{c.last_contact_date ? `Last: ${c.last_contact_date}` : 'No contact logged'}</span>
+                  <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{c.last_contact_date ? `Last: ${c.last_contact_date}` : 'No contact logged'}</span>
                 </div>
               ))}
             </div>
@@ -601,7 +601,7 @@ function ContentTab() {
           <div className="section-label">Content pipeline</div>
           <Button size="sm" variant="ghost" onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : '+ New idea'}</Button>
         </div>
-        {autonomy === 'auto' && <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>✨ Auto-repurposing enabled — publishing marks all formats done automatically</div>}
+        {autonomy === 'auto' && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>✨ Auto-repurposing enabled — publishing marks all formats done automatically</div>}
         {adding && (
           <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
             <input placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
@@ -628,18 +628,18 @@ function ContentTab() {
 
       {pieces.length > 0 && pillars.length > 0 && (
         <Card>
-          <div className="section-label" style={{ fontSize: 12 }}>Pillar coverage</div>
+          <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Pillar coverage</div>
           <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 'var(--space-2)' }}>
             {pillars.map(pillar => {
               const count = pieces.filter(p => p.pillar === pillar).length;
               return (
-                <div key={pillar} className="muted" style={{ fontSize: 12, border: '1px solid var(--sand)', borderRadius: 'var(--radius-pill)', padding: '4px 10px' }}>
+                <div key={pillar} className="muted" style={{ fontSize: 'var(--text-caption)', border: '1px solid var(--sand)', borderRadius: 'var(--radius-pill)', padding: '4px 10px' }}>
                   {pillar}: {count}
                 </div>
               );
             })}
             {pieces.some(p => !p.pillar) && (
-              <div className="muted" style={{ fontSize: 12, border: '1px dashed var(--sand)', borderRadius: 'var(--radius-pill)', padding: '4px 10px' }}>
+              <div className="muted" style={{ fontSize: 'var(--text-caption)', border: '1px dashed var(--sand)', borderRadius: 'var(--radius-pill)', padding: '4px 10px' }}>
                 No pillar: {pieces.filter(p => !p.pillar).length}
               </div>
             )}
@@ -653,25 +653,25 @@ function ContentTab() {
             const items = pieces.filter(p => p.status === col.key);
             return (
               <div key={col.key} style={{ flex: '1 1 0', minWidth: 200 }}>
-                <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                   {col.label} · {items.length}
                 </div>
                 <div className="stack" style={{ gap: 'var(--space-2)' }}>
                   {items.map(p => (
                     <Link key={p.id} to={`/business/content/${p.id}`} style={{ textDecoration: 'none' }}>
                       <div className="planner-block track-business" style={{ cursor: 'pointer' }}>
-                        <div style={{ fontWeight: 700, fontSize: 14 }}>{p.title}</div>
-                        <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{p.audience || 'No audience set'}</div>
-                        {p.pillar && <div className="faint" style={{ fontSize: 11 }}>{p.pillar}</div>}
+                        <div style={{ fontWeight: 700, fontSize: 'var(--text-compact)' }}>{p.title}</div>
+                        <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 2 }}>{p.audience || 'No audience set'}</div>
+                        {p.pillar && <div className="faint" style={{ fontSize: 'var(--text-micro)' }}>{p.pillar}</div>}
                         {col.key === 'published' && (
-                          <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+                          <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>
                             {(p.content_repurpose_items || []).filter(r => r.published).length}/{(p.content_repurpose_items || []).length} repurposed
                           </div>
                         )}
                       </div>
                     </Link>
                   ))}
-                  {items.length === 0 && <div className="muted" style={{ fontSize: 12 }}>Nothing here</div>}
+                  {items.length === 0 && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>Nothing here</div>}
                 </div>
               </div>
             );
@@ -770,7 +770,7 @@ function MarketingTab() {
 
         <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 4 }}>
           {['All', ...categories].map(c => (
-            <button key={c} className={`sub-tab ${filter === c ? 'active' : ''}`} style={{ fontSize: 11 }} onClick={() => setFilter(c)}>{c}</button>
+            <button key={c} className={`sub-tab ${filter === c ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => setFilter(c)}>{c}</button>
           ))}
         </div>
       </Card>
@@ -783,18 +783,18 @@ function MarketingTab() {
               <div key={a.id} className="row-between" style={{ borderBottom: '1px solid var(--sand)', padding: '8px 0' }}>
                 <div>
                   <div style={{ fontWeight: 700 }}>{a.title}</div>
-                  <div className="muted" style={{ fontSize: 12 }}>{a.category}{a.activity_date && ` · ${a.activity_date}`}</div>
-                  {a.notes && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{a.notes}</div>}
+                  <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{a.category}{a.activity_date && ` · ${a.activity_date}`}</div>
+                  {a.notes && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 2 }}>{a.notes}</div>}
                   {goals.length > 0 && (
                     <div style={{ marginTop: 4 }}>
                       {linkingGoalFor === a.id ? (
-                        <select style={{ fontSize: 11 }} autoFocus value={a.goal_id || ''}
+                        <select style={{ fontSize: 'var(--text-micro)' }} autoFocus value={a.goal_id || ''}
                           onChange={e => handleLinkGoal(a, e.target.value)} onBlur={() => setLinkingGoalFor(null)}>
                           <option value="">Not linked</option>
                           {goals.map(g => <option key={g.id} value={g.id}>{truncateGoalTitle(g.title)}</option>)}
                         </select>
                       ) : (
-                        <button className="sub-tab" style={{ fontSize: 11 }} onClick={() => setLinkingGoalFor(a.id)}>
+                        <button className="sub-tab" style={{ fontSize: 'var(--text-micro)' }} onClick={() => setLinkingGoalFor(a.id)}>
                           {a.goals?.title ? <><Target size={11} style={{ verticalAlign: 'middle', marginRight: 3 }} />{truncateGoalTitle(a.goals.title)}</> : '+ Link goal'}
                         </button>
                       )}
@@ -817,8 +817,8 @@ function MarketingTab() {
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {completed.map(a => (
               <div key={a.id} className="row-between" style={{ padding: '4px 0' }}>
-                <span className="muted" style={{ fontSize: 13 }}>{a.title} · {a.category}{a.goals?.title && <> · <Target size={11} style={{ verticalAlign: 'middle' }} /> {truncateGoalTitle(a.goals.title)}</>}</span>
-                <span className="muted" style={{ fontSize: 11 }}>{a.activity_date}</span>
+                <span className="muted" style={{ fontSize: 'var(--text-small)' }}>{a.title} · {a.category}{a.goals?.title && <> · <Target size={11} style={{ verticalAlign: 'middle' }} /> {truncateGoalTitle(a.goals.title)}</>}</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{a.activity_date}</span>
               </div>
             ))}
           </div>
@@ -864,7 +864,7 @@ function LibraryTab() {
           {syncing ? 'Syncing…' : 'Sync latest from manual'}
         </Button>
       </div>
-      {syncStatus && <div className="muted" style={{ fontSize: 12, marginBottom: 'var(--space-3)' }}>{syncStatus}</div>}
+      {syncStatus && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginBottom: 'var(--space-3)' }}>{syncStatus}</div>}
       {subTab === 'ctas' && <CtaLibrary key={syncVersion} />}
       {subTab === 'scripts' && <ScriptLibrary key={syncVersion} />}
       {subTab === 'prompts' && <PromptLibrary key={syncVersion} />}
@@ -894,8 +894,8 @@ function CtaLibrary() {
         {items.map(c => (
           <div key={c.id} className="row-between" style={{ padding: '8px 0', borderBottom: '1px solid var(--sand)' }}>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 13 }}>{c.cta_text}</div>
-              <div className="muted" style={{ fontSize: 11 }}>{c.audience} · {c.stage}{c.page ? ` · ${c.page}` : ''}</div>
+              <div style={{ fontWeight: 700, fontSize: 'var(--text-small)' }}>{c.cta_text}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>{c.audience} · {c.stage}{c.page ? ` · ${c.page}` : ''}</div>
             </div>
             <Button size="sm" variant="ghost" onClick={() => copy(c)}>{copiedId === c.id ? <>Copied <Check size={13} style={{ verticalAlign: 'middle' }} /></> : 'Copy'}</Button>
           </div>
@@ -925,8 +925,8 @@ function ScriptLibrary() {
       <div className="stack">
         {items.map(s => (
           <details key={s.id} open={!!search} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>{s.section} — {s.situation}</summary>
-            <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>{s.script_text}</p>
+            <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-small)' }}>{s.section} — {s.situation}</summary>
+            <p className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>{s.script_text}</p>
             <Button size="sm" variant="ghost" onClick={() => copy(s)}>{copiedId === s.id ? <>Copied <Check size={13} style={{ verticalAlign: 'middle' }} /></> : 'Copy'}</Button>
           </details>
         ))}
@@ -955,9 +955,9 @@ function PromptLibrary() {
       <div className="stack">
         {items.map(p => (
           <details key={p.id} open={!!search} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>{p.code ? `${p.code} — ` : ''}{p.title}</summary>
-            <div className="muted" style={{ fontSize: 11 }}>{p.category} · {p.use_for}</div>
-            <p style={{ fontSize: 13, marginTop: 4, whiteSpace: 'pre-wrap' }}>{p.prompt_text}</p>
+            <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-small)' }}>{p.code ? `${p.code} — ` : ''}{p.title}</summary>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>{p.category} · {p.use_for}</div>
+            <p style={{ fontSize: 'var(--text-small)', marginTop: 4, whiteSpace: 'pre-wrap' }}>{p.prompt_text}</p>
             <Button size="sm" variant="ghost" onClick={() => copy(p)}>{copiedId === p.id ? <>Copied <Check size={13} style={{ verticalAlign: 'middle' }} /></> : 'Copy'}</Button>
           </details>
         ))}
@@ -1036,7 +1036,7 @@ function ClientsTab() {
               <input placeholder="Referral source" value={form.referral_source} onChange={e => setForm({ ...form, referral_source: e.target.value })} />
             </div>
 
-            <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>What happened</div>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>What happened</div>
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <input placeholder="Timeline (start to close)" value={form.timeline_notes} onChange={e => setForm({ ...form, timeline_notes: e.target.value })} style={{ flex: 1, minWidth: 200 }} />
               <input placeholder="Biggest objection or concern" value={form.biggest_objection} onChange={e => setForm({ ...form, biggest_objection: e.target.value })} style={{ flex: 1, minWidth: 200 }} />
@@ -1046,12 +1046,12 @@ function ClientsTab() {
               <input placeholder="What almost went wrong" value={form.what_almost_went_wrong} onChange={e => setForm({ ...form, what_almost_went_wrong: e.target.value })} style={{ flex: 1, minWidth: 200 }} />
             </div>
 
-            <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>Lessons</div>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>Lessons</div>
             <textarea placeholder="Lesson learned — what could've been explained earlier, or a content idea from this transaction" value={form.lesson_learned} onChange={e => setForm({ ...form, lesson_learned: e.target.value })} style={{ minHeight: 60 }} />
             <input placeholder="Which system should this update? (e.g. Consultation SOP)" value={form.system_to_update} onChange={e => setForm({ ...form, system_to_update: e.target.value })} />
             <input placeholder="Referral opportunity — who they might introduce" value={form.referral_opportunity_noted} onChange={e => setForm({ ...form, referral_opportunity_noted: e.target.value })} />
 
-            <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>What this transaction creates</div>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>What this transaction creates</div>
             <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-3)' }}>
               <Checkbox checked={form.added_to_past_client_plan} onChange={v => setForm({ ...form, added_to_past_client_plan: v })} label="Schedule 30/90/365-day touches" />
               <Checkbox checked={form.content_idea_added} onChange={v => setForm({ ...form, content_idea_added: v })} label="Send lesson to Inbox as content idea" />
@@ -1067,10 +1067,10 @@ function ClientsTab() {
         <Card key={t.id}>
           <div className="row-between">
             <div style={{ fontWeight: 700 }}>{t.contacts?.name || 'Unknown client'} · {t.property_area}</div>
-            <span className="muted" style={{ fontSize: 12 }}>{t.closing_date}</span>
+            <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>{t.closing_date}</span>
           </div>
-          {t.lesson_learned && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>{t.lesson_learned}</div>}
-          {t.system_to_update && <div className="faint" style={{ fontSize: 12, marginTop: 2 }}>Updates: {t.system_to_update}</div>}
+          {t.lesson_learned && <div className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>{t.lesson_learned}</div>}
+          {t.system_to_update && <div className="faint" style={{ fontSize: 'var(--text-caption)', marginTop: 2 }}>Updates: {t.system_to_update}</div>}
         </Card>
       ))}
     </div>
@@ -1088,7 +1088,7 @@ function FlowsTab() {
           <div className="row-between">
             <div>
               <div style={{ fontWeight: 700 }}>{flow.label}</div>
-              <div className="muted" style={{ fontSize: 12 }}>{flow.description}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{flow.description}</div>
             </div>
             <Link to={`/business/flows/${key}`}><Button size="sm">Start</Button></Link>
           </div>
@@ -1256,15 +1256,15 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
       <div className="row-between">
         <div style={{ cursor: 'pointer', flex: 1 }} onClick={onToggleExpand}>
           <span>{item.week_number ? `Wk ${item.week_number} — ` : ''}{item.title}</span>
-          {item.date_range && <span className="muted" style={{ fontSize: 11 }}> · {item.date_range}</span>}
-          {subtasks.length > 0 && <span className="muted" style={{ fontSize: 11 }}> · {doneCount}/{subtasks.length} sub-tasks</span>}
+          {item.date_range && <span className="muted" style={{ fontSize: 'var(--text-micro)' }}> · {item.date_range}</span>}
+          {subtasks.length > 0 && <span className="muted" style={{ fontSize: 'var(--text-micro)' }}> · {doneCount}/{subtasks.length} sub-tasks</span>}
         </div>
         <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
           {item.link_to && <Link to={item.link_to}><Button size="sm" variant="ghost">Open →</Button></Link>}
           {item.status !== 'In Progress' && item.status !== 'Done' && (
             <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); handleStartThisWeek(); }}>▶ Start this week</Button>
           )}
-          <span className="muted" style={{ fontSize: 11 }}>{item.status}{item.status_manual && ' (manual)'}</span>
+          <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{item.status}{item.status_manual && ' (manual)'}</span>
         </div>
       </div>
 
@@ -1287,7 +1287,7 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
           {item.link_to && <Button size="sm" variant="text" onClick={() => setPickingLink(true)}>Change link</Button>}
 
           <div className="row" style={{ marginTop: 'var(--space-2)', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <span className="muted" style={{ fontSize: 12 }}>Status:</span>
+            <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>Status:</span>
             <select value={item.status} onChange={e => handleSetStatus(e.target.value)}>
               <option value="Not Started">Not Started</option>
               <option value="In Progress">In Progress</option>
@@ -1304,13 +1304,13 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
 
           {splitPreview && (
             <div style={{ marginTop: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--cream)', borderRadius: 'var(--radius-sm)' }}>
-              <div className="muted" style={{ fontSize: 11, marginBottom: 6 }}>Review before saving — nothing's changed yet.</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginBottom: 6 }}>Review before saving — nothing's changed yet.</div>
               <label className="stack" style={{ gap: 2 }}>
-                <span style={{ fontSize: 11 }}>Item title</span>
+                <span style={{ fontSize: 'var(--text-micro)' }}>Item title</span>
                 <input value={splitPreview.parent} onChange={e => setSplitPreview({ ...splitPreview, parent: e.target.value })} />
               </label>
               <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
-                <span style={{ fontSize: 11 }}>Sub-tasks</span>
+                <span style={{ fontSize: 'var(--text-micro)' }}>Sub-tasks</span>
                 {splitPreview.subs.map((s, i) => (
                   <div key={i} className="row" style={{ gap: 'var(--space-2)' }}>
                     <input value={s} onChange={e => updateSplitSub(i, e.target.value)} style={{ flex: 1 }} />
@@ -1442,12 +1442,12 @@ function CeoDashboardView() {
 
       <Card>
         <div className="section-label">Pipeline snapshot</div>
-        <p className="muted" style={{ fontSize: 11, marginTop: 4 }}>Active leads, active clients, closings, and flagship content pre-fill from real data — everything else is a manual snapshot, same as the paper version.</p>
+        <p className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>Active leads, active clients, closings, and flagship content pre-fill from real data — everything else is a manual snapshot, same as the paper version.</p>
         <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
-          <div><div className="muted" style={{ fontSize: 11 }}>Active leads</div><div style={{ fontWeight: 700, fontSize: 18 }}>{form.active_leads ?? 0}</div></div>
-          <div><div className="muted" style={{ fontSize: 11 }}>Active clients</div><div style={{ fontWeight: 700, fontSize: 18 }}>{form.active_clients ?? 0}</div></div>
-          <div><div className="muted" style={{ fontSize: 11 }}>Closings this month</div><div style={{ fontWeight: 700, fontSize: 18 }}>{form.closings_this_month ?? 0}</div></div>
-          <div><div className="muted" style={{ fontSize: 11 }}>Flagship content published</div><div style={{ fontWeight: 700, fontSize: 18 }}>{form.flagship_content_published ?? 0}</div></div>
+          <div><div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Active leads</div><div style={{ fontWeight: 700, fontSize: 'var(--text-subtitle)' }}>{form.active_leads ?? 0}</div></div>
+          <div><div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Active clients</div><div style={{ fontWeight: 700, fontSize: 'var(--text-subtitle)' }}>{form.active_clients ?? 0}</div></div>
+          <div><div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Closings this month</div><div style={{ fontWeight: 700, fontSize: 'var(--text-subtitle)' }}>{form.closings_this_month ?? 0}</div></div>
+          <div><div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Flagship content published</div><div style={{ fontWeight: 700, fontSize: 'var(--text-subtitle)' }}>{form.flagship_content_published ?? 0}</div></div>
         </div>
       </Card>
 
@@ -1483,18 +1483,18 @@ function CampaignCalendarView() {
   const nowQ = currentQuarter();
   return (
     <div className="stack" style={{ gap: 'var(--space-3)' }}>
-      <p className="muted" style={{ fontSize: 12 }}>
+      <p className="muted" style={{ fontSize: 'var(--text-caption)' }}>
         Not a content calendar — a focus calendar. Same four quarters every year; only revisit this at the annual review.
       </p>
       {ANNUAL_CAMPAIGN_CALENDAR.map((q, i) => (
         <Card key={q.quarter} style={i === nowQ ? { borderColor: 'var(--sage)', borderWidth: 2, borderStyle: 'solid' } : undefined}>
           <div className="row-between">
             <div style={{ fontWeight: 700 }}>{q.quarter} · {q.months} — {q.theme}</div>
-            {i === nowQ && <span className="muted" style={{ fontSize: 11, color: 'var(--sage)' }}>● Current quarter</span>}
+            {i === nowQ && <span className="muted" style={{ fontSize: 'var(--text-micro)', color: 'var(--sage)' }}>● Current quarter</span>}
           </div>
-          <div style={{ fontSize: 13, marginTop: 'var(--space-2)' }}><strong>Audience:</strong> {q.audience}</div>
-          <div style={{ fontSize: 13, marginTop: 4 }}><strong>Why now:</strong> {q.why_now}</div>
-          <div style={{ fontSize: 13, marginTop: 4 }}><strong>Focus:</strong> {q.focus}</div>
+          <div style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-2)' }}><strong>Audience:</strong> {q.audience}</div>
+          <div style={{ fontSize: 'var(--text-small)', marginTop: 4 }}><strong>Why now:</strong> {q.why_now}</div>
+          <div style={{ fontSize: 'var(--text-small)', marginTop: 4 }}><strong>Focus:</strong> {q.focus}</div>
         </Card>
       ))}
     </div>
@@ -1521,12 +1521,12 @@ function SystemStatusView() {
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
-      <p className="muted" style={{ fontSize: 12 }}>
+      <p className="muted" style={{ fontSize: 'var(--text-caption)' }}>
         Master index for the 16-folder operating system. The system is frozen — status changes only, no rewrites, no new systems.
       </p>
       <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
         {Object.entries(STATUS_LEGEND).map(([key, s]) => (
-          <div key={key} className="muted" style={{ fontSize: 11 }}>{s.symbol} {s.label} — {s.description}</div>
+          <div key={key} className="muted" style={{ fontSize: 'var(--text-micro)' }}>{s.symbol} {s.label} — {s.description}</div>
         ))}
       </div>
       <div className="stack" style={{ gap: 4 }}>
@@ -1538,14 +1538,14 @@ function SystemStatusView() {
                 {Object.entries(STATUS_LEGEND).map(([key, s]) => <option key={key} value={key}>{s.symbol} {s.label}</option>)}
               </select>
             </div>
-            <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{f.note}</div>
+            <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>{f.note}</div>
           </Card>
         ))}
       </div>
       <Card>
         <div className="section-label">Not now — do-not-build list</div>
         <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
-          {DO_NOT_BUILD_LIST.map((item, i) => <div key={i} style={{ fontSize: 13 }}>• {item}</div>)}
+          {DO_NOT_BUILD_LIST.map((item, i) => <div key={i} style={{ fontSize: 'var(--text-small)' }}>• {item}</div>)}
         </div>
       </Card>
     </div>
@@ -1596,7 +1596,7 @@ function LeadMagnetsView() {
         {showStandards && (
           <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
             {LANDING_PAGE_STANDARDS.map((s, i) => (
-              <div key={i} style={{ fontSize: 13 }}><strong>{i + 1}. {s.element}</strong> — {s.standard}</div>
+              <div key={i} style={{ fontSize: 'var(--text-small)' }}><strong>{i + 1}. {s.element}</strong> — {s.standard}</div>
             ))}
           </div>
         )}
@@ -1607,7 +1607,7 @@ function LeadMagnetsView() {
           <div className="row-between" onClick={() => setExpandedId(expandedId === m.id ? null : m.id)} style={{ cursor: 'pointer' }}>
             <div>
               <div style={{ fontWeight: 700 }}>{m.name}</div>
-              <div className="muted" style={{ fontSize: 12 }}>{m.funnel} · {m.build_phase}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{m.funnel} · {m.build_phase}</div>
             </div>
             <select value={m.status} onClick={e => e.stopPropagation()} onChange={e => handleStatusChange(m.id, e.target.value)}>
               <option value="planned">Planned</option>
@@ -1617,18 +1617,18 @@ function LeadMagnetsView() {
           </div>
           {expandedId === m.id && (
             <div style={{ marginTop: 'var(--space-3)' }}>
-              <div style={{ fontSize: 13 }}><strong>Audience:</strong> {m.audience}</div>
-              <div style={{ fontSize: 13, marginTop: 4 }}><strong>Solves:</strong> {m.primary_problem}</div>
-              <div style={{ fontSize: 13, marginTop: 4 }}><strong>Next step:</strong> {m.next_step}</div>
-              <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>What's inside</div>
+              <div style={{ fontSize: 'var(--text-small)' }}><strong>Audience:</strong> {m.audience}</div>
+              <div style={{ fontSize: 'var(--text-small)', marginTop: 4 }}><strong>Solves:</strong> {m.primary_problem}</div>
+              <div style={{ fontSize: 'var(--text-small)', marginTop: 4 }}><strong>Next step:</strong> {m.next_step}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>What's inside</div>
               <div className="stack" style={{ marginTop: 4, gap: 2 }}>
-                {(m.whats_inside || []).map((bullet, i) => <div key={i} style={{ fontSize: 13 }}>• {bullet}</div>)}
+                {(m.whats_inside || []).map((bullet, i) => <div key={i} style={{ fontSize: 'var(--text-small)' }}>• {bullet}</div>)}
               </div>
               {NURTURE_SEQUENCES[m.funnel] && (
                 <>
-                  <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-3)', textTransform: 'uppercase' }}>5-email nurture sequence</div>
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 'var(--space-3)', textTransform: 'uppercase' }}>5-email nurture sequence</div>
                   <div className="stack" style={{ marginTop: 4, gap: 2 }}>
-                    {NURTURE_SEQUENCES[m.funnel].map((email, i) => <div key={i} style={{ fontSize: 13 }}>{i + 1}. {email}</div>)}
+                    {NURTURE_SEQUENCES[m.funnel].map((email, i) => <div key={i} style={{ fontSize: 'var(--text-small)' }}>{i + 1}. {email}</div>)}
                   </div>
                 </>
               )}
@@ -1641,7 +1641,7 @@ function LeadMagnetsView() {
         <div className="section-label">CTA library by funnel</div>
         <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
           {Object.entries(CTAS_BY_FUNNEL).map(([category, ctas]) => (
-            <div key={category} style={{ fontSize: 13 }}><strong>{category}:</strong> {ctas.join(' · ')}</div>
+            <div key={category} style={{ fontSize: 'var(--text-small)' }}><strong>{category}:</strong> {ctas.join(' · ')}</div>
           ))}
         </div>
       </Card>
@@ -1686,10 +1686,10 @@ function NurtureTrackingView() {
         <Card>
           <div className="section-label">Tracking dashboard</div>
           <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
-            <div><div className="muted" style={{ fontSize: 11 }}>Downloads</div><div style={{ fontWeight: 700, fontSize: 18 }}>{stats.downloads}</div></div>
-            <div><div className="muted" style={{ fontSize: 11 }}>In sequence</div><div style={{ fontWeight: 700, fontSize: 18 }}>{stats.inProgress}</div></div>
-            <div><div className="muted" style={{ fontSize: 11 }}>Replied</div><div style={{ fontWeight: 700, fontSize: 18 }}>{stats.replied}</div></div>
-            <div><div className="muted" style={{ fontSize: 11 }}>Booked</div><div style={{ fontWeight: 700, fontSize: 18 }}>{stats.booked}</div></div>
+            <div><div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Downloads</div><div style={{ fontWeight: 700, fontSize: 'var(--text-subtitle)' }}>{stats.downloads}</div></div>
+            <div><div className="muted" style={{ fontSize: 'var(--text-micro)' }}>In sequence</div><div style={{ fontWeight: 700, fontSize: 'var(--text-subtitle)' }}>{stats.inProgress}</div></div>
+            <div><div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Replied</div><div style={{ fontWeight: 700, fontSize: 'var(--text-subtitle)' }}>{stats.replied}</div></div>
+            <div><div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Booked</div><div style={{ fontWeight: 700, fontSize: 'var(--text-subtitle)' }}>{stats.booked}</div></div>
           </div>
         </Card>
       )}
@@ -1721,12 +1721,12 @@ function NurtureTrackingView() {
           <div className="row-between">
             <div>
               <div style={{ fontWeight: 700 }}>{row.contacts?.name || row.lead_name || 'Unnamed lead'}</div>
-              <div className="muted" style={{ fontSize: 12 }}>{row.lead_magnets?.name} · started {row.date_started}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{row.lead_magnets?.name} · started {row.date_started}</div>
             </div>
             <button className="row-remove-btn" onClick={() => deleteNurtureTracking(row.id).then(refresh)}>×</button>
           </div>
           <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-            <span className="muted" style={{ fontSize: 11 }}>Email sent:</span>
+            <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Email sent:</span>
             <select value={row.current_email} onChange={e => handleUpdate(row, { current_email: Number(e.target.value) })}>
               {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}/5</option>)}
             </select>

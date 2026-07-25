@@ -15,7 +15,7 @@
   border-collapse: collapse;
   width: 100%;
   margin: var(--space-3) 0;
-  font-size: 13px;
+  font-size: var(--text-small);
 }
 .markdown-table th, .markdown-table td {
   border: 1px solid var(--sand);

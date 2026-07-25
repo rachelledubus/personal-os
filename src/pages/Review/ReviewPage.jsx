@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
+import PageHeader from '../../components/layout/PageHeader.jsx';
+import Stack from '../../components/layout/Stack.jsx';
+import { RowBetween } from '../../components/layout/Row.jsx';
 import WeeklyResetModal from '../Plan/WeeklyResetModal.jsx';
 import { mondayOfWeek, currentMonthStr } from '../../utils/date.js';
 import { Compass, Sunset, BarChart3, RotateCcw, Briefcase } from 'lucide-react';
@@ -17,17 +20,29 @@ const REVIEWS = [
     type: 'weekly_reset', title: 'Monday Reset', icon: Compass,
     subtitle: "Set this week's one priority and targets.",
     marker: () => mondayOfWeek(),
+    linkOut: null,
   },
   {
     type: 'weekly_closeout', title: 'Friday Close-Out', icon: Sunset,
     subtitle: 'Wins, challenges, next week — becomes your Weekly Review.',
     marker: () => mondayOfWeek(),
+    linkOut: null,
   },
   {
     type: 'monthly_snapshot', title: 'Monthly Snapshot', icon: BarChart3,
     subtitle: 'A one-glance summary of last month.',
     marker: () => currentMonthStr(),
+    linkOut: null,
   },
+];
+
+// Two rituals that live on their own dedicated pages rather than the
+// shared WeeklyResetModal — same list shape so they render the same
+// way (Batch 4 pilot: this is the kind of duplication SubTabNav-style
+// consolidation targets next, once Business's own split happens).
+const EXTERNAL_REVIEWS = [
+  { title: 'Business Weekly Reset', icon: Compass, subtitle: "Overdue contacts, this week's build, and your targets — start of week.", to: '/business/weekly-reset', cta: 'Open →' },
+  { title: 'Business Weekly Reflection', icon: Briefcase, subtitle: "What worked, what didn't, what's next — for the business specifically.", to: '/business/dashboard', cta: 'Open in Business →' },
 ];
 
 export default function ReviewPage() {
@@ -35,44 +50,41 @@ export default function ReviewPage() {
 
   return (
     <div>
-      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><RotateCcw size={20} /> Review</div>
-      <p className="muted" style={{ marginTop: -8, marginBottom: 'var(--space-4)' }}>
-        Every reflection ritual in one place — open any of these whenever you want, not just when the app happens to ask.
-      </p>
+      <PageHeader
+        icon={RotateCcw}
+        title="Review"
+        subtitle="Every reflection ritual in one place — open any of these whenever you want, not just when the app happens to ask."
+      />
 
-      <div className="stack" style={{ gap: 'var(--space-3)' }}>
+      <Stack gap={3}>
         {REVIEWS.map(r => (
           <Card key={r.type}>
-            <div className="row-between">
+            <RowBetween>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}><r.icon size={16} /> {r.title}</div>
-                <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{r.subtitle}</div>
+                <div style={{ fontWeight: 700, fontSize: 'var(--text-body)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <r.icon size={16} /> {r.title}
+                </div>
+                <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 2 }}>{r.subtitle}</div>
               </div>
               <Button size="sm" onClick={() => setOpen(r)}>Open</Button>
-            </div>
+            </RowBetween>
           </Card>
         ))}
 
-        <Card>
-          <div className="row-between">
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}><Compass size={16} /> Business Weekly Reset</div>
-              <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Overdue contacts, this week's build, and your targets — start of week.</div>
-            </div>
-            <Link to="/business/weekly-reset"><Button size="sm" variant="ghost">Open →</Button></Link>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="row-between">
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}><Briefcase size={16} /> Business Weekly Reflection</div>
-              <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>What worked, what didn't, what's next — for the business specifically.</div>
-            </div>
-            <Link to="/business/dashboard"><Button size="sm" variant="ghost">Open in Business →</Button></Link>
-          </div>
-        </Card>
-      </div>
+        {EXTERNAL_REVIEWS.map(r => (
+          <Card key={r.title}>
+            <RowBetween>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 'var(--text-body)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <r.icon size={16} /> {r.title}
+                </div>
+                <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 2 }}>{r.subtitle}</div>
+              </div>
+              <Link to={r.to}><Button size="sm" variant="ghost">{r.cta}</Button></Link>
+            </RowBetween>
+          </Card>
+        ))}
+      </Stack>
 
       {open && (
         <WeeklyResetModal promptType={open.type} marker={open.marker()} onClose={() => setOpen(null)} />

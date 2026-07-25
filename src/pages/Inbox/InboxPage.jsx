@@ -102,7 +102,7 @@ export default function InboxPage() {
       {lastResolved && (
         <Card className="inbox-resolved-banner">
           <div className="row-between">
-            <div style={{ fontSize: 13 }}>
+            <div style={{ fontSize: 'var(--text-small)' }}>
               "{lastResolved.text}" → moved to <strong>{lastResolved.destLabel}</strong>
               {lastResolved.destNote && <span className="muted"> — {lastResolved.destNote}</span>}
             </div>
@@ -158,9 +158,9 @@ export default function InboxPage() {
                   {contactResults.length > 0 && (
                     <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
                       {contactResults.map(c => (
-                        <div key={c.id} className="row-between" style={{ fontSize: 13, padding: '4px 0', cursor: 'pointer' }} onClick={() => handleResolveToExistingContact(item, c)}>
+                        <div key={c.id} className="row-between" style={{ fontSize: 'var(--text-small)', padding: '4px 0', cursor: 'pointer' }} onClick={() => handleResolveToExistingContact(item, c)}>
                           <span>{c.name}</span>
-                          <span className="muted" style={{ fontSize: 11 }}>{c.category} · attach note here</span>
+                          <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{c.category} · attach note here</span>
                         </div>
                       ))}
                     </div>

@@ -11,9 +11,9 @@
 .btn:active { transform: scale(0.97); }
 .btn:disabled { opacity: 0.5; cursor: default; }
 
-.btn-sm { font-size: 11px; padding: 8px 14px; }
+.btn-sm { font-size: var(--text-micro); padding: 8px 14px; }
 .btn-md { font-size: 12.5px; padding: 11px 20px; }
-.btn-lg { font-size: 13px; padding: 13px 26px; }
+.btn-lg { font-size: var(--text-small); padding: 13px 26px; }
 
 .btn-primary { background: var(--navy); color: var(--white); }
 .btn-primary:hover:not(:disabled) { box-shadow: var(--shadow-active); }
