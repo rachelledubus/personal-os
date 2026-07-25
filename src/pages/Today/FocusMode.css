@@ -1,10 +1,6 @@
-.focus-shell {
-  position: fixed; inset: 0;
-  background: var(--sand);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 200;
-}
-.focus-exit { position: absolute; top: 24px; right: 24px; background: none; border: none; color: var(--ink-soft); }
+/* .focus-shell / .focus-exit removed — both FocusMode and ResearchMode
+   now use the shared Overlay primitive (variant="fullscreen") instead
+   of this bespoke fixed-position layer. */
 .focus-content { text-align: center; max-width: 480px; padding: var(--space-5); }
 .focus-track-tag {
   display: inline-block; font-family: var(--font-display); font-weight: 700; font-size: 11px;
@@ -20,7 +16,7 @@
 
 .research-notes {
   width: 100%; min-height: 140px; margin-top: var(--space-5);
-  border: 1px solid #e2ded4; border-radius: var(--radius-md);
+  border: 1px solid var(--border-default); border-radius: var(--radius-md);
   padding: var(--space-3); font-size: 14px; resize: vertical;
   background: var(--white);
 }

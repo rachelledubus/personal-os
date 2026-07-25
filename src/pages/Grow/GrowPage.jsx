@@ -229,7 +229,7 @@ function HabitsTab() {
         </div>
       )}
       {insights.length > 0 && (
-        <div className="stack" style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-soft, #e2ded4)' }}>
+        <div className="stack" style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-default)' }}>
           <div className="section-label">Patterns</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {insights.map((line, i) => <div key={i} style={{ fontSize: 13 }}>💡 {line}</div>)}
@@ -237,7 +237,7 @@ function HabitsTab() {
         </div>
       )}
 
-      <div className="row" style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-soft, #e2ded4)' }}>
+      <div className="row" style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-default)' }}>
         <input
           placeholder="New system (e.g. Health Identity System)..."
           value={newSystemName}

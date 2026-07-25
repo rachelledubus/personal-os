@@ -1,0 +1,25 @@
+.skeleton {
+  background: var(--sand);
+  border-radius: var(--radius-sm);
+}
+.skeleton-line { display: block; }
+.skeleton-card {
+  padding: var(--space-4);
+  background: var(--cream);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-resting);
+}
+.skeleton-card .skeleton-line { background: var(--sand); }
+
+/* Gentle pulse, not a shimmer sweep — a loud moving-light animation is
+   its own sensory cost. Respects prefers-reduced-motion by simply not
+   animating at all rather than degrading to a "reduced" motion tier. */
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton {
+    animation: skeletonPulse 1.4s var(--ease-standard) infinite;
+  }
+}
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}

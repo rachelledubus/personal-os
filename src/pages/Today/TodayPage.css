@@ -8,7 +8,7 @@
 }
 .today-add-custom { margin-top: var(--space-4); }
 .today-add-custom input {
-  flex: 1; border: 1px solid #e2ded4; border-radius: var(--radius-sm);
+  flex: 1; border: 1px solid var(--border-default); border-radius: var(--radius-sm);
   padding: 9px 12px; font-size: 14px;
 }
 

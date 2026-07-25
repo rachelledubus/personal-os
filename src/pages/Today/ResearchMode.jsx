@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
+import Overlay from '../../components/ui/Overlay.jsx';
 import './FocusMode.css';
 
 export default function ResearchMode() {
@@ -19,11 +19,7 @@ export default function ResearchMode() {
   const ss = String(seconds % 60).padStart(2, '0');
 
   return (
-    <div className="focus-shell">
-      <button className="focus-exit" onClick={() => setShowExitPrompt(true)} aria-label="End research session">
-        <X size={22} />
-      </button>
-
+    <Overlay open variant="fullscreen" onClose={() => setShowExitPrompt(true)} showScrim={false}>
       {!showExitPrompt ? (
         <div className="focus-content">
           <div className="focus-track-tag track-business">Research</div>
@@ -46,6 +42,6 @@ export default function ResearchMode() {
           </div>
         </div>
       )}
-    </div>
+    </Overlay>
   );
 }

@@ -108,7 +108,7 @@ input, textarea, select { font-family: var(--font-body); }
 .planner-block.track-business { border-left-color: var(--accent); }
 
 input, textarea, select {
-  border: 1px solid #e2ded4; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default); border-radius: var(--radius-sm);
   padding: 9px 12px; font-size: 14px; background: var(--white); color: var(--navy);
 }
 

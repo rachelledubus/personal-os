@@ -60,6 +60,25 @@
   --shadow-active: 0 6px 24px rgba(22, 50, 79, 0.14);
   --shadow-modal: 0 20px 60px rgba(22, 50, 79, 0.28);
 
+  /* --- Border --- */
+  /* Was hardcoded as raw #e2ded4 in 4+ files (global.css, TodayPage.css,
+     FocusMode.css, InteractionTimeline.css) — one token now. */
+  --border-default: #e2ded4;
+
+  /* --- Sizing --- */
+  /* minHeight: 44 appeared ad hoc for touch targets; max-width: 1080px
+     was hardcoded once in global.css. Promoted to tokens so future
+     components reference these instead of inventing new raw values. */
+  --control-height-sm: 32px;
+  --control-height-md: 44px;
+  --control-height-lg: 56px;
+  --container-max: 1080px;
+
+  /* --- Overlay stacking --- */
+  /* Modal/SidePanel/FocusMode each had their own z-index (100/100/200).
+     One shared scale for the new Overlay primitive. */
+  --z-overlay: 200;
+
   /* --- Motion --- */
   --duration-fast: 120ms;
   --duration-base: 200ms;

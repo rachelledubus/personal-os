@@ -1,22 +1,12 @@
 import React from 'react';
-import { X } from 'lucide-react';
-import './Modal.css';
+import Overlay from './Overlay.jsx';
 
+/** Kept as its own named component so existing call sites don't need
+ *  to change — internally it's just Overlay variant="sheet" now. */
 export default function Modal({ open, onClose, title, children, dismissible = true }) {
-  if (!open) return null;
   return (
-    <div className="modal-scrim" onClick={dismissible ? onClose : undefined}>
-      <div className="modal-panel" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{title}</h3>
-          {dismissible && (
-            <button className="modal-close" onClick={onClose} aria-label="Close">
-              <X size={18} />
-            </button>
-          )}
-        </div>
-        <div className="modal-body">{children}</div>
-      </div>
-    </div>
+    <Overlay open={open} onClose={onClose} variant="sheet" title={title} dismissible={dismissible}>
+      {children}
+    </Overlay>
   );
 }

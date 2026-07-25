@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
+import Overlay from '../../components/ui/Overlay.jsx';
 import TimerWidget from '../../components/timer/TimerWidget.jsx';
 import { getTodayItems, toggleTodayItem } from '../../services/todayItems.js';
 import { startFocusSession, endFocusSession } from '../../services/focusSessions.js';
@@ -38,11 +38,7 @@ export default function FocusMode() {
   }
 
   return (
-    <div className="focus-shell">
-      <button className="focus-exit" onClick={handleExit} aria-label="Exit focus mode">
-        <X size={22} />
-      </button>
-
+    <Overlay open variant="fullscreen" onClose={handleExit} showScrim={false}>
       {!item ? (
         <div className="focus-empty">Nothing left to focus on — you're clear.</div>
       ) : (
@@ -58,6 +54,6 @@ export default function FocusMode() {
           </div>
         </div>
       )}
-    </div>
+    </Overlay>
   );
 }

@@ -1,0 +1,70 @@
+.overlay-scrim {
+  position: fixed; inset: 0;
+  background: rgba(22, 50, 79, 0.35);
+  display: flex; align-items: flex-end; justify-content: center;
+  z-index: var(--z-overlay);
+  animation: overlayFadeIn var(--duration-modal) var(--ease-standard);
+}
+@media (min-width: 640px) {
+  .overlay-scrim { align-items: center; }
+}
+.overlay-scrim-fullscreen {
+  background: var(--sand);
+  align-items: center;
+}
+
+.overlay-panel {
+  background: var(--cream);
+  box-shadow: var(--shadow-modal);
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+.overlay-panel:focus { outline: none; } /* focus ring not needed — the panel itself is the landing target, not an interactive control */
+
+/* variant="sheet" — was Modal.jsx */
+.overlay-panel-sheet {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: 100%;
+  max-width: 520px;
+  max-height: 88vh;
+  animation: overlaySlideUp var(--duration-modal) var(--ease-standard);
+}
+@media (min-width: 640px) {
+  .overlay-panel-sheet { border-radius: var(--radius-lg); }
+}
+
+/* variant="drawer" — was SidePanel.jsx */
+.overlay-panel-drawer {
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  animation: overlaySlideIn var(--duration-modal) var(--ease-standard);
+}
+
+/* variant="fullscreen" — was FocusMode's bespoke .focus-shell */
+.overlay-panel-fullscreen {
+  width: 100%;
+  max-width: 480px;
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+  animation: overlayFadeIn var(--duration-modal) var(--ease-standard);
+}
+
+.overlay-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.overlay-panel-drawer .overlay-header {
+  position: sticky; top: 0; background: var(--cream); padding-bottom: var(--space-2);
+}
+.overlay-header h3 { font-size: var(--text-title); font-weight: 800; }
+.overlay-close { background: none; border: none; color: var(--ink-soft); padding: 4px; flex-shrink: 0; }
+.overlay-close-floating { position: absolute; top: 24px; right: 24px; }
+
+.overlay-body { padding-bottom: var(--space-2); }
+.overlay-panel-drawer .overlay-body { padding-bottom: var(--space-6); }
+
+@keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlaySlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes overlaySlideIn { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }

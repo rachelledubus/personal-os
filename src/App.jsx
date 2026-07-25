@@ -9,6 +9,8 @@ import GlobalCapture from './components/capture/GlobalCapture.jsx';
 import KawaiiBackdrop from './components/ui/KawaiiBackdrop.jsx';
 import Companion from './components/companion/Companion.jsx';
 import MiniTimerBar from './components/timer/MiniTimerBar.jsx';
+import { CapacityModeProvider } from './components/layout/CapacityModeContext.jsx';
+import Skeleton from './components/ui/Skeleton.jsx';
 import { getFeatureFlag } from './services/settings.js';
 import AuthScreen from './pages/AuthScreen.jsx';
 
@@ -41,10 +43,19 @@ export default function App() {
     }
   }, [user]);
 
-  if (loading) return <div className="app-loading">Loading…</div>;
+  if (loading) {
+    return (
+      <div className="app-loading" style={{ flexDirection: 'column', gap: 12, width: 240 }}>
+        <Skeleton height={24} />
+        <Skeleton width="70%" />
+        <Skeleton width="85%" />
+      </div>
+    );
+  }
   if (!user) return <AuthScreen />;
 
   return (
+    <CapacityModeProvider>
     <div className="app-shell">
       {showDecorations && <KawaiiBackdrop />}
       <SideNav />
@@ -87,5 +98,6 @@ export default function App() {
       <GlobalCapture />
       <QuickJump />
     </div>
+    </CapacityModeProvider>
   );
 }
