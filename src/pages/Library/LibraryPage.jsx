@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Library, Check, Pencil, X, Clipboard } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -22,7 +23,7 @@ export default function LibraryPage() {
   return (
     <div>
       <Banner slotKey="library_banner" scene="library" />
-      <div className="page-title">📚 Library</div>
+      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Library size={20} /> Library</div>
       <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
         {TABS.map(t => (
           <button key={t} className={`sub-tab ${tab === t ? 'active' : ''}`} onClick={() => navigate(`/library/${t}`)}>
@@ -199,7 +200,7 @@ function BacklogTab() {
       <div className="row-between">
         <input placeholder="Search backlog..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, marginRight: 'var(--space-3)' }} />
         {ideas.length > 0 && (
-          <Button size="sm" variant="ghost" onClick={handleCopyAll}>{copied ? 'Copied ✓' : '📋 Copy all as prompt'}</Button>
+          <Button size="sm" variant="ghost" onClick={handleCopyAll}>{copied ? <>Copied <Check size={14} style={{ verticalAlign: 'middle' }} /></> : <><Clipboard size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />Copy all as prompt</>}</Button>
         )}
       </div>
 
@@ -246,7 +247,12 @@ function AILogTab() {
 
   useEffect(() => { listRecentDecisions(30).then(setDecisions); }, []);
 
-  const RESPONSE_LABEL = { accepted: '✓ Accepted', edited: '✎ Edited', rejected: '✕ Rejected', null: 'Pending' };
+  const RESPONSE_LABEL = {
+    accepted: <><Check size={12} style={{ verticalAlign: 'middle' }} /> Accepted</>,
+    edited: <><Pencil size={12} style={{ verticalAlign: 'middle' }} /> Edited</>,
+    rejected: <><X size={12} style={{ verticalAlign: 'middle' }} /> Rejected</>,
+    null: 'Pending',
+  };
 
   return (
     <Card>

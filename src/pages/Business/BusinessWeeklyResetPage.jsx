@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import ContactProfilePanel from '../../components/business/ContactProfilePanel.jsx';
+import { Compass, Check } from 'lucide-react';
 import { listOverdueContacts } from '../../services/contacts.js';
 import { getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals, getWeekCheckins } from '../../services/dailyCheckin.js';
 import { getThisWeekBuild } from '../../services/timeline.js';
@@ -60,7 +61,7 @@ export default function BusinessWeeklyResetPage() {
   return (
     <div className="stack" style={{ gap: 'var(--space-4)', maxWidth: 720 }}>
       <div>
-        <div className="page-title">🧭 Business Weekly Reset</div>
+        <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Compass size={20} /> Business Weekly Reset</div>
         <p className="muted" style={{ marginTop: -8 }}>Who needs attention, what's this week's build, and what you're aiming for.</p>
       </div>
 
@@ -112,7 +113,7 @@ export default function BusinessWeeklyResetPage() {
             <label className="reset-field"><span>Consultations target</span>
               <input type="number" value={targetForm.consultations_target} onChange={e => setTargetForm({ ...targetForm, consultations_target: Number(e.target.value) })} />
             </label>
-            <div style={{ width: '100%' }}><Button size="sm" onClick={handleSaveTargets}>{saved ? 'Saved ✓' : 'Save targets'}</Button></div>
+            <div style={{ width: '100%' }}><Button size="sm" onClick={handleSaveTargets}>{saved ? <>Saved <Check size={14} style={{ verticalAlign: 'middle' }} /></> : 'Save targets'}</Button></div>
           </div>
         ) : (
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>

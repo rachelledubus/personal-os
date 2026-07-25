@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, Inbox } from 'lucide-react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
@@ -94,7 +94,7 @@ export default function InboxPage() {
   return (
     <div>
       <Banner slotKey="inbox_banner" scene="inbox" />
-      <div className="page-title">📥 Inbox</div>
+      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Inbox size={20} /> Inbox</div>
       <p className="muted" style={{ marginBottom: 'var(--space-4)' }}>
         Everything you've captured, unsorted. Organize each into its real home — or archive it.
       </p>
@@ -173,7 +173,7 @@ export default function InboxPage() {
 
               <div className="row-between" style={{ marginTop: 'var(--space-3)' }}>
                 <Button size="sm" variant="text" onClick={() => handleSuggest(item)} disabled={loadingId === item.id}>
-                  {loadingId === item.id ? 'Thinking…' : '✨ Suggest'}
+                  {loadingId === item.id ? 'Thinking…' : <><Sparkles size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Suggest</>}
                 </Button>
                 <Button size="sm" variant="text" onClick={() => handleArchive(item)}>Archive</Button>
               </div>

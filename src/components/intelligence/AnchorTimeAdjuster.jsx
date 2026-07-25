@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, AlertTriangle } from 'lucide-react';
 import { recalculateChainForToday } from '../../services/lifeRhythm.js';
 import '../intelligence/EnergyCheckIn.css';
 
@@ -40,7 +40,7 @@ export default function AnchorTimeAdjuster({ onRecalculated }) {
       {result && (
         <span className="muted" style={{ fontSize: 11 }}>
           {result.updated === 0 ? 'Nothing to reflow yet' : `${result.updated} block${result.updated === 1 ? '' : 's'} updated`}
-          {result.conflicts > 0 && <span style={{ color: 'var(--danger)' }}> — ⚠ {result.conflicts} running tight</span>}
+          {result.conflicts > 0 && <span style={{ color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: 3 }}> — <AlertTriangle size={12} />{result.conflicts} running tight</span>}
         </span>
       )}
       {error && <span style={{ fontSize: 11, color: 'var(--danger)' }}>Couldn't update: {error}</span>}

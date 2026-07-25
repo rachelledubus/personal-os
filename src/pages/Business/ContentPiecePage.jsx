@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Download, FileText, Lightbulb, Sparkles, Check } from 'lucide-react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Checkbox from '../../components/ui/Checkbox.jsx';
@@ -188,7 +189,7 @@ export default function ContentPiecePage() {
           <div className="row-between">
             <div className="section-label">Brief</div>
             <div className="row" style={{ gap: 'var(--space-2)' }}>
-              <Button size="sm" variant="text" onClick={openPicker}>📥 Pull from Library</Button>
+              <Button size="sm" variant="text" onClick={openPicker}><Download size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />Pull from Library</Button>
               <Button size="sm" variant="text" onClick={() => setEditingBrief(!editingBrief)}>{editingBrief ? 'Cancel' : 'Edit'}</Button>
             </div>
           </div>
@@ -253,12 +254,12 @@ export default function ContentPiecePage() {
                 <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 6 }}>
                   {templates.map(t => (
                     <button key={t.id} className="sub-tab" style={{ fontSize: 12, textAlign: 'left', width: '100%' }} onClick={() => pullFromTemplate(t)}>
-                      📄 {t.title}
+                      <FileText size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />{t.title}
                     </button>
                   ))}
                   {ideas.map(i => (
                     <button key={i.id} className="sub-tab" style={{ fontSize: 12, textAlign: 'left', width: '100%' }} onClick={() => pullFromIdea(i)}>
-                      💡 {i.title}
+                      <Lightbulb size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />{i.title}
                     </button>
                   ))}
                 </div>
@@ -272,7 +273,7 @@ export default function ContentPiecePage() {
           <div className="row-between">
             <div className="section-label">Draft</div>
             <div className="row" style={{ gap: 'var(--space-2)' }}>
-              <Button size="sm" variant="text" onClick={handleExpandWithAi} disabled={expanding}>{expanding ? '…' : '✨ Expand with AI'}</Button>
+              <Button size="sm" variant="text" onClick={handleExpandWithAi} disabled={expanding}>{expanding ? '…' : <><Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />Expand with AI</>}</Button>
               <Button size="sm" variant="text" onClick={() => setEditingDraft(!editingDraft)}>{editingDraft ? 'Cancel' : 'Edit'}</Button>
             </div>
           </div>
@@ -325,7 +326,7 @@ export default function ContentPiecePage() {
           <div className="row-between">
             <div className="section-label">Repurpose</div>
             <Button size="sm" variant="ghost" onClick={() => handleRepurpose()} disabled={repurposing}>
-              {repurposing ? 'Drafting…' : '✨ Regenerate drafts'}
+              {repurposing ? 'Drafting…' : <><Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />Regenerate drafts</>}
             </Button>
           </div>
           <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
@@ -335,7 +336,7 @@ export default function ContentPiecePage() {
             {(piece.content_repurpose_items || []).map(item => (
               <div key={item.id} className="row-between" style={{ fontSize: 12 }}>
                 <span className="muted" style={{ textTransform: 'uppercase' }}>{item.format.replace('_', ' ')}</span>
-                {item.published ? <span style={{ color: 'var(--success)' }}>✓ Published</span> : (
+                {item.published ? <span style={{ color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={13} />Published</span> : (
                   <Button size="sm" variant="text" onClick={() => handleMarkRepurposed(item.id)}>Mark published</Button>
                 )}
               </div>

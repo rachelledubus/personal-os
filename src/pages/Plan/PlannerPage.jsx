@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Calendar } from 'lucide-react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { listTimeBlocks, addTimeBlock, deleteTimeBlock } from '../../services/timeBlocks.js';
@@ -25,7 +26,7 @@ export default function PlannerPage() {
   return (
     <div>
       <Banner slotKey="plan_banner" scene="plan" />
-      <div className="page-title">📅 Plan</div>
+      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Calendar size={20} /> Plan</div>
 
       <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
         {TABS.map(t => (

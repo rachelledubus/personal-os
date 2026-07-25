@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Home, Check } from 'lucide-react';
 import TodayItemList from '../../components/todayItem/TodayItemList.jsx';
 import ScheduleView, { getOverrunningBlock } from '../../components/schedule/ScheduleView.jsx';
 import Banner from '../../components/ui/Banner.jsx';
@@ -170,7 +171,7 @@ export default function TodayPage() {
   return (
     <div>
       <Banner slotKey="today_banner" scene="today" />
-      <div className="page-title">🏡 Today</div>
+      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Home size={20} /> Today</div>
       <GuardianStrip />
 
       <Card className="today-summary-card">
@@ -275,7 +276,7 @@ export default function TodayPage() {
           {completedBlocks.length > 0 && (
             <div style={{ marginTop: 'var(--space-3)' }}>
               <Button size="sm" variant="text" onClick={() => setShowCompleted(!showCompleted)}>
-                {showCompleted ? '▾' : '▸'} ✓ Completed today ({completedBlocks.length})
+                {showCompleted ? '▾' : '▸'} <Check size={13} style={{ verticalAlign: 'middle' }} /> Completed today ({completedBlocks.length})
               </Button>
               {showCompleted && (
                 <div style={{ marginTop: 'var(--space-2)', opacity: 0.7 }}>

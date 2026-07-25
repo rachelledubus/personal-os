@@ -4,6 +4,7 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import WeeklyResetModal from '../Plan/WeeklyResetModal.jsx';
 import { mondayOfWeek, currentMonthStr } from '../../utils/date.js';
+import { Compass, Sunset, BarChart3, RotateCcw, Briefcase } from 'lucide-react';
 
 // Same three rituals that used to only show up as a one-shot popup on
 // the exact right day, gone the moment you dismissed or missed it.
@@ -13,17 +14,17 @@ import { mondayOfWeek, currentMonthStr } from '../../utils/date.js';
 // prompts.js tracking), so it won't also ambush you later that day.
 const REVIEWS = [
   {
-    type: 'weekly_reset', title: 'Monday Reset', icon: '🧭',
+    type: 'weekly_reset', title: 'Monday Reset', icon: Compass,
     subtitle: "Set this week's one priority and targets.",
     marker: () => mondayOfWeek(),
   },
   {
-    type: 'weekly_closeout', title: 'Friday Close-Out', icon: '🌇',
+    type: 'weekly_closeout', title: 'Friday Close-Out', icon: Sunset,
     subtitle: 'Wins, challenges, next week — becomes your Weekly Review.',
     marker: () => mondayOfWeek(),
   },
   {
-    type: 'monthly_snapshot', title: 'Monthly Snapshot', icon: '📊',
+    type: 'monthly_snapshot', title: 'Monthly Snapshot', icon: BarChart3,
     subtitle: 'A one-glance summary of last month.',
     marker: () => currentMonthStr(),
   },
@@ -34,7 +35,7 @@ export default function ReviewPage() {
 
   return (
     <div>
-      <div className="page-title">🪞 Review</div>
+      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><RotateCcw size={20} /> Review</div>
       <p className="muted" style={{ marginTop: -8, marginBottom: 'var(--space-4)' }}>
         Every reflection ritual in one place — open any of these whenever you want, not just when the app happens to ask.
       </p>
@@ -44,7 +45,7 @@ export default function ReviewPage() {
           <Card key={r.type}>
             <div className="row-between">
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{r.icon} {r.title}</div>
+                <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}><r.icon size={16} /> {r.title}</div>
                 <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{r.subtitle}</div>
               </div>
               <Button size="sm" onClick={() => setOpen(r)}>Open</Button>
@@ -55,7 +56,7 @@ export default function ReviewPage() {
         <Card>
           <div className="row-between">
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>🧭 Business Weekly Reset</div>
+              <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}><Compass size={16} /> Business Weekly Reset</div>
               <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Overdue contacts, this week's build, and your targets — start of week.</div>
             </div>
             <Link to="/business/weekly-reset"><Button size="sm" variant="ghost">Open →</Button></Link>
@@ -65,7 +66,7 @@ export default function ReviewPage() {
         <Card>
           <div className="row-between">
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>💼 Business Weekly Reflection</div>
+              <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}><Briefcase size={16} /> Business Weekly Reflection</div>
               <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>What worked, what didn't, what's next — for the business specifically.</div>
             </div>
             <Link to="/business/dashboard"><Button size="sm" variant="ghost">Open in Business →</Button></Link>

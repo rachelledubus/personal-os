@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card.jsx';
+import { Check } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
 import Checkbox from '../../components/ui/Checkbox.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
@@ -417,7 +418,7 @@ function ProjectRow({ project, expanded, onToggleExpand }) {
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {tasks.length === 0 && <div className="muted" style={{ fontSize: 12 }}>No tasks linked yet — add project_id when creating a task.</div>}
             {tasks.map(t => (
-              <div key={t.id} className="muted" style={{ fontSize: 13 }}>{t.completed ? '✓ ' : '○ '}{t.title}</div>
+              <div key={t.id} className="muted" style={{ fontSize: 13 }}>{t.completed ? <Check size={12} style={{ verticalAlign: 'middle' }} /> : '○ '}{t.title}</div>
             ))}
           </div>
 

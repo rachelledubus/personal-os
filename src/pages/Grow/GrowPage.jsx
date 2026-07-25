@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Sprout, Flame, Bell, Clock, Lightbulb, Check, RefreshCw } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -50,7 +51,7 @@ export default function GrowPage() {
   return (
     <div>
       <Banner slotKey="grow_banner" scene="grow" />
-      <div className="page-title">🌱 Grow</div>
+      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Sprout size={20} /> Grow</div>
       <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
         {TABS.map(t => (
           <button key={t} className={`sub-tab ${tab === t ? 'active' : ''}`} onClick={() => navigate(`/grow/${t}`)}>
@@ -191,15 +192,15 @@ function HabitsTab() {
               <div className="row-between">
                 <Checkbox checked={doneIds.has(h.id)} onChange={v => toggle(h.id, v)} label={h.name} />
                 <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
-                  {streaks[h.id] > 1 && <span className="muted" style={{ fontSize: 12 }}>🔥 {streaks[h.id]} day streak</span>}
+                  {streaks[h.id] > 1 && <span className="muted" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Flame size={13} />{streaks[h.id]} day streak</span>}
                   {h.remind_periodically ? (
-                    <Button size="sm" variant="accent" onClick={() => handleClearReminder(h)}>🔔 Reminding — turn off</Button>
+                    <Button size="sm" variant="accent" onClick={() => handleClearReminder(h)}><Bell size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Reminding — turn off</Button>
                   ) : (
                     <>
                       <Button size="sm" variant="text" onClick={() => handleUseInterval(h)} disabled={reminderBusyId === h.id}>
-                        {reminderBusyId === h.id ? '☁️ asking Sora...' : '🔔 AI interval'}
+                        {reminderBusyId === h.id ? '☁️ asking Sora...' : <><Bell size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />AI interval</>}
                       </Button>
-                      <Button size="sm" variant="text" onClick={() => openTimesPicker(h)}>🕐 Specific times</Button>
+                      <Button size="sm" variant="text" onClick={() => openTimesPicker(h)}><Clock size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Specific times</Button>
                     </>
                   )}
                 </div>
@@ -232,7 +233,7 @@ function HabitsTab() {
         <div className="stack" style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-default)' }}>
           <div className="section-label">Patterns</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            {insights.map((line, i) => <div key={i} style={{ fontSize: 13 }}>💡 {line}</div>)}
+            {insights.map((line, i) => <div key={i} style={{ fontSize: 13, display: 'flex', alignItems: 'flex-start', gap: 6 }}><Lightbulb size={14} style={{ flexShrink: 0, marginTop: 2 }} />{line}</div>)}
           </div>
         </div>
       )}
@@ -365,14 +366,14 @@ function WorkoutsTab() {
         <Card>
           <div className="section-label">Insights</div>
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            {insights.map((line, i) => <div key={i} style={{ fontSize: 13 }}>💡 {line}</div>)}
+            {insights.map((line, i) => <div key={i} style={{ fontSize: 13, display: 'flex', alignItems: 'flex-start', gap: 6 }}><Lightbulb size={14} style={{ flexShrink: 0, marginTop: 2 }} />{line}</div>)}
           </div>
         </Card>
       )}
 
       {restoredDraft && (
         <div className="muted" style={{ fontSize: 12, background: 'var(--cream)', padding: '8px 12px', borderRadius: 'var(--radius-sm)' }}>
-          ✓ Restored your unsaved numbers from earlier — nothing was lost.
+          <Check size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />Restored your unsaved numbers from earlier — nothing was lost.
         </div>
       )}
 
@@ -419,7 +420,7 @@ function WorkoutsTab() {
 
             {!swaps[ex.exercise_name] && !proposalHere && (
               <Button size="sm" variant="text" onClick={() => handleRequestSwap(ex)} disabled={swapping === ex.exercise_name} style={{ marginTop: 'var(--space-2)' }}>
-                {swapping === ex.exercise_name ? 'Finding a swap…' : "🔄 Not feeling this one? Swap it"}
+                {swapping === ex.exercise_name ? 'Finding a swap…' : <><RefreshCw size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Not feeling this one? Swap it</>}
               </Button>
             )}
             {proposalHere && (
@@ -452,7 +453,7 @@ function WorkoutsTab() {
       </Card>
 
       {template && template.length > 0 && (
-        <Button onClick={handleSaveSession}>{saved ? 'Nice work! Saved ✓ 🎉' : `Save ${dayMeta?.label} session`}</Button>
+        <Button onClick={handleSaveSession}>{saved ? <>Nice work! Saved <Check size={14} style={{ verticalAlign: 'middle' }} /> 🎉</> : `Save ${dayMeta?.label} session`}</Button>
       )}
     </div>
   );

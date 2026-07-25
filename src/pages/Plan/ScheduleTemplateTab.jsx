@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card.jsx';
+import { AlertTriangle, Anchor } from 'lucide-react';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import {
@@ -178,7 +179,7 @@ export default function ScheduleTemplateTab() {
                   Computed: {computedById[block.id]?.effective_start_time || '—'} – {computedById[block.id]?.effective_end_time || '—'}
                   {computedById[block.id]?.conflict_minutes != null && (
                     <span style={{ color: 'var(--danger)', marginLeft: 6 }}>
-                      ⚠ Running {computedById[block.id].conflict_minutes} min behind the chain before it
+                      <AlertTriangle size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Running {computedById[block.id].conflict_minutes} min behind the chain before it
                     </span>
                   )}
                 </div>
@@ -208,7 +209,7 @@ export default function ScheduleTemplateTab() {
                 </select>
                 <button className={`sub-tab ${block.is_anchor ? 'active' : ''}`} style={{ fontSize: 12 }}
                   onClick={() => handleField(block, 'is_anchor', !block.is_anchor)}>
-                  {block.is_anchor ? '⚓ Day anchor' : 'Mark as day anchor'}
+                  {block.is_anchor ? <><Anchor size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Day anchor</> : 'Mark as day anchor'}
                 </button>
               </div>
 

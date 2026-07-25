@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Settings, Check } from 'lucide-react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
@@ -30,7 +31,7 @@ export default function ControlCenterPage() {
 
   return (
     <div>
-      <div className="page-title">🛠️ Control Center</div>
+      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Settings size={20} /> Control Center</div>
       <p className="muted" style={{ marginBottom: 'var(--space-4)' }}>
         The backstage area — adjust your system yourself instead of asking for a code change.
       </p>
@@ -229,7 +230,7 @@ function FeaturesSection() {
             onChange={e => setSleepTargetsState({ ...sleepTargets, wake_time: e.target.value })} />
         </label>
         <Button size="sm" onClick={handleSaveSleep} style={{ alignSelf: 'flex-end' }}>
-          {sleepSaved ? 'Saved ✓' : 'Save'}
+          {sleepSaved ? <>Saved <Check size={14} style={{ verticalAlign: 'middle' }} /></> : 'Save'}
         </Button>
       </div>
     </Card>
@@ -340,7 +341,7 @@ function AiSection() {
         <p className="muted" style={{ fontSize: 12 }}>Applied to AI-drafted follow-ups and content repurposing, on top of the base brand voice rules.</p>
         <textarea value={instructions} onChange={e => setInstructions(e.target.value)} style={{ width: '100%', minHeight: 80, marginTop: 'var(--space-2)' }}
           placeholder="e.g. Keep messages under 100 words. Never mention pricing directly." />
-        <Button size="sm" onClick={handleSave} style={{ marginTop: 'var(--space-2)' }}>{saved ? 'Saved ✓' : 'Save instructions'}</Button>
+        <Button size="sm" onClick={handleSave} style={{ marginTop: 'var(--space-2)' }}>{saved ? <>Saved <Check size={14} style={{ verticalAlign: 'middle' }} /></> : 'Save instructions'}</Button>
       </Card>
 
       <Card>
@@ -437,7 +438,7 @@ function MemorySection() {
           {handoff && (
             <div style={{ marginTop: 'var(--space-3)' }}>
               <textarea readOnly value={handoff} style={{ width: '100%', minHeight: 240, fontSize: 12, fontFamily: 'monospace' }} />
-              <Button size="sm" variant="ghost" onClick={copyHandoff} style={{ marginTop: 'var(--space-2)' }}>{copied ? 'Copied ✓' : 'Copy to clipboard'}</Button>
+              <Button size="sm" variant="ghost" onClick={copyHandoff} style={{ marginTop: 'var(--space-2)' }}>{copied ? <>Copied <Check size={14} style={{ verticalAlign: 'middle' }} /></> : 'Copy to clipboard'}</Button>
             </div>
           )}
         </Card>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Check } from 'lucide-react';
 import { quickCapture } from '../../services/capture.js';
 import './GlobalCapture.css';
 
@@ -85,7 +85,7 @@ export default function GlobalCapture() {
 
             <div className="row-between" style={{ marginTop: 'var(--space-3)' }}>
               <div className="muted" style={{ fontSize: 12, color: saveError ? 'var(--danger)' : undefined }}>
-                {saveError || (justSaved ? 'Captured ✓' : 'Sorted later in the Inbox')}
+                {saveError || (justSaved ? <>Captured <Check size={13} style={{ verticalAlign: 'middle' }} /></> : 'Sorted later in the Inbox')}
               </div>
               <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving || !text.trim()}>
                 {saving ? 'Saving…' : 'Capture'}

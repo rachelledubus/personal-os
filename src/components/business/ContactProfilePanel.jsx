@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SidePanel from '../ui/SidePanel.jsx';
+import { Sparkles } from 'lucide-react';
 import Button from '../ui/Button.jsx';
 import AiSuggestionBox from '../ui/AiSuggestionBox.jsx';
 import InteractionTimeline from './InteractionTimeline.jsx';
@@ -302,7 +303,7 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
 
         <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <Link to={`/business/flows/consultation?contact=${contact.id}`}><Button size="sm" variant="ghost">Consultation</Button></Link>
-          <Button size="sm" variant="ghost" onClick={handleDraftFollowUp} disabled={drafting}>{drafting ? 'Drafting…' : '✨ Draft follow-up'}</Button>
+          <Button size="sm" variant="ghost" onClick={handleDraftFollowUp} disabled={drafting}>{drafting ? 'Drafting…' : <><Sparkles size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Draft follow-up</>}</Button>
           <Button size="sm" variant="text" onClick={handleDelete}>Delete</Button>
         </div>
         {draft && (

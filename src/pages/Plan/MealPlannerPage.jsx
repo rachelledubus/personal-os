@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Salad, BookOpen, Check, Star, Sparkles } from 'lucide-react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
@@ -145,7 +146,7 @@ export default function MealPlannerPage({ embedded = false }) {
 
   return (
     <div>
-      {!embedded && <div className="page-title">🥗 Meal Planner</div>}
+      {!embedded && <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Salad size={20} /> Meal Planner</div>}
 
       <MealBuilder foods={foods} onFoodsChanged={loadAll} />
       <QuickMealAdd onSaved={loadAll} />
@@ -379,7 +380,7 @@ function DayCard({ date, dayPlan, foods, recipes, templates, onAdd, onAddRecipe,
                   <button key={f.id} className="food-quick-add" onClick={() => onAdd(date, mt, f)}>+ {f.name}</button>
                 ))}
                 {(recipes || []).filter(r => r.is_regular && (!r.meal_types || r.meal_types.includes(mt))).map(r => (
-                  <button key={r.id} className="food-quick-add" onClick={() => onAddRecipe(date, mt, r)}>📖 + {r.name}</button>
+                  <button key={r.id} className="food-quick-add" onClick={() => onAddRecipe(date, mt, r)}><BookOpen size={12} style={{ verticalAlign: 'middle', marginRight: 2 }} />+ {r.name}</button>
                 ))}
                 {templates.length > 0 && (
                   <select defaultValue="" onChange={e => { onApplyTemplate(e.target.value, date, mt); e.target.value = ''; }}>
@@ -577,7 +578,7 @@ function MealBuilder({ foods, onFoodsChanged }) {
 
       <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
         <input placeholder="Name this recipe (e.g. Weeknight bowl)" value={saveName} onChange={e => setSaveName(e.target.value)} style={{ flex: 1 }} />
-        <Button size="sm" onClick={handleSave} disabled={!name}>{saved ? 'Saved ✓' : 'Save as Recipe'}</Button>
+        <Button size="sm" onClick={handleSave} disabled={!name}>{saved ? <>Saved <Check size={14} style={{ verticalAlign: 'middle' }} /></> : 'Save as Recipe'}</Button>
       </div>
       {saveError && <div className="muted" style={{ fontSize: 11, marginTop: 4, color: 'var(--danger)' }}>Couldn't save: {saveError}</div>}
 
@@ -614,7 +615,7 @@ function MealBuilder({ foods, onFoodsChanged }) {
                       className={`sub-tab ${f.is_regular ? 'active' : ''}`}
                       style={{ fontSize: 10, marginLeft: 6 }}
                       onClick={() => handleToggleRegular(f)}
-                    >{f.is_regular ? '★ Regular' : '☆ Mark as regular'}</button>
+                    ><Star size={12} fill={f.is_regular ? 'currentColor' : 'none'} style={{ verticalAlign: 'middle', marginRight: 3 }} />{f.is_regular ? 'Regular' : 'Mark as regular'}</button>
                   </div>
                 </div>
               ))}
@@ -657,7 +658,7 @@ function QuickMealAdd({ onSaved }) {
 
   return (
     <Card style={{ marginTop: 'var(--space-4)' }}>
-      <div className="section-label">✨ Quick meal (AI-estimated)</div>
+      <div className="section-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Sparkles size={14} />Quick meal (AI-estimated)</div>
       <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
         For premade/packaged things — frozen pizza, boxed tortellini, a takeout order. AI estimates the calories so
         you don't have to look it up, then it's saved as a real food you can use anywhere.
@@ -685,7 +686,7 @@ function QuickMealAdd({ onSaved }) {
           </div>
           {estimate.serving_note && <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{estimate.serving_note}</div>}
           <Button size="sm" style={{ marginTop: 'var(--space-2)' }} onClick={handleSave}>
-            {saved ? 'Saved ✓' : 'Save to my foods'}
+            {saved ? <>Saved <Check size={14} style={{ verticalAlign: 'middle' }} /></> : 'Save to my foods'}
           </Button>
         </div>
       )}
@@ -715,7 +716,7 @@ function MealQuickAdd({ mealType, foods, recipes, onAddFood, onAddRecipe }) {
             <button key={f.id} className="food-quick-add" onClick={() => onAddFood(f)}>+ {f.name}</button>
           ))}
           {regularRecipes.map(r => (
-            <button key={r.id} className="food-quick-add" onClick={() => onAddRecipe(r)}>📖 + {r.name}</button>
+            <button key={r.id} className="food-quick-add" onClick={() => onAddRecipe(r)}><BookOpen size={12} style={{ verticalAlign: 'middle', marginRight: 2 }} />+ {r.name}</button>
           ))}
         </div>
       ) : (
@@ -738,7 +739,7 @@ function MealQuickAdd({ mealType, foods, recipes, onAddFood, onAddRecipe }) {
               className="food-quick-add"
               onClick={() => { r.type === 'food' ? onAddFood(r.item) : onAddRecipe(r.item); setQuery(''); }}
             >
-              {r.type === 'recipe' ? '📖 ' : ''}+ {r.item.name}
+              {r.type === 'recipe' && <BookOpen size={12} style={{ verticalAlign: 'middle', marginRight: 2 }} />}+ {r.item.name}
             </button>
           ))}
         </div>
@@ -1162,7 +1163,7 @@ function RecipeRow({ recipe, expanded, onToggleExpand, onDelete, onServingsChang
           className={`sub-tab ${recipe.is_regular ? 'active' : ''}`}
           style={{ fontSize: 10, marginLeft: 6 }}
           onClick={e => { e.stopPropagation(); handleToggleRegular(); }}
-        >{recipe.is_regular ? '★ Regular' : '☆ Mark as regular'}</button>
+        ><Star size={12} fill={recipe.is_regular ? 'currentColor' : 'none'} style={{ verticalAlign: 'middle', marginRight: 3 }} />{recipe.is_regular ? 'Regular' : 'Mark as regular'}</button>
       </div>
 
       {expanded && (
@@ -1194,7 +1195,7 @@ function RecipeRow({ recipe, expanded, onToggleExpand, onDelete, onServingsChang
                 Total at {servings} servings: {totals.calories} kcal · {totals.protein}p · {totals.carbs}c · {totals.fat}f
               </div>
               <Button size="sm" style={{ marginTop: 'var(--space-2)' }} onClick={handleAddToGrocery}>
-                {addedToGrocery ? 'Added ✓' : 'Add ingredients to grocery list'}
+                {addedToGrocery ? <>Added <Check size={14} style={{ verticalAlign: 'middle' }} /></> : 'Add ingredients to grocery list'}
               </Button>
             </>
           )}

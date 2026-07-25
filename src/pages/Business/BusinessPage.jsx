@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Briefcase, RotateCcw, Target, Check, Split } from 'lucide-react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -43,7 +44,7 @@ export default function BusinessPage() {
   return (
     <div>
       <Banner slotKey="business_banner" scene="business" />
-      <div className="page-title">💼 Business</div>
+      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Briefcase size={20} /> Business</div>
 
       <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
         {TABS.map(t => (
@@ -204,7 +205,7 @@ function DashboardTab() {
         <div className="row-between">
           <div>
             <div className="section-label">Weekly reflection</div>
-            <Link to="/review" className="muted" style={{ fontSize: 11 }}>🪞 All reviews →</Link>
+            <Link to="/review" className="muted" style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 3 }}><RotateCcw size={12} />All reviews →</Link>
           </div>
           <Button size="sm" variant="text" onClick={() => setEditingReview(!editingReview)}>
             {editingReview ? 'Cancel' : (review ? 'Edit' : 'Add reflection')}
@@ -794,7 +795,7 @@ function MarketingTab() {
                         </select>
                       ) : (
                         <button className="sub-tab" style={{ fontSize: 11 }} onClick={() => setLinkingGoalFor(a.id)}>
-                          {a.goals?.title ? `🎯 ${truncateGoalTitle(a.goals.title)}` : '+ Link goal'}
+                          {a.goals?.title ? <><Target size={11} style={{ verticalAlign: 'middle', marginRight: 3 }} />{truncateGoalTitle(a.goals.title)}</> : '+ Link goal'}
                         </button>
                       )}
                     </div>
@@ -816,7 +817,7 @@ function MarketingTab() {
           <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
             {completed.map(a => (
               <div key={a.id} className="row-between" style={{ padding: '4px 0' }}>
-                <span className="muted" style={{ fontSize: 13 }}>{a.title} · {a.category}{a.goals?.title && ` · 🎯 ${truncateGoalTitle(a.goals.title)}`}</span>
+                <span className="muted" style={{ fontSize: 13 }}>{a.title} · {a.category}{a.goals?.title && <> · <Target size={11} style={{ verticalAlign: 'middle' }} /> {truncateGoalTitle(a.goals.title)}</>}</span>
                 <span className="muted" style={{ fontSize: 11 }}>{a.activity_date}</span>
               </div>
             ))}
@@ -896,7 +897,7 @@ function CtaLibrary() {
               <div style={{ fontWeight: 700, fontSize: 13 }}>{c.cta_text}</div>
               <div className="muted" style={{ fontSize: 11 }}>{c.audience} · {c.stage}{c.page ? ` · ${c.page}` : ''}</div>
             </div>
-            <Button size="sm" variant="ghost" onClick={() => copy(c)}>{copiedId === c.id ? 'Copied ✓' : 'Copy'}</Button>
+            <Button size="sm" variant="ghost" onClick={() => copy(c)}>{copiedId === c.id ? <>Copied <Check size={13} style={{ verticalAlign: 'middle' }} /></> : 'Copy'}</Button>
           </div>
         ))}
       </div>
@@ -926,7 +927,7 @@ function ScriptLibrary() {
           <details key={s.id} open={!!search} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
             <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>{s.section} — {s.situation}</summary>
             <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>{s.script_text}</p>
-            <Button size="sm" variant="ghost" onClick={() => copy(s)}>{copiedId === s.id ? 'Copied ✓' : 'Copy'}</Button>
+            <Button size="sm" variant="ghost" onClick={() => copy(s)}>{copiedId === s.id ? <>Copied <Check size={13} style={{ verticalAlign: 'middle' }} /></> : 'Copy'}</Button>
           </details>
         ))}
       </div>
@@ -957,7 +958,7 @@ function PromptLibrary() {
             <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>{p.code ? `${p.code} — ` : ''}{p.title}</summary>
             <div className="muted" style={{ fontSize: 11 }}>{p.category} · {p.use_for}</div>
             <p style={{ fontSize: 13, marginTop: 4, whiteSpace: 'pre-wrap' }}>{p.prompt_text}</p>
-            <Button size="sm" variant="ghost" onClick={() => copy(p)}>{copiedId === p.id ? 'Copied ✓' : 'Copy'}</Button>
+            <Button size="sm" variant="ghost" onClick={() => copy(p)}>{copiedId === p.id ? <>Copied <Check size={13} style={{ verticalAlign: 'middle' }} /></> : 'Copy'}</Button>
           </details>
         ))}
       </div>
@@ -1297,7 +1298,7 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
 
           {subtasks.length === 0 && !splitPreview && parseCompoundTitle(item.title) && (
             <div style={{ marginTop: 'var(--space-2)' }}>
-              <Button size="sm" variant="text" onClick={openSplitPreview}>🔀 Split into sub-tasks</Button>
+              <Button size="sm" variant="text" onClick={openSplitPreview}><Split size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Split into sub-tasks</Button>
             </div>
           )}
 

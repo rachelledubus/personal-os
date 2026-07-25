@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Button from '../ui/Button.jsx';
+import { Sparkles } from 'lucide-react';
 import AiSuggestionBox from '../ui/AiSuggestionBox.jsx';
 import { listInteractions, addInteraction, deleteInteraction, typeLabel, requestRelationshipSummary } from '../../services/interactions.js';
 import './InteractionTimeline.css';
@@ -60,7 +61,7 @@ export default function InteractionTimeline({ contact }) {
         <div className="row" style={{ gap: 'var(--space-2)' }}>
           {interactions?.length > 0 && (
             <Button size="sm" variant="text" onClick={handleSummarize} disabled={summarizing}>
-              {summarizing ? 'Summarizing…' : '✨ Summarize'}
+              {summarizing ? 'Summarizing…' : <><Sparkles size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Summarize</>}
             </Button>
           )}
           <Button size="sm" variant="text" onClick={() => setAdding(!adding)}>
