@@ -4,11 +4,10 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import ContactProfilePanel from '../../components/business/ContactProfilePanel.jsx';
 import { Compass, Check } from 'lucide-react';
+import Badge from '../../components/ui/Badge.jsx';
 import { listOverdueContacts } from '../../services/contacts.js';
 import { getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals, getWeekCheckins } from '../../services/dailyCheckin.js';
 import { getThisWeekBuild } from '../../services/timeline.js';
-
-const STATUS_TONE = { Overdue: 'var(--terracotta, #C0553A)' };
 
 // The actual "Business Monday Reset" — what was missing wasn't a link
 // to Business Dashboard (too generic, makes you go hunting), it was
@@ -78,7 +77,7 @@ export default function BusinessWeeklyResetPage() {
                   <div style={{ fontWeight: 700, fontSize: 'var(--text-compact)' }}>{c.name}</div>
                   <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.next_action || 'No next action set'}</div>
                 </div>
-                <span style={{ fontSize: 'var(--text-micro)', fontWeight: 700, color: STATUS_TONE.Overdue }}>Overdue</span>
+                <Badge tone="danger">Overdue</Badge>
               </div>
             ))}
           </div>

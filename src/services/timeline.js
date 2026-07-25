@@ -1,5 +1,20 @@
 import { supabase } from '../lib/supabaseClient.js';
 
+async function getUserId() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id;
+}
+
+/** RoadmapTab's own load — was calling supabase directly inline
+ *  instead of going through this file, despite timeline.js already
+ *  owning every other roadmap_items operation. */
+export async function listRoadmapItems() {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('roadmap_items').select('*').eq('user_id', userId).order('sort_order');
+  if (error) throw error;
+  return data || [];
+}
+
 // ============================================================
 // MASTER BUILD TIMELINE (System 11) -> roadmap_items
 // The real 13-week sequence from 00_MASTER_BUILD_TIMELINE.docx,

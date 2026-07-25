@@ -15,6 +15,17 @@ const TONE_CLASS = {
   neutral: 'badge-neutral',
 };
 
+/** The two STATUS_TONE maps (BusinessPage's PipelineTab, and
+ *  ContactProfilePanel) had drifted into separate objects — one used
+ *  real tokens, the other used stale hardcoded fallback hex values
+ *  that no longer matched. One mapping now, both call sites use it. */
+export function contactStatusTone(status) {
+  if (status === 'Overdue') return 'danger';
+  if (status === 'Due Soon') return 'warning';
+  if (status === 'On Track') return 'success';
+  return 'neutral'; // 'No Next Action' / 'No Date Set'
+}
+
 export default function Badge({ tone = 'neutral', children }) {
   return <span className={`badge ${TONE_CLASS[tone] || TONE_CLASS.neutral}`}>{children}</span>;
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import SidePanel from '../ui/SidePanel.jsx';
 import { Sparkles } from 'lucide-react';
 import Button from '../ui/Button.jsx';
+import Badge, { contactStatusTone } from '../ui/Badge.jsx';
 import AiSuggestionBox from '../ui/AiSuggestionBox.jsx';
 import InteractionTimeline from './InteractionTimeline.jsx';
 import {
@@ -10,14 +11,6 @@ import {
 } from '../../services/contacts.js';
 import { getCategoryList } from '../../services/settings.js';
 import { getCadenceStandards, standardKeyForContact, FOLLOWUP_STANDARD_TYPES } from '../../services/followupStandards.js';
-
-const STATUS_TONE = {
-  Overdue: 'var(--terracotta, #C0553A)',
-  'Due Soon': 'var(--gold, #B8863B)',
-  'On Track': 'var(--sage, #5B7B62)',
-  'No Next Action': 'var(--ink-soft)',
-  'No Date Set': 'var(--ink-soft)',
-};
 
 const TIERS = ['Tier 1 - Core', 'Tier 2 - Developing', 'Tier 3 - Strategic'];
 const TRANSACTION_CATEGORIES = ['Lead', 'Future Client', 'Active Client'];
@@ -138,7 +131,7 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
           <select value={contact.category} onChange={e => applyField({ category: e.target.value, relationship_tier: contact.relationship_tier || inferDefaultTier(e.target.value) })}>
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: STATUS_TONE[contact.status] }}>{contact.status}</span>
+          <Badge tone={contactStatusTone(contact.status)}>{contact.status}</Badge>
         </div>
 
         {/* ---------- Contact info ---------- */}

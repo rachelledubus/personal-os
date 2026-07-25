@@ -52,7 +52,7 @@ export default function TimerWidget({ mission = null, compact = false }) {
     return (
       <div className={`timer-widget ${compact ? 'timer-widget-compact' : ''}`}>
         <div className="timer-stats-row">
-          <span className="muted" style={{ fontSize: 'var(--text-caption)'.5 }}>
+          <span className="muted" style={{ fontSize: 12.5 }}>
             Today: {Math.round(stats.totalSeconds / 60)} min · {stats.sessionCount} session{stats.sessionCount === 1 ? '' : 's'}
           </span>
         </div>
