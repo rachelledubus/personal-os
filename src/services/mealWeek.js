@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { mondayOfWeek } from '../utils/date.js';
+import { listIngredients, totalMacrosAtServings, listRecipes } from './recipes.js';
 
 // ============================================================
 // WEEKLY MEAL PLANNING
@@ -97,5 +98,82 @@ export async function applyTemplateToSlot(template, date, mealType) {
     }));
   if (rows.length === 0) return;
   const { error } = await supabase.from('meal_plan_items').insert(rows);
+  if (error) throw error;
+}
+
+// ============================================================
+// SINGLE-DAY PLAN — Batch 9. Was inline in MealPlannerPage.jsx (the
+// biggest chunk of its 20 direct Supabase calls).
+// ============================================================
+
+/** One day's full plan: foods list, recipes list, macro goals, the
+ *  planned items grouped by meal type (with recipe items' macros
+ *  computed from their real ingredients, cached per recipe since the
+ *  same recipe can appear more than once in a day), and what was
+ *  actually logged eaten. Kept as one combined function — the caller
+ *  needs all of it together to render the day view. */
+export async function loadDayPlan(planDate) {
+  const userId = await getUserId();
+  const [{ data: foodData }, { data: settings }, { data: planData }, { data: logData }, recipeData] = await Promise.all([
+    supabase.from('foods').select('*').eq('user_id', userId).order('name'),
+    supabase.from('settings').select('*').eq('user_id', userId).maybeSingle(),
+    supabase.from('meal_plan_items').select('*, foods(*), recipes(*)').eq('user_id', userId).eq('plan_date', planDate),
+    supabase.from('meal_logs').select('*, foods(*)').eq('user_id', userId).eq('log_date', planDate),
+    listRecipes(),
+  ]);
+
+  const macroCache = {};
+  async function recipeMacrosPerServing(recipeId) {
+    if (!macroCache[recipeId]) {
+      const ingredients = await listIngredients(recipeId);
+      macroCache[recipeId] = totalMacrosAtServings(ingredients, 1);
+    }
+    return macroCache[recipeId];
+  }
+
+  const grouped = { breakfast: [], lunch: [], dinner: [], snacks: [] };
+  for (const p of planData || []) {
+    if (!grouped[p.meal_type]) continue;
+    if (p.recipe_id && p.recipes) {
+      const macros = await recipeMacrosPerServing(p.recipe_id);
+      grouped[p.meal_type].push({ name: `${p.recipes.name} (recipe)`, servings: p.servings, planId: p.id, isRecipe: true, recipeId: p.recipe_id, ...macros });
+    } else {
+      grouped[p.meal_type].push({ ...p.foods, servings: p.servings, planId: p.id });
+    }
+  }
+
+  return { foods: foodData || [], recipes: recipeData || [], goals: settings || null, planned: grouped, actual: logData || [] };
+}
+
+export async function addFoodToDayPlan(planDate, mealType, foodId) {
+  const userId = await getUserId();
+  const { error } = await supabase.from('meal_plan_items').insert({
+    user_id: userId, plan_date: planDate, meal_type: mealType, food_id: foodId, servings: 1,
+  });
+  if (error) throw error;
+}
+
+export async function addRecipeToDayPlan(planDate, mealType, recipeId, servings = 1) {
+  const userId = await getUserId();
+  const { error } = await supabase.from('meal_plan_items').insert({
+    user_id: userId, plan_date: planDate, meal_type: mealType, recipe_id: recipeId, servings,
+  });
+  if (error) throw error;
+}
+
+export async function removePlanItem(planId) {
+  const { error } = await supabase.from('meal_plan_items').delete().eq('id', planId);
+  if (error) throw error;
+}
+
+/** items: allPlannedItems from the day view — recipes save by
+ *  recipeId, foods save by foodId (matches applyTemplateToSlot's
+ *  expected shape above). */
+export async function saveMealPlanAsTemplate(name, items) {
+  const userId = await getUserId();
+  const { error } = await supabase.from('meal_plan_templates').insert({
+    user_id: userId, name,
+    items: items.map(i => i.isRecipe ? { recipeId: i.recipeId, servings: i.servings } : { foodId: i.id, servings: i.servings }),
+  });
   if (error) throw error;
 }

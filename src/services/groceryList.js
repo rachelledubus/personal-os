@@ -40,3 +40,21 @@ export async function clearPurchasedGroceryItems() {
   const { error } = await supabase.from('grocery_items').delete().eq('user_id', userId).eq('purchased', true);
   if (error) throw error;
 }
+
+/** The day view's "Generate grocery list" action — was the last of
+ *  the direct-Supabase writes still sitting in MealPlannerPage.jsx
+ *  itself rather than a service file. Recipe-sourced items are
+ *  skipped: their real ingredients come from the recipe's own "Add
+ *  ingredients to grocery list" action (recipes.js), not a bogus item
+ *  named after the recipe. */
+export async function addPlannedItemsToGroceryList(items) {
+  const userId = await getUserId();
+  for (const item of items) {
+    if (item.isRecipe) continue;
+    const { data: exists } = await supabase.from('grocery_items').select('id')
+      .eq('user_id', userId).ilike('name', item.name).maybeSingle();
+    if (!exists) {
+      await supabase.from('grocery_items').insert({ user_id: userId, name: item.name, category: 'Other' });
+    }
+  }
+}
