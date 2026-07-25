@@ -1,10 +1,5 @@
 import { supabase } from '../lib/supabaseClient.js';
 
-async function getUserId() {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id;
-}
-
 /** RoadmapTab's own load — was calling supabase directly inline
  *  instead of going through this file, despite timeline.js already
  *  owning every other roadmap_items operation. */
