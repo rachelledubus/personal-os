@@ -25,7 +25,7 @@ export default function GuidedFlow() {
 
   const flow = FLOWS[flowKey];
   const [run, setRun] = useState(null);
-  const [values, setValues] = useState({});
+  const [values, setValues] = useState(() => flow?.defaults || {});
   const [done, setDone] = useState(false);
 
   useEffect(() => {

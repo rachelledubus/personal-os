@@ -8,6 +8,7 @@ import {
   getContentPiece, updateContentPiece, advanceStatus, initRepurposeSlots, markRepurposed,
   requestRepurposeDrafts, requestDraftExpansion, listContentTemplates, listContentIdeas,
 } from '../../services/contentEngine.js';
+import { getCategoryList, CTA_BY_CONTENT_TYPE, CONTENT_QUALITY_CHECKLIST_ITEMS } from '../../services/settings.js';
 
 const STATUS_FLOW = ['idea', 'drafting', 'published'];
 const STATUS_LABEL = { idea: 'Idea', drafting: 'Drafting', published: 'Published' };
@@ -35,18 +36,28 @@ export default function ContentPiecePage() {
   const [ideas, setIdeas] = useState([]);
   const [repurposing, setRepurposing] = useState(false);
   const [repurposeDrafts, setRepurposeDrafts] = useState(null);
+  const [pillars, setPillars] = useState([]);
+  const [audiences, setAudiences] = useState([]);
+  const [contentTypes, setContentTypes] = useState([]);
+  const [checklist, setChecklist] = useState([]);
 
   async function refresh() {
     const p = await getContentPiece(id);
     setPiece(p);
     setTitleDraft(p.title);
     setBriefForm({
-      buyer_question: p.buyer_question || '', audience: p.audience || '', funnel_stage: p.funnel_stage || 'Awareness',
-      goal: p.goal || '', trade_off: p.trade_off || '', cta: p.cta || '',
+      buyer_question: p.buyer_question || '', audience: p.audience || '', pillar: p.pillar || '', content_type: p.content_type || '',
+      funnel_stage: p.funnel_stage || 'Awareness', goal: p.goal || '', trade_off: p.trade_off || '', cta: p.cta || '',
     });
     setDraftText(p.draft_body || '');
+    setChecklist(p.quality_checklist?.length ? p.quality_checklist : CONTENT_QUALITY_CHECKLIST_ITEMS.map(label => ({ label, checked: false })));
   }
   useEffect(() => { refresh(); }, [id]);
+  useEffect(() => {
+    getCategoryList('content_pillars').then(setPillars);
+    getCategoryList('content_audiences').then(setAudiences);
+    getCategoryList('content_types').then(setContentTypes);
+  }, []);
 
   async function apply(fields) {
     await updateContentPiece(id, fields);
@@ -89,6 +100,12 @@ export default function ContentPiecePage() {
 
   async function handleToggleFactChecked(value) {
     await apply({ fact_checked: value });
+  }
+
+  async function handleToggleChecklistItem(index) {
+    const next = checklist.map((item, i) => (i === index ? { ...item, checked: !item.checked } : item));
+    setChecklist(next);
+    await apply({ quality_checklist: next });
   }
 
   async function handleCycleStatus() {
@@ -181,11 +198,29 @@ export default function ContentPiecePage() {
               <input placeholder="Buyer question this answers" value={briefForm.buyer_question}
                 onChange={e => setBriefForm({ ...briefForm, buyer_question: e.target.value })} />
               <div className="row" style={{ gap: 'var(--space-2)' }}>
-                <input placeholder="Audience" value={briefForm.audience} onChange={e => setBriefForm({ ...briefForm, audience: e.target.value })} />
+                <select value={briefForm.audience} onChange={e => setBriefForm({ ...briefForm, audience: e.target.value })}>
+                  <option value="">No audience set</option>
+                  {audiences.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+                <select value={briefForm.pillar} onChange={e => setBriefForm({ ...briefForm, pillar: e.target.value })}>
+                  <option value="">No pillar set</option>
+                  {pillars.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
                 <select value={briefForm.funnel_stage} onChange={e => setBriefForm({ ...briefForm, funnel_stage: e.target.value })}>
                   <option>Awareness</option><option>Consideration</option><option>Decision</option>
                 </select>
               </div>
+              <select
+                value={briefForm.content_type}
+                onChange={e => {
+                  const content_type = e.target.value;
+                  const suggestedCta = CTA_BY_CONTENT_TYPE[content_type];
+                  setBriefForm(prev => ({ ...prev, content_type, cta: prev.cta || suggestedCta || prev.cta }));
+                }}
+              >
+                <option value="">No content type set</option>
+                {contentTypes.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
               <input placeholder="Goal — what should the reader walk away with?" value={briefForm.goal}
                 onChange={e => setBriefForm({ ...briefForm, goal: e.target.value })} />
               <input placeholder="Trade-off — the one honest thing to acknowledge" value={briefForm.trade_off}
@@ -196,7 +231,7 @@ export default function ContentPiecePage() {
           ) : (
             <div className="stack" style={{ marginTop: 'var(--space-2)', fontSize: 13, gap: 4 }}>
               {piece.buyer_question && <div><strong>Question:</strong> {piece.buyer_question}</div>}
-              <div className="muted">{piece.audience || 'No audience set'} · {piece.funnel_stage}</div>
+              <div className="muted">{piece.audience || 'No audience set'} · {piece.pillar || 'No pillar set'} · {piece.content_type || 'No content type set'} · {piece.funnel_stage}</div>
               {piece.goal && <div><strong>Goal:</strong> {piece.goal}</div>}
               {piece.trade_off && <div><strong>Trade-off:</strong> {piece.trade_off}</div>}
               {piece.cta && <div><strong>CTA:</strong> {piece.cta}</div>}
@@ -271,9 +306,16 @@ export default function ContentPiecePage() {
           <div style={{ marginTop: 'var(--space-2)' }}>
             <Checkbox checked={piece.fact_checked} onChange={handleToggleFactChecked} label="Fact-checked" />
           </div>
-          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-            Before publishing: numbers and claims verified · brand voice matches (warm, educational, never pushy) · one clear CTA
+          <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
+            {checklist.map((item, i) => (
+              <Checkbox key={item.label} checked={item.checked} onChange={() => handleToggleChecklistItem(i)} label={item.label} />
+            ))}
           </div>
+          {checklist.length > 0 && (
+            <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+              {checklist.filter(c => c.checked).length}/{checklist.length} before publishing
+            </div>
+          )}
         </div>
       </Card>
 

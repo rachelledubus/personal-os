@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
+import EmptyState from '../../components/ui/EmptyState.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import { todayStr } from '../../utils/date.js';
 import { sumMacros, remainingMacros, suggestFoods, pctOfGoal } from '../../utils/macros.js';
 import {
-  SLOTS, listFoodsBySlot, tagFoodSlot, sumSelectionMacros, comboName, addComboToGroceryList, saveComboAsRecipe,
+  SLOTS, listFoodsBySlot, tagFoodSlot, tagFoodMealTypes, sumSelectionMacros, comboName, addComboToGroceryList, saveComboAsRecipe,
   seedStarterFoodsIfEmpty, estimateFoodCalories, saveQuickMealAsFood,
 } from '../../services/mealBuilder.js';
 import {
@@ -14,7 +15,7 @@ import {
 } from '../../services/mealWeek.js';
 import {
   listRecipes, addRecipe, deleteRecipe, updateRecipeServings, listIngredients, addIngredient, deleteIngredient,
-  scaleIngredients, totalMacrosAtServings, addRecipeToGroceryList,
+  scaleIngredients, totalMacrosAtServings, addRecipeToGroceryList, tagRecipeMealTypes,
 } from '../../services/recipes.js';
 import { listGroceryItems, toggleGroceryItemPurchased, deleteGroceryItem, clearPurchasedGroceryItems } from '../../services/groceryList.js';
 import {
@@ -203,20 +204,13 @@ export default function MealPlannerPage({ embedded = false }) {
               </div>
             ))}
           </div>
-          <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
-            {foods.slice(0, 6).map(f => (
-              <button key={f.id} className="food-quick-add" onClick={() => addToPlan(mt, f)}>+ {f.name}</button>
-            ))}
-          </div>
-          {recipes.length > 0 ? (
-            <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
-              {recipes.slice(0, 6).map(r => (
-                <button key={r.id} className="food-quick-add" onClick={() => addRecipeToPlanDay(mt, r)}>📖 + {r.name}</button>
-              ))}
-            </div>
-          ) : (
-            <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>No recipes yet — add one in the Recipes tab to plan it into meals.</div>
-          )}
+          <MealQuickAdd
+            mealType={mt}
+            foods={foods}
+            recipes={recipes}
+            onAddFood={f => addToPlan(mt, f)}
+            onAddRecipe={r => addRecipeToPlanDay(mt, r)}
+          />
         </Card>
       ))}
 
@@ -381,10 +375,10 @@ function DayCard({ date, dayPlan, foods, recipes, templates, onAdd, onAddRecipe,
                 ))}
               </div>
               <div className="row" style={{ marginTop: 4, flexWrap: 'wrap', gap: 4 }}>
-                {foods.slice(0, 4).map(f => (
+                {foods.filter(f => f.is_regular && (!f.meal_types || f.meal_types.includes(mt))).map(f => (
                   <button key={f.id} className="food-quick-add" onClick={() => onAdd(date, mt, f)}>+ {f.name}</button>
                 ))}
-                {(recipes || []).slice(0, 4).map(r => (
+                {(recipes || []).filter(r => r.is_regular && (!r.meal_types || r.meal_types.includes(mt))).map(r => (
                   <button key={r.id} className="food-quick-add" onClick={() => onAddRecipe(date, mt, r)}>📖 + {r.name}</button>
                 ))}
                 {templates.length > 0 && (
@@ -472,6 +466,18 @@ function MealBuilder({ foods, onFoodsChanged }) {
   async function handleTag(foodId, slot) {
     await tagFoodSlot(foodId, slot);
     refreshSlots();
+    onFoodsChanged?.();
+  }
+
+  async function handleMealTag(food, mealType) {
+    const current = food.meal_types || [];
+    const next = current.includes(mealType) ? current.filter(m => m !== mealType) : [...current, mealType];
+    await tagFoodMealTypes(food.id, next, food.is_regular);
+    onFoodsChanged?.();
+  }
+
+  async function handleToggleRegular(food) {
+    await tagFoodMealTypes(food.id, food.meal_types || [], !food.is_regular);
     onFoodsChanged?.();
   }
 
@@ -585,14 +591,31 @@ function MealBuilder({ foods, onFoodsChanged }) {
               No foods in your database yet — add one from a meal slot above, or below.
             </div>
           ) : (
-            <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+            <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 6 }}>
               {foods.map(f => (
-                <div key={f.id} className="row-between" style={{ fontSize: 13, padding: '4px 0' }}>
-                  <span>{f.name}</span>
-                  <select value={f.meal_slot || ''} onChange={e => handleTag(f.id, e.target.value)}>
-                    <option value="">No slot</option>
-                    {SLOTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                  </select>
+                <div key={f.id} style={{ fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--sand)' }}>
+                  <div className="row-between">
+                    <span>{f.name}</span>
+                    <select value={f.meal_slot || ''} onChange={e => handleTag(f.id, e.target.value)}>
+                      <option value="">No slot</option>
+                      {SLOTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="row" style={{ gap: 4, marginTop: 4 }}>
+                    {MEAL_TYPES.map(mt => (
+                      <button
+                        key={mt}
+                        className={`sub-tab ${(f.meal_types || []).includes(mt) ? 'active' : ''}`}
+                        style={{ fontSize: 10, textTransform: 'capitalize' }}
+                        onClick={() => handleMealTag(f, mt)}
+                      >{mt}</button>
+                    ))}
+                    <button
+                      className={`sub-tab ${f.is_regular ? 'active' : ''}`}
+                      style={{ fontSize: 10, marginLeft: 6 }}
+                      onClick={() => handleToggleRegular(f)}
+                    >{f.is_regular ? '★ Regular' : '☆ Mark as regular'}</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -667,6 +690,60 @@ function QuickMealAdd({ onSaved }) {
         </div>
       )}
     </Card>
+  );
+}
+
+function MealQuickAdd({ mealType, foods, recipes, onAddFood, onAddRecipe }) {
+  const [query, setQuery] = useState('');
+
+  const regularFoods = foods.filter(f => f.is_regular && (!f.meal_types || f.meal_types.includes(mealType)));
+  const regularRecipes = recipes.filter(r => r.is_regular && (!r.meal_types || r.meal_types.includes(mealType)));
+
+  const q = query.trim().toLowerCase();
+  const searchResults = q
+    ? [
+        ...foods.filter(f => f.name.toLowerCase().includes(q)).map(f => ({ type: 'food', item: f })),
+        ...recipes.filter(r => r.name.toLowerCase().includes(q)).map(r => ({ type: 'recipe', item: r })),
+      ].slice(0, 8)
+    : [];
+
+  return (
+    <div style={{ marginTop: 'var(--space-3)' }}>
+      {(regularFoods.length > 0 || regularRecipes.length > 0) ? (
+        <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
+          {regularFoods.map(f => (
+            <button key={f.id} className="food-quick-add" onClick={() => onAddFood(f)}>+ {f.name}</button>
+          ))}
+          {regularRecipes.map(r => (
+            <button key={r.id} className="food-quick-add" onClick={() => onAddRecipe(r)}>📖 + {r.name}</button>
+          ))}
+        </div>
+      ) : (
+        <div className="muted" style={{ fontSize: 11 }}>
+          No regulars tagged for {mealType} yet — tag some as "Regular" (Manage food slots / Recipes tab), or search below.
+        </div>
+      )}
+
+      <input
+        placeholder={`Search foods & recipes to add to ${mealType}...`}
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        style={{ width: '100%', marginTop: 'var(--space-2)', fontSize: 13 }}
+      />
+      {searchResults.length > 0 && (
+        <div className="row" style={{ flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+          {searchResults.map(r => (
+            <button
+              key={`${r.type}-${r.item.id}`}
+              className="food-quick-add"
+              onClick={() => { r.type === 'food' ? onAddFood(r.item) : onAddRecipe(r.item); setQuery(''); }}
+            >
+              {r.type === 'recipe' ? '📖 ' : ''}+ {r.item.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1041,6 +1118,18 @@ function RecipeRow({ recipe, expanded, onToggleExpand, onDelete, onServingsChang
     onServingsChanged?.();
   }
 
+  async function handleMealTag(mealType) {
+    const current = recipe.meal_types || [];
+    const next = current.includes(mealType) ? current.filter(m => m !== mealType) : [...current, mealType];
+    await tagRecipeMealTypes(recipe.id, next, recipe.is_regular);
+    onServingsChanged?.();
+  }
+
+  async function handleToggleRegular() {
+    await tagRecipeMealTypes(recipe.id, recipe.meal_types || [], !recipe.is_regular);
+    onServingsChanged?.();
+  }
+
   async function handleAddToGrocery() {
     await addRecipeToGroceryList(recipe.id, servings);
     setAddedToGrocery(true);
@@ -1058,6 +1147,22 @@ function RecipeRow({ recipe, expanded, onToggleExpand, onDelete, onServingsChang
           <span className="muted" style={{ fontSize: 11 }}>base {recipe.base_servings} servings</span>
           <Button size="sm" variant="text" onClick={e => { e.stopPropagation(); onDelete(); }}>Delete</Button>
         </div>
+      </div>
+
+      <div className="row" style={{ gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+        {MEAL_TYPES.map(mt => (
+          <button
+            key={mt}
+            className={`sub-tab ${(recipe.meal_types || []).includes(mt) ? 'active' : ''}`}
+            style={{ fontSize: 10, textTransform: 'capitalize' }}
+            onClick={e => { e.stopPropagation(); handleMealTag(mt); }}
+          >{mt}</button>
+        ))}
+        <button
+          className={`sub-tab ${recipe.is_regular ? 'active' : ''}`}
+          style={{ fontSize: 10, marginLeft: 6 }}
+          onClick={e => { e.stopPropagation(); handleToggleRegular(); }}
+        >{recipe.is_regular ? '★ Regular' : '☆ Mark as regular'}</button>
       </div>
 
       {expanded && (

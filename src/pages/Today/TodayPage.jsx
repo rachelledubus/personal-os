@@ -4,6 +4,7 @@ import TodayItemList from '../../components/todayItem/TodayItemList.jsx';
 import ScheduleView, { getOverrunningBlock } from '../../components/schedule/ScheduleView.jsx';
 import Banner from '../../components/ui/Banner.jsx';
 import EnergyCheckIn from '../../components/intelligence/EnergyCheckIn.jsx';
+import AnchorTimeAdjuster from '../../components/intelligence/AnchorTimeAdjuster.jsx';
 import { getFeatureFlag } from '../../services/settings.js';
 import AskAIPanel from '../../components/intelligence/AskAIPanel.jsx';
 import Card from '../../components/ui/Card.jsx';
@@ -208,6 +209,9 @@ export default function TodayPage() {
       <div className="row-between" style={{ marginTop: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         {showEnergyCheckin && <EnergyCheckIn onReplanned={refreshSchedule} />}
         <AskAIPanel onApplied={refreshSchedule} />
+      </div>
+      <div style={{ marginTop: 'var(--space-2)' }}>
+        <AnchorTimeAdjuster onRecalculated={refreshSchedule} />
       </div>
 
       {/* Neglected Priorities (Area 1/2) — the one place that looks

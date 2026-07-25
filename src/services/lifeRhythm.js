@@ -181,6 +181,108 @@ export async function removeTransitionStep(templateId, stepIndex) {
   if (error) throw error;
 }
 
+// ---------- Dependency-based chain computation (Tier 4, Phase A) ----------
+// Pure function: given one day's templates (any order) and an optional
+// override for the is_anchor block's actual start time, computes the
+// real effective start/end for every block by walking sort_order once.
+// 'fixed' blocks are untouched (today's exact behavior). 'anchored'
+// blocks start when the block they depend_on ends (falling back to the
+// immediately preceding block in sort_order if no explicit dependency
+// is set, so a plain sequential chain needs zero per-block wiring).
+// 'commute' blocks compute backward from a fixed target_arrival_time
+// and flag a conflict if the chain before them would run past when
+// they need to leave.
+function toMinutes(t) {
+  if (!t) return null;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+function toTimeStr(min) {
+  if (min == null) return null;
+  const wrapped = ((min % 1440) + 1440) % 1440;
+  return `${String(Math.floor(wrapped / 60)).padStart(2, '0')}:${String(wrapped % 60).padStart(2, '0')}`;
+}
+
+export function computeChainTimes(templates, { anchorOverrideMinutes = null } = {}) {
+  const sorted = [...templates].sort((a, b) => a.sort_order - b.sort_order);
+  const resultsById = {};
+
+  sorted.forEach((block, index) => {
+    let startMin, endMin, conflictMinutes = null;
+    const prevResult = index > 0 ? resultsById[sorted[index - 1].id] : null;
+
+    if (block.is_anchor && anchorOverrideMinutes != null) {
+      startMin = anchorOverrideMinutes;
+      const templateDuration = toMinutes(block.end_time) - toMinutes(block.start_time);
+      endMin = startMin + (block.estimated_duration_minutes ?? (Number.isFinite(templateDuration) ? templateDuration : 0));
+    } else if (block.schedule_mode === 'anchored') {
+      const dep = block.depends_on_block_id ? resultsById[block.depends_on_block_id] : null;
+      const base = dep || prevResult;
+      startMin = base ? base.endMin : (toMinutes(block.start_time) ?? 0);
+      endMin = startMin + (block.estimated_duration_minutes || 0);
+    } else if (block.schedule_mode === 'commute') {
+      endMin = toMinutes(block.target_arrival_time);
+      startMin = endMin != null ? endMin - (block.travel_minutes || 0) : (toMinutes(block.start_time) ?? null);
+      if (prevResult && startMin != null && prevResult.endMin > startMin) {
+        conflictMinutes = prevResult.endMin - startMin;
+      }
+    } else {
+      startMin = toMinutes(block.start_time);
+      endMin = toMinutes(block.end_time);
+    }
+
+    resultsById[block.id] = { startMin, endMin, conflictMinutes };
+  });
+
+  return sorted.map(block => {
+    const r = resultsById[block.id];
+    return {
+      ...block,
+      effective_start_time: toTimeStr(r.startMin),
+      effective_end_time: toTimeStr(r.endMin),
+      conflict_minutes: r.conflictMinutes,
+    };
+  });
+}
+
+/** Phase C — the live trigger. Call this when the user logs an actual
+ *  anchor time (e.g. "I woke up at 6:20") to reflow the rest of today's
+ *  auto-generated schedule. Only touches blocks that are still
+ *  auto_generated AND not yet completed — anything already marked done,
+ *  or any block the user manually added/edited by hand, is left alone. */
+export async function recalculateChainForToday(actualTimeStr) {
+  const userId = await getUserId();
+  const date = todayStr();
+  const dow = new Date(date + 'T00:00:00').getDay();
+
+  const [{ data: templates }, { data: todayInstances }] = await Promise.all([
+    supabase.from('life_rhythm_blocks').select('*').eq('user_id', userId).eq('day_of_week', dow).order('sort_order'),
+    supabase.from('time_blocks').select('*').eq('user_id', userId).eq('block_date', date).eq('auto_generated', true),
+  ]);
+
+  const [h, m] = actualTimeStr.split(':').map(Number);
+  const computed = computeChainTimes(templates || [], { anchorOverrideMinutes: h * 60 + m });
+
+  const instanceByTemplateId = {};
+  (todayInstances || []).forEach(inst => { if (!inst.completed) instanceByTemplateId[inst.source_template_id] = inst; });
+
+  let updated = 0;
+  let conflicts = 0;
+  for (const block of computed) {
+    const instance = instanceByTemplateId[block.id];
+    if (!instance) continue; // not generated yet today, or already completed — leave it alone
+    await supabase.from('time_blocks').update({
+      start_time: block.effective_start_time,
+      end_time: block.effective_end_time,
+      chain_conflict: block.conflict_minutes != null,
+    }).eq('id', instance.id);
+    updated += 1;
+    if (block.conflict_minutes != null) conflicts += 1;
+  }
+
+  return { updated, conflicts };
+}
+
 export async function generateTodayBlocks() {
   const userId = await getUserId();
   if (!userId) return [];
@@ -198,18 +300,24 @@ export async function generateTodayBlocks() {
   if (eErr) throw eErr;
 
   const alreadyGenerated = new Set((existing || []).map(b => b.source_template_id));
-  const toInsert = (templates || [])
+  // No anchor override yet in this pass (Phase A) — that's the live
+  // "I actually woke up at X" trigger, wired in next. Without an
+  // override, is_anchor blocks just use their own template start_time,
+  // which is exactly today's existing behavior for every block.
+  const computed = computeChainTimes(templates || []);
+  const toInsert = computed
     .filter(t => !alreadyGenerated.has(t.id))
     .map(t => ({
       user_id: userId,
       title: t.title,
       block_date: date,
-      start_time: t.start_time,
-      end_time: t.end_time,
+      start_time: t.effective_start_time,
+      end_time: t.effective_end_time,
       track: t.track,
       is_recurring: true,
       source_template_id: t.id,
       auto_generated: true,
+      chain_conflict: t.conflict_minutes != null,
     }));
 
   if (toInsert.length > 0) {

@@ -67,6 +67,9 @@ export const FLOWS = {
       { key: 'who', title: 'Who called?', fields: ['name', 'phone'] },
       { key: 'reply', title: 'Send the text-back script', fields: ['note'] },
     ],
+    defaults: {
+      note: "Hi, this is Rachelle — sorry I missed your call! Feel free to text me what you need here, or if you'd rather talk, here's my booking link so we can find a time: [booking link]",
+    },
     async onComplete(answers) {
       const contact = await addContact({
         name: answers.name || 'Unknown caller', phone: answers.phone,

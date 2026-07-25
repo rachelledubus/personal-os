@@ -20,12 +20,21 @@ import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, s
 import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses, syncRoadmapItemFromSubtasks, setRoadmapItemInProgress, setRoadmapItemStatus, resetRoadmapItemToAutomatic } from '../../services/timeline.js';
 import { listContentPieces, addContentPiece } from '../../services/contentEngine.js';
 import { listMarketingActivities, addMarketingActivity, updateMarketingActivity, completeMarketingActivity, deleteMarketingActivity } from '../../services/marketing.js';
-import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt } from '../../services/library.js';
+import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt, syncLibraryGaps } from '../../services/library.js';
 import { listTransactions, addTransaction } from '../../services/transactions.js';
 import { getAutonomyLevel } from '../../services/aiOperator.js';
+import {
+  getCeoDashboard, saveCeoDashboard, getAutoStatsForMonth, ANNUAL_CAMPAIGN_CALENDAR, currentQuarter,
+  STATUS_LEGEND, getSystemStatusFolders, setSystemStatusFolders, DO_NOT_BUILD_LIST,
+} from '../../services/businessReports.js';
+import { currentMonthStr } from '../../utils/date.js';
+import {
+  seedLeadMagnetsIfEmpty, listLeadMagnets, updateLeadMagnetStatus, LANDING_PAGE_STANDARDS, NURTURE_SEQUENCES,
+  CTAS_BY_FUNNEL, listNurtureTracking, addNurtureTracking, updateNurtureTracking, deleteNurtureTracking, getFunnelDashboardStats,
+} from '../../services/leadMagnets.js';
 
-const TABS = ['dashboard', 'pipeline', 'relationships', 'content', 'marketing', 'library', 'clients', 'roadmap'];
-const TAB_LABELS = { dashboard: 'Dashboard', pipeline: 'Pipeline', relationships: 'Relationships', content: 'Content', marketing: 'Marketing', library: 'Library', clients: 'Clients', roadmap: 'Roadmap' };
+const TABS = ['dashboard', 'pipeline', 'relationships', 'content', 'marketing', 'library', 'clients', 'roadmap', 'reports', 'funnels'];
+const TAB_LABELS = { dashboard: 'Dashboard', pipeline: 'Pipeline', relationships: 'Relationships', content: 'Content', marketing: 'Marketing', library: 'Library', clients: 'Clients', roadmap: 'Roadmap', reports: 'Reports', funnels: 'Funnels' };
 
 export default function BusinessPage() {
   const { tab = 'dashboard' } = useParams();
@@ -52,6 +61,8 @@ export default function BusinessPage() {
       {tab === 'library' && <LibraryTab />}
       {tab === 'clients' && <ClientsTab />}
       {tab === 'roadmap' && <RoadmapTab />}
+      {tab === 'reports' && <ReportsTab />}
+      {tab === 'funnels' && <FunnelsTab />}
     </div>
   );
 }
@@ -553,16 +564,25 @@ function RelationshipsTab() {
 function ContentTab() {
   const [pieces, setPieces] = useState([]);
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ title: '', buyer_question: '', audience: '', funnel_stage: 'Awareness' });
+  const [form, setForm] = useState({ title: '', buyer_question: '', audience: '', pillar: '', content_type: '', funnel_stage: 'Awareness' });
   const [autonomy, setAutonomy] = useState('confirm');
+  const [pillars, setPillars] = useState([]);
+  const [audiences, setAudiences] = useState([]);
+  const [contentTypes, setContentTypes] = useState([]);
 
   async function refresh() { setPieces(await listContentPieces()); }
-  useEffect(() => { refresh(); getAutonomyLevel().then(setAutonomy); }, []);
+  useEffect(() => {
+    refresh();
+    getAutonomyLevel().then(setAutonomy);
+    getCategoryList('content_pillars').then(setPillars);
+    getCategoryList('content_audiences').then(setAudiences);
+    getCategoryList('content_types').then(setContentTypes);
+  }, []);
 
   async function handleAdd() {
     if (!form.title.trim()) return;
     await addContentPiece(form);
-    setForm({ title: '', buyer_question: '', audience: '', funnel_stage: 'Awareness' });
+    setForm({ title: '', buyer_question: '', audience: '', pillar: '', content_type: '', funnel_stage: 'Awareness' });
     setAdding(false);
     refresh();
   }
@@ -585,7 +605,18 @@ function ContentTab() {
           <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
             <input placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             <input placeholder="Buyer question this answers" value={form.buyer_question} onChange={e => setForm({ ...form, buyer_question: e.target.value })} />
-            <input placeholder="Audience" value={form.audience} onChange={e => setForm({ ...form, audience: e.target.value })} />
+            <select value={form.audience} onChange={e => setForm({ ...form, audience: e.target.value })}>
+              <option value="">No audience set</option>
+              {audiences.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            <select value={form.pillar} onChange={e => setForm({ ...form, pillar: e.target.value })}>
+              <option value="">No pillar set</option>
+              {pillars.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <select value={form.content_type} onChange={e => setForm({ ...form, content_type: e.target.value })}>
+              <option value="">No content type set</option>
+              {contentTypes.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
             <select value={form.funnel_stage} onChange={e => setForm({ ...form, funnel_stage: e.target.value })}>
               <option>Awareness</option><option>Consideration</option><option>Decision</option>
             </select>
@@ -593,6 +624,27 @@ function ContentTab() {
           </div>
         )}
       </Card>
+
+      {pieces.length > 0 && pillars.length > 0 && (
+        <Card>
+          <div className="section-label" style={{ fontSize: 12 }}>Pillar coverage</div>
+          <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 'var(--space-2)' }}>
+            {pillars.map(pillar => {
+              const count = pieces.filter(p => p.pillar === pillar).length;
+              return (
+                <div key={pillar} className="muted" style={{ fontSize: 12, border: '1px solid var(--sand)', borderRadius: 'var(--radius-pill)', padding: '4px 10px' }}>
+                  {pillar}: {count}
+                </div>
+              );
+            })}
+            {pieces.some(p => !p.pillar) && (
+              <div className="muted" style={{ fontSize: 12, border: '1px dashed var(--sand)', borderRadius: 'var(--radius-pill)', padding: '4px 10px' }}>
+                No pillar: {pieces.filter(p => !p.pillar).length}
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
 
       {pieces.length === 0 ? <EmptyState icon="megaphone" title="No content in the pipeline yet" /> : (
         <div className="row" style={{ alignItems: 'flex-start', gap: 'var(--space-3)', overflowX: 'auto' }}>
@@ -609,6 +661,7 @@ function ContentTab() {
                       <div className="planner-block track-business" style={{ cursor: 'pointer' }}>
                         <div style={{ fontWeight: 700, fontSize: 14 }}>{p.title}</div>
                         <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{p.audience || 'No audience set'}</div>
+                        {p.pillar && <div className="faint" style={{ fontSize: 11 }}>{p.pillar}</div>}
                         {col.key === 'published' && (
                           <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
                             {(p.content_repurpose_items || []).filter(r => r.published).length}/{(p.content_repurpose_items || []).length} repurposed
@@ -780,18 +833,40 @@ function MarketingTab() {
 // ============================================================
 function LibraryTab() {
   const [subTab, setSubTab] = useState('ctas');
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(null);
+  const [syncVersion, setSyncVersion] = useState(0);
   useEffect(() => { seedLibraryIfEmpty(); }, []);
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncStatus(null);
+    try {
+      const result = await syncLibraryGaps();
+      setSyncStatus(result.added === 0 ? "You're fully caught up — nothing new to add." : `Added ${result.added} new entr${result.added === 1 ? 'y' : 'ies'} from the manual.`);
+      setSyncVersion(v => v + 1);
+    } catch (err) {
+      setSyncStatus(`Couldn't sync: ${err.message || err}`);
+    }
+    setSyncing(false);
+  }
 
   return (
     <div>
-      <div className="row" style={{ marginBottom: 'var(--space-4)', gap: 4 }}>
-        {['ctas', 'scripts', 'prompts', 'playbooks'].map(t => (
-          <button key={t} className={`sub-tab ${subTab === t ? 'active' : ''}`} onClick={() => setSubTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
-        ))}
+      <div className="row-between" style={{ marginBottom: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <div className="row" style={{ gap: 4 }}>
+          {['ctas', 'scripts', 'prompts', 'playbooks'].map(t => (
+            <button key={t} className={`sub-tab ${subTab === t ? 'active' : ''}`} onClick={() => setSubTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
+          ))}
+        </div>
+        <Button size="sm" variant="ghost" onClick={handleSync} disabled={syncing}>
+          {syncing ? 'Syncing…' : 'Sync latest from manual'}
+        </Button>
       </div>
-      {subTab === 'ctas' && <CtaLibrary />}
-      {subTab === 'scripts' && <ScriptLibrary />}
-      {subTab === 'prompts' && <PromptLibrary />}
+      {syncStatus && <div className="muted" style={{ fontSize: 12, marginBottom: 'var(--space-3)' }}>{syncStatus}</div>}
+      {subTab === 'ctas' && <CtaLibrary key={syncVersion} />}
+      {subTab === 'scripts' && <ScriptLibrary key={syncVersion} />}
+      {subTab === 'prompts' && <PromptLibrary key={syncVersion} />}
       {subTab === 'playbooks' && <FlowsTab />}
     </div>
   );
@@ -900,8 +975,10 @@ function ClientsTab() {
   const [contacts, setContacts] = useState([]);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({
-    contact_id: '', buyer_or_seller: 'Buyer', property_area: '', closing_date: '',
-    lesson_learned: '', content_idea_added: false, added_to_past_client_plan: true, testimonial_requested: true,
+    contact_id: '', buyer_or_seller: 'Buyer', property_area: '', closing_date: '', referral_source: '',
+    timeline_notes: '', biggest_objection: '', unexpected_question: '', what_almost_went_wrong: '',
+    lesson_learned: '', system_to_update: '', content_idea_added: false, added_to_past_client_plan: true,
+    testimonial_requested: true, photos_collected: false, referral_opportunity_noted: '',
   });
 
   async function refresh() {
@@ -926,7 +1003,12 @@ function ClientsTab() {
     if (!form.contact_id || !form.closing_date) return;
     const contact = contacts.find(c => c.id === form.contact_id);
     await addTransaction({ ...form, contacts_name: contact?.name });
-    setForm({ contact_id: '', buyer_or_seller: 'Buyer', property_area: '', closing_date: '', lesson_learned: '', content_idea_added: false, added_to_past_client_plan: true, testimonial_requested: true });
+    setForm({
+      contact_id: '', buyer_or_seller: 'Buyer', property_area: '', closing_date: '', referral_source: '',
+      timeline_notes: '', biggest_objection: '', unexpected_question: '', what_almost_went_wrong: '',
+      lesson_learned: '', system_to_update: '', content_idea_added: false, added_to_past_client_plan: true,
+      testimonial_requested: true, photos_collected: false, referral_opportunity_noted: '',
+    });
     setAdding(false);
     refresh();
   }
@@ -950,12 +1032,30 @@ function ClientsTab() {
               </select>
               <input placeholder="Property / area" value={form.property_area} onChange={e => setForm({ ...form, property_area: e.target.value })} />
               <input type="date" value={form.closing_date} onChange={e => setForm({ ...form, closing_date: e.target.value })} />
+              <input placeholder="Referral source" value={form.referral_source} onChange={e => setForm({ ...form, referral_source: e.target.value })} />
             </div>
+
+            <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>What happened</div>
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <input placeholder="Timeline (start to close)" value={form.timeline_notes} onChange={e => setForm({ ...form, timeline_notes: e.target.value })} style={{ flex: 1, minWidth: 200 }} />
+              <input placeholder="Biggest objection or concern" value={form.biggest_objection} onChange={e => setForm({ ...form, biggest_objection: e.target.value })} style={{ flex: 1, minWidth: 200 }} />
+            </div>
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <input placeholder="Unexpected question" value={form.unexpected_question} onChange={e => setForm({ ...form, unexpected_question: e.target.value })} style={{ flex: 1, minWidth: 200 }} />
+              <input placeholder="What almost went wrong" value={form.what_almost_went_wrong} onChange={e => setForm({ ...form, what_almost_went_wrong: e.target.value })} style={{ flex: 1, minWidth: 200 }} />
+            </div>
+
+            <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>Lessons</div>
             <textarea placeholder="Lesson learned — what could've been explained earlier, or a content idea from this transaction" value={form.lesson_learned} onChange={e => setForm({ ...form, lesson_learned: e.target.value })} style={{ minHeight: 60 }} />
+            <input placeholder="Which system should this update? (e.g. Consultation SOP)" value={form.system_to_update} onChange={e => setForm({ ...form, system_to_update: e.target.value })} />
+            <input placeholder="Referral opportunity — who they might introduce" value={form.referral_opportunity_noted} onChange={e => setForm({ ...form, referral_opportunity_noted: e.target.value })} />
+
+            <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>What this transaction creates</div>
             <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-3)' }}>
               <Checkbox checked={form.added_to_past_client_plan} onChange={v => setForm({ ...form, added_to_past_client_plan: v })} label="Schedule 30/90/365-day touches" />
               <Checkbox checked={form.content_idea_added} onChange={v => setForm({ ...form, content_idea_added: v })} label="Send lesson to Inbox as content idea" />
               <Checkbox checked={form.testimonial_requested} onChange={v => setForm({ ...form, testimonial_requested: v })} label="Testimonial requested" />
+              <Checkbox checked={form.photos_collected} onChange={v => setForm({ ...form, photos_collected: v })} label="Photos collected (with permission)" />
             </div>
             <div><Button size="sm" onClick={handleAdd}>Save closing</Button></div>
           </div>
@@ -969,6 +1069,7 @@ function ClientsTab() {
             <span className="muted" style={{ fontSize: 12 }}>{t.closing_date}</span>
           </div>
           {t.lesson_learned && <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>{t.lesson_learned}</div>}
+          {t.system_to_update && <div className="faint" style={{ fontSize: 12, marginTop: 2 }}>Updates: {t.system_to_update}</div>}
         </Card>
       ))}
     </div>
@@ -1254,6 +1355,385 @@ function RoadmapRow({ item, expanded, onToggleExpand, onLinked }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ============================================================
+// REPORTS — Bundle 3. Three "zoom out" views: CEO Dashboard (monthly
+// snapshot), Annual Campaign Calendar (static, quarter-highlighted),
+// System Status Index (16-folder master index, status-editable).
+// ============================================================
+function ReportsTab() {
+  const [subTab, setSubTab] = useState('ceo');
+  return (
+    <div>
+      <div className="row" style={{ marginBottom: 'var(--space-4)', gap: 4 }}>
+        {[['ceo', 'CEO Dashboard'], ['calendar', 'Campaign Calendar'], ['status', 'System Status']].map(([key, label]) => (
+          <button key={key} className={`sub-tab ${subTab === key ? 'active' : ''}`} onClick={() => setSubTab(key)}>{label}</button>
+        ))}
+      </div>
+      {subTab === 'ceo' && <CeoDashboardView />}
+      {subTab === 'calendar' && <CampaignCalendarView />}
+      {subTab === 'status' && <SystemStatusView />}
+    </div>
+  );
+}
+
+function CeoDashboardView() {
+  const [monthKey, setMonthKey] = useState(currentMonthStr());
+  const [form, setForm] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+
+  const FIELDS = [
+    ['consultations_booked', 'Consultations booked this month'],
+    ['pending_contracts', 'Pending contracts'],
+    ['website_visitors', 'Website visitors (if tracked)'],
+    ['downloads_signups', 'Guide downloads / email signups'],
+    ['referrals_received', 'Referrals received'],
+    ['partner_conversations', 'New professional partner conversations'],
+    ['sphere_touches', 'Sphere touches completed'],
+    ['gci', 'Gross Commission Income (GCI) this month'],
+    ['reviews_received', 'Reviews / testimonials received'],
+  ];
+  const REFLECTION_FIELDS = [
+    ['biggest_win', 'Biggest win'],
+    ['biggest_challenge', 'Biggest challenge'],
+    ['doing_differently', 'What I\u2019m doing differently next month'],
+    ['one_priority', 'This month\u2019s one priority'],
+  ];
+
+  useEffect(() => { load(); }, [monthKey]);
+
+  async function load() {
+    setLoading(true);
+    const [saved, autoStats] = await Promise.all([getCeoDashboard(monthKey), getAutoStatsForMonth(monthKey)]);
+    setForm({ ...autoStats, ...(saved || {}) }); // saved values win over auto stats once you've edited them
+    setLoading(false);
+  }
+
+  async function handleSave() {
+    await saveCeoDashboard(monthKey, form);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  }
+
+  function shiftMonth(delta) {
+    const [y, m] = monthKey.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    setMonthKey(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+
+  if (loading || !form) return null;
+  const monthLabel = (() => {
+    const [y, m] = monthKey.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  })();
+
+  return (
+    <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
+        <Button size="sm" variant="ghost" onClick={() => shiftMonth(-1)}>←</Button>
+        <span style={{ fontWeight: 700 }}>{monthLabel}</span>
+        <Button size="sm" variant="ghost" onClick={() => shiftMonth(1)}>→</Button>
+      </div>
+
+      <Card>
+        <div className="section-label">Pipeline snapshot</div>
+        <p className="muted" style={{ fontSize: 11, marginTop: 4 }}>Active leads, active clients, closings, and flagship content pre-fill from real data — everything else is a manual snapshot, same as the paper version.</p>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
+          <div><div className="muted" style={{ fontSize: 11 }}>Active leads</div><div style={{ fontWeight: 700, fontSize: 18 }}>{form.active_leads ?? 0}</div></div>
+          <div><div className="muted" style={{ fontSize: 11 }}>Active clients</div><div style={{ fontWeight: 700, fontSize: 18 }}>{form.active_clients ?? 0}</div></div>
+          <div><div className="muted" style={{ fontSize: 11 }}>Closings this month</div><div style={{ fontWeight: 700, fontSize: 18 }}>{form.closings_this_month ?? 0}</div></div>
+          <div><div className="muted" style={{ fontSize: 11 }}>Flagship content published</div><div style={{ fontWeight: 700, fontSize: 18 }}>{form.flagship_content_published ?? 0}</div></div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="section-label">The rest of the snapshot</div>
+        <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
+          {FIELDS.map(([key, label]) => (
+            <label key={key} className="reset-field">
+              <span>{label}</span>
+              <input value={form[key] || ''} onChange={e => setForm({ ...form, [key]: e.target.value })} />
+            </label>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <div className="section-label">This month, in one line each</div>
+        <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
+          {REFLECTION_FIELDS.map(([key, label]) => (
+            <label key={key} className="reset-field">
+              <span>{label}</span>
+              <input value={form[key] || ''} onChange={e => setForm({ ...form, [key]: e.target.value })} />
+            </label>
+          ))}
+        </div>
+        <Button size="sm" onClick={handleSave} style={{ marginTop: 'var(--space-3)' }}>{saved ? 'Saved \u2713' : 'Save snapshot'}</Button>
+      </Card>
+    </div>
+  );
+}
+
+function CampaignCalendarView() {
+  const nowQ = currentQuarter();
+  return (
+    <div className="stack" style={{ gap: 'var(--space-3)' }}>
+      <p className="muted" style={{ fontSize: 12 }}>
+        Not a content calendar — a focus calendar. Same four quarters every year; only revisit this at the annual review.
+      </p>
+      {ANNUAL_CAMPAIGN_CALENDAR.map((q, i) => (
+        <Card key={q.quarter} style={i === nowQ ? { borderColor: 'var(--sage)', borderWidth: 2, borderStyle: 'solid' } : undefined}>
+          <div className="row-between">
+            <div style={{ fontWeight: 700 }}>{q.quarter} · {q.months} — {q.theme}</div>
+            {i === nowQ && <span className="muted" style={{ fontSize: 11, color: 'var(--sage)' }}>● Current quarter</span>}
+          </div>
+          <div style={{ fontSize: 13, marginTop: 'var(--space-2)' }}><strong>Audience:</strong> {q.audience}</div>
+          <div style={{ fontSize: 13, marginTop: 4 }}><strong>Why now:</strong> {q.why_now}</div>
+          <div style={{ fontSize: 13, marginTop: 4 }}><strong>Focus:</strong> {q.focus}</div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function SystemStatusView() {
+  const [folders, setFolders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { load(); }, []);
+  async function load() {
+    setFolders(await getSystemStatusFolders());
+    setLoading(false);
+  }
+
+  async function handleStatusChange(number, status) {
+    const next = folders.map(f => (f.number === number ? { ...f, status } : f));
+    setFolders(next);
+    await setSystemStatusFolders(next);
+  }
+
+  if (loading) return null;
+
+  return (
+    <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <p className="muted" style={{ fontSize: 12 }}>
+        Master index for the 16-folder operating system. The system is frozen — status changes only, no rewrites, no new systems.
+      </p>
+      <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+        {Object.entries(STATUS_LEGEND).map(([key, s]) => (
+          <div key={key} className="muted" style={{ fontSize: 11 }}>{s.symbol} {s.label} — {s.description}</div>
+        ))}
+      </div>
+      <div className="stack" style={{ gap: 4 }}>
+        {folders.map(f => (
+          <Card key={f.number}>
+            <div className="row-between">
+              <div><strong>{f.number}</strong> · {f.name}</div>
+              <select value={f.status} onChange={e => handleStatusChange(f.number, e.target.value)}>
+                {Object.entries(STATUS_LEGEND).map(([key, s]) => <option key={key} value={key}>{s.symbol} {s.label}</option>)}
+              </select>
+            </div>
+            <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{f.note}</div>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <div className="section-label">Not now — do-not-build list</div>
+        <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
+          {DO_NOT_BUILD_LIST.map((item, i) => <div key={i} style={{ fontSize: 13 }}>• {item}</div>)}
+        </div>
+      </Card>
+    </div>
+  );
+}
+// ============================================================
+// FUNNELS — Bundle 5 / System 04C. Lead magnets as real entities, the
+// two nurture sequences as reference, and a live per-lead tracker
+// (the manual's own "start with a spreadsheet" recommendation, just
+// live) that the dashboard stats are computed from.
+// ============================================================
+function FunnelsTab() {
+  const [subTab, setSubTab] = useState('magnets');
+  useEffect(() => { seedLeadMagnetsIfEmpty(); }, []);
+  return (
+    <div>
+      <div className="row" style={{ marginBottom: 'var(--space-4)', gap: 4 }}>
+        {[['magnets', 'Lead Magnets'], ['tracking', 'Nurture Tracking']].map(([key, label]) => (
+          <button key={key} className={`sub-tab ${subTab === key ? 'active' : ''}`} onClick={() => setSubTab(key)}>{label}</button>
+        ))}
+      </div>
+      {subTab === 'magnets' && <LeadMagnetsView />}
+      {subTab === 'tracking' && <NurtureTrackingView />}
+    </div>
+  );
+}
+
+function LeadMagnetsView() {
+  const [magnets, setMagnets] = useState([]);
+  const [expandedId, setExpandedId] = useState(null);
+  const [showStandards, setShowStandards] = useState(false);
+
+  useEffect(() => { refresh(); }, []);
+  async function refresh() { setMagnets(await listLeadMagnets()); }
+
+  async function handleStatusChange(id, status) {
+    await updateLeadMagnetStatus(id, status);
+    refresh();
+  }
+
+  return (
+    <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Landing page standards</div>
+          <Button size="sm" variant="text" onClick={() => setShowStandards(!showStandards)}>{showStandards ? 'Hide' : 'Show'}</Button>
+        </div>
+        {showStandards && (
+          <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
+            {LANDING_PAGE_STANDARDS.map((s, i) => (
+              <div key={i} style={{ fontSize: 13 }}><strong>{i + 1}. {s.element}</strong> — {s.standard}</div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {magnets.map(m => (
+        <Card key={m.id}>
+          <div className="row-between" onClick={() => setExpandedId(expandedId === m.id ? null : m.id)} style={{ cursor: 'pointer' }}>
+            <div>
+              <div style={{ fontWeight: 700 }}>{m.name}</div>
+              <div className="muted" style={{ fontSize: 12 }}>{m.funnel} · {m.build_phase}</div>
+            </div>
+            <select value={m.status} onClick={e => e.stopPropagation()} onChange={e => handleStatusChange(m.id, e.target.value)}>
+              <option value="planned">Planned</option>
+              <option value="building">Building</option>
+              <option value="live">Live</option>
+            </select>
+          </div>
+          {expandedId === m.id && (
+            <div style={{ marginTop: 'var(--space-3)' }}>
+              <div style={{ fontSize: 13 }}><strong>Audience:</strong> {m.audience}</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}><strong>Solves:</strong> {m.primary_problem}</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}><strong>Next step:</strong> {m.next_step}</div>
+              <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-2)', textTransform: 'uppercase' }}>What's inside</div>
+              <div className="stack" style={{ marginTop: 4, gap: 2 }}>
+                {(m.whats_inside || []).map((bullet, i) => <div key={i} style={{ fontSize: 13 }}>• {bullet}</div>)}
+              </div>
+              {NURTURE_SEQUENCES[m.funnel] && (
+                <>
+                  <div className="muted" style={{ fontSize: 11, marginTop: 'var(--space-3)', textTransform: 'uppercase' }}>5-email nurture sequence</div>
+                  <div className="stack" style={{ marginTop: 4, gap: 2 }}>
+                    {NURTURE_SEQUENCES[m.funnel].map((email, i) => <div key={i} style={{ fontSize: 13 }}>{i + 1}. {email}</div>)}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </Card>
+      ))}
+
+      <Card>
+        <div className="section-label">CTA library by funnel</div>
+        <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
+          {Object.entries(CTAS_BY_FUNNEL).map(([category, ctas]) => (
+            <div key={category} style={{ fontSize: 13 }}><strong>{category}:</strong> {ctas.join(' · ')}</div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function NurtureTrackingView() {
+  const [rows, setRows] = useState([]);
+  const [magnets, setMagnets] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ contact_id: '', lead_magnet_id: '', lead_name: '', date_started: new Date().toISOString().slice(0, 10) });
+
+  useEffect(() => { refresh(); }, []);
+  async function refresh() {
+    const [t, m, c, s] = await Promise.all([listNurtureTracking(), listLeadMagnets(), listContacts(), getFunnelDashboardStats()]);
+    setRows(t);
+    setMagnets(m);
+    setContacts(c);
+    setStats(s);
+  }
+
+  async function handleAdd() {
+    if (!form.lead_magnet_id) return;
+    const contact = contacts.find(c => c.id === form.contact_id);
+    await addNurtureTracking({ ...form, lead_name: contact?.name || form.lead_name, contact_id: form.contact_id || null });
+    setForm({ contact_id: '', lead_magnet_id: '', lead_name: '', date_started: new Date().toISOString().slice(0, 10) });
+    setAdding(false);
+    refresh();
+  }
+
+  async function handleUpdate(row, fields) {
+    await updateNurtureTracking(row.id, fields);
+    refresh();
+  }
+
+  return (
+    <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      {stats && (
+        <Card>
+          <div className="section-label">Tracking dashboard</div>
+          <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
+            <div><div className="muted" style={{ fontSize: 11 }}>Downloads</div><div style={{ fontWeight: 700, fontSize: 18 }}>{stats.downloads}</div></div>
+            <div><div className="muted" style={{ fontSize: 11 }}>In sequence</div><div style={{ fontWeight: 700, fontSize: 18 }}>{stats.inProgress}</div></div>
+            <div><div className="muted" style={{ fontSize: 11 }}>Replied</div><div style={{ fontWeight: 700, fontSize: 18 }}>{stats.replied}</div></div>
+            <div><div className="muted" style={{ fontSize: 11 }}>Booked</div><div style={{ fontWeight: 700, fontSize: 18 }}>{stats.booked}</div></div>
+          </div>
+        </Card>
+      )}
+
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Nurture tracking</div>
+          <Button size="sm" variant="ghost" onClick={() => setAdding(!adding)}>{adding ? 'Cancel' : '+ New lead on a sequence'}</Button>
+        </div>
+        {adding && (
+          <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap' }}>
+            <select value={form.contact_id} onChange={e => setForm({ ...form, contact_id: e.target.value })}>
+              <option value="">Not linked to a contact</option>
+              {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            {!form.contact_id && <input placeholder="Lead name" value={form.lead_name} onChange={e => setForm({ ...form, lead_name: e.target.value })} />}
+            <select value={form.lead_magnet_id} onChange={e => setForm({ ...form, lead_magnet_id: e.target.value })}>
+              <option value="">Which magnet...</option>
+              {magnets.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+            <input type="date" value={form.date_started} onChange={e => setForm({ ...form, date_started: e.target.value })} />
+            <Button size="sm" onClick={handleAdd}>Add</Button>
+          </div>
+        )}
+      </Card>
+
+      {rows.length === 0 ? <EmptyState icon="megaphone" title="No one on a nurture sequence yet" /> : rows.map(row => (
+        <Card key={row.id}>
+          <div className="row-between">
+            <div>
+              <div style={{ fontWeight: 700 }}>{row.contacts?.name || row.lead_name || 'Unnamed lead'}</div>
+              <div className="muted" style={{ fontSize: 12 }}>{row.lead_magnets?.name} · started {row.date_started}</div>
+            </div>
+            <button className="row-remove-btn" onClick={() => deleteNurtureTracking(row.id).then(refresh)}>×</button>
+          </div>
+          <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <span className="muted" style={{ fontSize: 11 }}>Email sent:</span>
+            <select value={row.current_email} onChange={e => handleUpdate(row, { current_email: Number(e.target.value) })}>
+              {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}/5</option>)}
+            </select>
+            <Checkbox checked={row.replied} onChange={v => handleUpdate(row, { replied: v })} label="Replied" />
+            <Checkbox checked={row.booked} onChange={v => handleUpdate(row, { booked: v })} label="Booked" />
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }

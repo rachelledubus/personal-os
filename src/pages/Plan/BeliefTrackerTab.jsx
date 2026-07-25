@@ -118,13 +118,15 @@ export default function BeliefTrackerTab() {
         <div className="section-label">New entry</div>
         <div className="stack" style={{ gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
           {FIELDS.map(f => (
-            <input
-              key={f.key}
-              placeholder={f.placeholder}
-              value={newEntry[f.key]}
-              onChange={e => setNewEntry(n => ({ ...n, [f.key]: e.target.value }))}
-              style={{ width: '100%' }}
-            />
+            <div key={f.key}>
+              <div className="muted" style={{ fontSize: 11, marginBottom: 2 }}>{f.label}</div>
+              <input
+                placeholder={f.placeholder}
+                value={newEntry[f.key]}
+                onChange={e => setNewEntry(n => ({ ...n, [f.key]: e.target.value }))}
+                style={{ width: '100%' }}
+              />
+            </div>
           ))}
         </div>
         <Button size="sm" onClick={handleAdd} style={{ marginTop: 'var(--space-3)' }}>+ Add entry</Button>

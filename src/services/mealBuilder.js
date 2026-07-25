@@ -76,6 +76,13 @@ export async function tagFoodSlot(foodId, slot) {
   if (error) throw error;
 }
 
+/** User-controlled tagging for the quick-add regulars row — never
+ *  auto-computed from usage, always an explicit choice. */
+export async function tagFoodMealTypes(foodId, mealTypes, isRegular) {
+  const { error } = await supabase.from('foods').update({ meal_types: mealTypes, is_regular: isRegular }).eq('id', foodId);
+  if (error) throw error;
+}
+
 /** Real macro totals if every slot has a tagged food selected, null
  *  otherwise (some slots may still be free-text since nothing's
  *  tagged for them yet — that's fine, just no macro total to show). */

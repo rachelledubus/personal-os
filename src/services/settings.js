@@ -89,7 +89,35 @@ export const CATEGORY_LISTS = {
     label: 'Content — pillars',
     default: ['Real Monthly Cost', 'Florida Home Education', 'School Zone Intelligence', 'Neighborhood Comparisons', 'Local Market Insights', 'Homeownership Education'],
   },
+  content_types: {
+    label: 'Content — types',
+    default: ['Relocation content', 'Buyer education', 'Future buyers', 'School content', 'General education'],
+  },
 };
+
+// CTA Framework by Content Type — System 03. Used to suggest (never
+// force) a CTA when a content type is picked; the CTA field stays
+// freely editable either way.
+export const CTA_BY_CONTENT_TYPE = {
+  'Relocation content': 'Get the Southwest Broward Relocation Guide',
+  'Buyer education': 'Download the Real Payment Guide',
+  'Future buyers': 'Start Your Future Home Plan',
+  'School content': "Send me an address and I'll verify the school zone",
+  'General education': 'Subscribe to the Southwest Broward Intelligence Report',
+};
+
+// Content Quality Checklist — System 03, verbatim. Stored per-piece as
+// {label, checked}[] so editing one piece's progress never touches
+// this master list.
+export const CONTENT_QUALITY_CHECKLIST_ITEMS = [
+  'Does this answer a real question?',
+  'Is the audience clear?',
+  'Does it include local context?',
+  'Does it explain a trade-off?',
+  'Does it avoid generic realtor language?',
+  'Does it sound like Rachelle?',
+  'Is there a clear next step?',
+];
 
 export async function getCategoryList(listKey) {
   const stored = await getPreference('category_lists', listKey);

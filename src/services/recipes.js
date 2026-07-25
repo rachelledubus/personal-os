@@ -32,6 +32,13 @@ export async function updateRecipeServings(id, baseServings) {
   if (error) throw error;
 }
 
+/** Same rule-based, user-controlled tagging as foods — never inferred
+ *  from how often a recipe gets used. */
+export async function tagRecipeMealTypes(id, mealTypes, isRegular) {
+  const { error } = await supabase.from('recipes').update({ meal_types: mealTypes, is_regular: isRegular }).eq('id', id);
+  if (error) throw error;
+}
+
 export async function deleteRecipe(id) {
   const { error } = await supabase.from('recipes').delete().eq('id', id);
   if (error) throw error;
