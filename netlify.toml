@@ -3,6 +3,11 @@
   publish = "dist"
   functions = "netlify/functions"
 
+# Reminder check — every 15 minutes. This is what actually reaches you
+# without the app being open; see check-reminders.js.
+[functions."check-reminders"]
+  schedule = "*/15 * * * *"
+
 # Client-side routing (react-router) needs every path to fall back to
 # index.html, or a hard refresh on e.g. /business/contacts will 404.
 [[redirects]]

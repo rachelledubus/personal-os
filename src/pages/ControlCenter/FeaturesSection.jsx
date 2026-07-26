@@ -5,11 +5,12 @@ import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import FormField from '../../components/form/FormField.jsx';
 import { FormActions } from '../../components/form/FormActions.jsx';
 import {
-  FEATURE_FLAGS, getAllFeatureFlags, setFeatureFlag, getSleepTargets, setSleepTargets,
+  FEATURE_FLAGS, getAllFeatureFlags, setFeatureFlag, getSleepTargets, setSleepTargets, getPreference, setPreference,
 } from '../../services/settings.js';
 import {
   seedGuardiansIfEmpty, listGuardians, getXpProgressWithinLevel, getFullHistory, getAchievementProgress,
 } from '../../services/guardians.js';
+import { pushSupported, notificationPermission, isSubscribed, subscribeToPush, unsubscribeFromPush, sendTestPush } from '../../services/pushNotifications.js';
 
 export default function FeaturesSection() {
   const [flags, setFlags] = useState({});
@@ -19,6 +20,12 @@ export default function FeaturesSection() {
   const [achievements, setAchievements] = useState(null);
   const [expandedHistoryId, setExpandedHistoryId] = useState(null);
   const [fullHistory, setFullHistory] = useState(null);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushError, setPushError] = useState(null);
+  const [testStatus, setTestStatus] = useState(null);
+  const [timezone, setTimezoneState] = useState('America/New_York');
+  const [tzSaved, setTzSaved] = useState(false);
 
   async function refresh() {
     setFlags(await getAllFeatureFlags());
@@ -26,8 +33,46 @@ export default function FeaturesSection() {
     await seedGuardiansIfEmpty();
     setGuardians(await listGuardians());
     setAchievements(await getAchievementProgress());
+    setPushSubscribed(await isSubscribed());
+    setTimezoneState(await getPreference('notification_settings', 'timezone', 'America/New_York'));
   }
   useEffect(() => { refresh(); }, []);
+
+  async function handleEnablePush() {
+    setPushBusy(true);
+    setPushError(null);
+    try {
+      await subscribeToPush();
+      setPushSubscribed(true);
+    } catch (err) {
+      setPushError(err.message || String(err));
+    }
+    setPushBusy(false);
+  }
+
+  async function handleDisablePush() {
+    setPushBusy(true);
+    await unsubscribeFromPush();
+    setPushSubscribed(false);
+    setPushBusy(false);
+  }
+
+  async function handleTestPush() {
+    setTestStatus('sending');
+    try {
+      await sendTestPush();
+      setTestStatus('sent');
+    } catch (err) {
+      setTestStatus(`error: ${err.message || err}`);
+    }
+    setTimeout(() => setTestStatus(null), 4000);
+  }
+
+  async function handleSaveTimezone() {
+    await setPreference('notification_settings', 'timezone', timezone);
+    setTzSaved(true);
+    setTimeout(() => setTzSaved(false), 1500);
+  }
 
   async function toggle(key, value) {
     setFlags(prev => ({ ...prev, [key]: value }));
@@ -51,6 +96,42 @@ export default function FeaturesSection() {
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
+    <Card>
+      <div className="section-label">Notifications</div>
+      <p className="muted" style={{ fontSize: 'var(--text-caption)' }}>
+        {pushSupported()
+          ? "Lets reminders (habits/systems today, medications and appointments once built) reach you even when the app isn't open. On iPhone, this only works after you've added the app to your home screen first."
+          : "Push notifications aren't supported in this browser."}
+      </p>
+      {pushSupported() && (
+        <>
+          <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)', alignItems: 'center' }}>
+            {pushSubscribed ? (
+              <>
+                <Button size="sm" variant="ghost" onClick={handleDisablePush} disabled={pushBusy}>Turn off notifications</Button>
+                <Button size="sm" variant="text" onClick={handleTestPush} disabled={testStatus === 'sending'}>
+                  {testStatus === 'sending' ? 'Sending…' : testStatus === 'sent' ? 'Sent ✓ — check your device' : 'Send test notification'}
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={handleEnablePush} disabled={pushBusy}>
+                {pushBusy ? 'Enabling…' : 'Enable notifications'}
+              </Button>
+            )}
+          </div>
+          {pushError && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, color: 'var(--danger)' }}>{pushError}</div>}
+          {testStatus?.startsWith('error') && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, color: 'var(--danger)' }}>{testStatus}</div>}
+
+          <div className="row" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-2)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <FormField label="Your timezone (for time-of-day reminders)" hint="e.g. America/New_York, America/Chicago, America/Los_Angeles">
+              <input value={timezone} onChange={e => setTimezoneState(e.target.value)} style={{ minWidth: 220 }} />
+            </FormField>
+            <FormActions onSave={handleSaveTimezone} saved={tzSaved} saveLabel="Save timezone" />
+          </div>
+        </>
+      )}
+    </Card>
+
     <Card>
       <div className="section-label">Feature toggles</div>
       <div className="stack" style={{ marginTop: 'var(--space-3)' }}>

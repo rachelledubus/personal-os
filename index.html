@@ -6,6 +6,16 @@
   <title>Rachelle's System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- PWA — installability is the prerequisite for push notifications,
+       especially on iOS, which requires the app be added to the home
+       screen before it can receive push at all. -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#16324F" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="My System" />
 </head>
 <body>
   <div id="root"></div>
