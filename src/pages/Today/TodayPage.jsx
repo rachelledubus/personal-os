@@ -11,6 +11,10 @@ import AskAIPanel from '../../components/intelligence/AskAIPanel.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
+import PageHeader from '../../components/layout/PageHeader.jsx';
+import Skeleton from '../../components/ui/Skeleton.jsx';
+import { Row } from '../../components/layout/Row.jsx';
+import Stack from '../../components/layout/Stack.jsx';
 import { listGuardians, getXpProgressWithinLevel } from '../../services/guardians.js';
 import { getTodayItems, toggleTodayItem, dismissTodayItem, addCustomTodayItem } from '../../services/todayItems.js';
 import { getTodaySchedule, toggleTaskDone, moveTaskToBlock, dismissBlock } from '../../services/dailyExecution.js';
@@ -168,85 +172,115 @@ export default function TodayPage() {
   const nextUp = allScheduledTasks.find(t => !t.completed);
   const overrunningBlock = !hyperfocusDismissed ? getOverrunningBlock(schedule, focusSessions) : null;
 
+  // Zone 2 has something to show above the schedule/items columns only
+  // if at least one of these three is true — otherwise that container
+  // doesn't render at all rather than showing an empty shell.
+  const hasZone2Alerts = businessOverdueCount > 0 || !!neglectedError || neglected.length > 0;
+
   return (
     <div>
       <Banner slotKey="today_banner" scene="today" />
-      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Home size={20} /> Today</div>
+      <PageHeader icon={Home} title="Today" />
+
+      {/* Zone 3 — Companion. Fixed position, every screen it appears
+          on: right under the header, above everything else. */}
       <GuardianStrip />
 
-      <Card className="today-summary-card">
-        <div className="row-between">
-          <div>
-            <div className="section-label">Right now</div>
-            <div className="today-headline">
-              {schedule === null ? 'Building your day…' : total === 0
-                ? 'Nothing assigned yet'
-                : doneCount === total ? '🎉 All done — go you!' : (nextUp?.title || 'All caught up')}
+      {/* Zone 1 — Primary. The one thing this screen answers: what's
+          next. Loading, in-progress, and done all render here, in the
+          same place, at the same weight — a shape while loading
+          (never a blank flash), never a second competing hero. */}
+      {schedule === null ? (
+        <Skeleton variant="card" />
+      ) : (
+        <Stack gap={3}>
+          <Card className="today-summary-card">
+            <div className="row-between">
+              <div>
+                <div className="section-label">Right now</div>
+                <div className="today-headline">
+                  {total === 0
+                    ? 'Nothing assigned yet'
+                    : doneCount === total ? '🎉 All done — go you!' : (nextUp?.title || 'All caught up')}
+                </div>
+              </div>
+              {total > 0 && <div className="today-progress-chip">{doneCount} / {total}</div>}
             </div>
-          </div>
-          {total > 0 && <div className="today-progress-chip">{doneCount} / {total}</div>}
-        </div>
-      </Card>
 
-      {/* Hyperfocus nudge (Area 4) — no timer, no tracking, just the
-          block's own end_time. Supportive framing, not a scold. */}
-      {overrunningBlock && (
-        <Card className="hyperfocus-nudge">
-          <div className="row-between">
-            <div style={{ fontSize: 'var(--text-small)' }}>
-              You've been deep in <strong>{overrunningBlock.title}</strong> — it was set to wrap up at{' '}
-              {overrunningBlock.end_time?.slice(0, 5)}. Totally fine to keep going.
-            </div>
-          </div>
-          <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
-            <Button size="sm" variant="ghost" onClick={() => setHyperfocusDismissed(true)}>Keep going</Button>
-            <Button size="sm" variant="text" onClick={() => { setHyperfocusDismissed(true); document.querySelector('.today-schedule-col')?.scrollIntoView({ behavior: 'smooth' }); }}>
-              Show me the rest of today
-            </Button>
-          </div>
-        </Card>
+            {/* Hyperfocus nudge lives inside the hero, not as a second
+                competing card — it's still about "right now," just a
+                qualifier on it. Supportive framing, not a scold. */}
+            {overrunningBlock && (
+              <div className="hyperfocus-nudge" style={{ marginTop: 'var(--space-3)', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--border-default)' }}>
+                <div style={{ fontSize: 'var(--text-small)' }}>
+                  You've been deep in <strong>{overrunningBlock.title}</strong> — it was set to wrap up at{' '}
+                  {overrunningBlock.end_time?.slice(0, 5)}. Totally fine to keep going.
+                </div>
+                <Row gap={2} style={{ marginTop: 'var(--space-2)' }}>
+                  <Button size="sm" variant="ghost" onClick={() => setHyperfocusDismissed(true)}>Keep going</Button>
+                  <Button size="sm" variant="text" onClick={() => { setHyperfocusDismissed(true); document.querySelector('.today-schedule-col')?.scrollIntoView({ behavior: 'smooth' }); }}>
+                    Show me the rest of today
+                  </Button>
+                </Row>
+              </div>
+            )}
+          </Card>
+        </Stack>
       )}
 
-      <div className="row-between" style={{ marginTop: 'var(--space-4)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+      {/* Zone 4 — Utility. Persistent, slim, same strip every day —
+          this is what Capacity Mode reads (via Energy Check-In) to
+          set the mode the rest of the page could someday reweight
+          around. Never a full-width card competing with Zone 1. */}
+      <Row gap={3} wrap style={{ marginTop: 'var(--space-4)' }}>
         {showEnergyCheckin && <EnergyCheckIn onReplanned={refreshSchedule} />}
         <AskAIPanel onApplied={refreshSchedule} />
-      </div>
+      </Row>
       <div style={{ marginTop: 'var(--space-2)' }}>
         <AnchorTimeAdjuster onRecalculated={refreshSchedule} />
       </div>
 
-      {/* Neglected Priorities (Area 1/2) — the one place that looks
-          across goals, relationships, habits, and maintenance at once. */}
-      {businessOverdueCount > 0 && (
+      {/* Zone 2 — Secondary, everything else, consolidated. Business
+          overdue, the neglected-priorities error, and "Might be worth
+          a look" used to be three separate Cards each competing for
+          the same attention as Zone 1. One container now, lower
+          visual weight than the hero above, still always visible —
+          never collapsed away, only ever reweighted. */}
+      {hasZone2Alerts && (
         <Card style={{ marginTop: 'var(--space-4)' }}>
-          <div className="row-between">
-            <div className="section-label">Business</div>
-          </div>
-          <Link to="/business/weekly-reset" className="row-between neglected-link" style={{ fontSize: 'var(--text-small)', padding: '4px 0' }}>
-            <span>You have {businessOverdueCount} overdue Business task{businessOverdueCount === 1 ? '' : 's'}</span>
-            <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>See who →</span>
-          </Link>
-        </Card>
-      )}
-      {neglectedError && (
-        <Card style={{ marginTop: 'var(--space-4)', borderLeft: '3px solid var(--danger)' }}>
-          <div style={{ fontSize: 'var(--text-small)' }}>"Might be worth a look" couldn't load: {neglectedError}</div>
-        </Card>
-      )}
-      {neglected.length > 0 && (
-        <Card style={{ marginTop: 'var(--space-4)' }}>
-          <div className="section-label">Might be worth a look</div>
-          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            {neglected.map(item => (
-              <Link key={`${item.type}-${item.id}`} to={item.link} className="row-between neglected-link" style={{ fontSize: 'var(--text-small)', padding: '4px 0' }}>
-                <span>{item.label}</span>
-                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{item.detail}</span>
+          <Stack gap={3}>
+            {businessOverdueCount > 0 && (
+              <Link to="/business/weekly-reset" className="row-between neglected-link" style={{ fontSize: 'var(--text-small)', padding: '4px 0' }}>
+                <span>You have {businessOverdueCount} overdue Business task{businessOverdueCount === 1 ? '' : 's'}</span>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>See who →</span>
               </Link>
-            ))}
-          </div>
+            )}
+            {neglectedError && (
+              <div style={{ fontSize: 'var(--text-small)', color: 'var(--danger)' }}>
+                "Might be worth a look" couldn't load: {neglectedError}
+              </div>
+            )}
+            {neglected.length > 0 && (
+              <div>
+                <div className="section-label">Might be worth a look</div>
+                <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+                  {neglected.map(item => (
+                    <Link key={`${item.type}-${item.id}`} to={item.link} className="row-between neglected-link" style={{ fontSize: 'var(--text-small)', padding: '4px 0' }}>
+                      <span>{item.label}</span>
+                      <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{item.detail}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Stack>
         </Card>
       )}
 
+      {/* Zone 2 continued — the schedule and today-items columns are
+          the bulk of "everything else." Same content and handlers as
+          before; just no longer visually competing with a separate
+          alerts card above it. */}
       <div className="today-columns">
         <div className="today-schedule-col">
           <div className="row-between" style={{ marginTop: 'var(--space-5)', marginBottom: 'var(--space-3)' }}>
