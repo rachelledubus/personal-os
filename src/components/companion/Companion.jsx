@@ -39,9 +39,13 @@ export default function Companion() {
   const blinkCheckRef = useRef(null);
 
   // Persisted minimize preference (user_preferences, category 'companion') —
-  // no new table, reuses the existing generic settings store.
+  // no new table, reuses the existing generic settings store. If the user
+  // has never touched the toggle, fall back to this breakpoint's own
+  // default (mobile starts minimized — see companion.config.js — so the
+  // full character doesn't sit on top of content on a phone screen).
   useEffect(() => {
-    getPreference('companion', 'minimized', false).then(v => setMinimized(!!v));
+    getPreference('companion', 'minimized', !!anchor.minimized).then(v => setMinimized(!!v));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Blink loop — probabilistic, not metronomic, so it reads as alive.
