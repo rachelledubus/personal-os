@@ -112,6 +112,14 @@ input, textarea, select {
   padding: 9px 12px; font-size: var(--text-compact); background: var(--white); color: var(--navy);
 }
 
+@media (max-width: 900px) {
+  input, select { min-height: var(--control-height-md); }
+  /* iOS zooms the page on focus if a field's font-size is under 16px —
+     bump it just on mobile rather than resizing text everywhere. */
+  input, textarea, select { font-size: 16px; }
+  .sub-tab { min-height: var(--control-height-md); display: inline-flex; align-items: center; }
+}
+
 .app-loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: var(--ink-soft); }
 
 .reset-field { display: flex; flex-direction: column; gap: 4px; font-size: var(--text-small); }
