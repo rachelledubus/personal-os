@@ -27,6 +27,11 @@ export async function updateGoal(id, fields) {
   if (error) throw error;
 }
 
+export async function deleteGoal(id) {
+  const { error } = await supabase.from('goals').delete().eq('id', id);
+  if (error) throw error;
+}
+
 /** The one real "this goal is done" action — separate from the generic
  *  updateGoal() so this specific, meaningful transition always logs,
  *  regardless of what other partial edits updateGoal gets used for. */

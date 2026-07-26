@@ -4,7 +4,7 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Checkbox from '../../components/ui/Checkbox.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
-import { loadHabitsData, addHabit, toggleHabitLog } from '../../services/habits.js';
+import { loadHabitsData, addHabit, toggleHabitLog, archiveHabit } from '../../services/habits.js';
 import { getHabitPatternInsights } from '../../services/habitInsights.js';
 import { suggestInterval, setHabitReminderInterval, setHabitReminderTimes, clearHabitReminder } from '../../services/habitReminders.js';
 
@@ -46,6 +46,13 @@ export default function HabitsTab() {
 
   async function toggle(habitId, checked) {
     await toggleHabitLog(habitId, checked);
+    load();
+  }
+
+  async function handleArchive(habit) {
+    const confirmed = window.confirm(`Remove "${habit.name}"? Your streak history stays on record, it just won't show here anymore.`);
+    if (!confirmed) return;
+    await archiveHabit(habit.id);
     load();
   }
 
@@ -116,6 +123,7 @@ export default function HabitsTab() {
                       <Button size="sm" variant="text" onClick={() => openTimesPicker(h)}><Clock size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Specific times</Button>
                     </>
                   )}
+                  <button className="row-remove-btn" aria-label="Remove system" onClick={() => handleArchive(h)}>×</button>
                 </div>
               </div>
               {reminderNote[h.id] && (

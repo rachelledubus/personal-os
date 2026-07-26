@@ -7,7 +7,7 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import {
-  listGoals, addGoal, listProjects, addProject,
+  listGoals, addGoal, deleteGoal, listProjects, addProject,
   listProjectTasks, listMilestones, addMilestone, toggleMilestone, markGoalAchieved,
 } from '../../services/goals.js';
 import {
@@ -91,6 +91,13 @@ export default function ProjectsTab() {
     refresh();
   }
 
+  async function handleDeleteGoal(goalId, title) {
+    const confirmed = window.confirm(`Delete "${title}"? Any milestones directly on this goal go with it — projects linked to it stay, just unlinked. This can't be undone.`);
+    if (!confirmed) return;
+    await deleteGoal(goalId);
+    refresh();
+  }
+
   async function handleAddProject() {
     if (!newProjectTitle.trim()) return;
     await addProject({
@@ -121,6 +128,7 @@ export default function ProjectsTab() {
                 expanded={expandedGoal === g.id}
                 onToggleExpand={() => setExpandedGoal(expandedGoal === g.id ? null : g.id)}
                 onMarkAchieved={() => handleMarkAchieved(g.id)}
+                onDelete={() => handleDeleteGoal(g.id, g.title)}
               />
             ))}
           </div>
@@ -198,7 +206,7 @@ export default function ProjectsTab() {
   );
 }
 
-function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved }) {
+function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved, onDelete }) {
   const [missions, setMissions] = useState([]);
   const [newMissionTitle, setNewMissionTitle] = useState('');
   const [expandedMission, setExpandedMission] = useState(null);
@@ -246,6 +254,7 @@ function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved }) {
           {goal.status !== 'Achieved' && (
             <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); onMarkAchieved(); }}>Mark achieved</Button>
           )}
+          <Button size="sm" variant="text" onClick={e => { e.stopPropagation(); onDelete(); }}>Delete</Button>
         </div>
       </div>
       {goal.target_value != null && (

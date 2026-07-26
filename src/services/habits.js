@@ -43,6 +43,15 @@ export async function addHabit(name) {
   if (error) throw error;
 }
 
+/** Soft-delete — sets archived, doesn't drop the row. Matches the
+ *  existing pattern (loadHabitsData already filters .eq('archived',
+ *  false)) and keeps past habit_logs/streak history intact instead of
+ *  cascading a hard delete through it. */
+export async function archiveHabit(habitId) {
+  const { error } = await supabase.from('habits').update({ archived: true }).eq('id', habitId);
+  if (error) throw error;
+}
+
 export async function toggleHabitLog(habitId, completed) {
   const userId = await getUserId();
   if (completed) {
