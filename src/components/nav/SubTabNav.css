@@ -1,0 +1,33 @@
+.sub-tab-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.sub-tab-nav .sub-tab {
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  /* On a phone, pages with a lot of sub-tabs (Business has 10) wrap
+     into several rows and push all real content below the fold before
+     the user sees anything. A single scrollable row keeps every tab
+     one thumb-swipe away instead, and matches how tab bars behave in
+     most mobile apps. */
+  .sub-tab-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    /* Let pills sit close to the edge without being clipped by rounded corners/shadow. */
+    padding: 2px 2px 10px;
+    margin: 0 calc(var(--space-1) * -1) var(--space-3);
+  }
+  .sub-tab-nav::-webkit-scrollbar { display: none; }
+
+  .sub-tab-nav .sub-tab {
+    margin-right: 0;
+  }
+}

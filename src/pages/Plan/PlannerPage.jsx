@@ -7,6 +7,7 @@ import { listTimeBlocks, addTimeBlock, deleteTimeBlock } from '../../services/ti
 import { todayStr } from '../../utils/date.js';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Banner from '../../components/ui/Banner.jsx';
+import SubTabNav from '../../components/nav/SubTabNav.jsx';
 import ProjectsTab from './ProjectsTab.jsx';
 import JournalTab from './JournalTab.jsx';
 import DreamLifeTab from './DreamLifeTab.jsx';
@@ -28,17 +29,11 @@ export default function PlannerPage() {
       <Banner slotKey="plan_banner" scene="plan" />
       <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Calendar size={20} /> Plan</div>
 
-      <div className="row" style={{ marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
-        {TABS.map(t => (
-          <button
-            key={t}
-            className={`sub-tab ${tab === t ? 'active' : ''}`}
-            onClick={() => navigate(t === 'blocks' ? '/plan' : `/plan/${t}`)}
-          >
-            {TAB_LABELS[t]}
-          </button>
-        ))}
-      </div>
+      <SubTabNav
+        tabs={TABS.map(t => ({ key: t, label: TAB_LABELS[t] }))}
+        active={tab}
+        onChange={t => navigate(t === 'blocks' ? '/plan' : `/plan/${t}`)}
+      />
 
       {tab === 'blocks' && <TimeBlocksTab />}
       {tab === 'goals' && <ProjectsTab />}
