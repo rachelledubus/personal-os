@@ -1,30 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import { listKitchenInventory, setInventoryItem, deleteInventoryItem } from '../../services/groceryAggregation.js';
+import { useSupabaseQuery } from '../../hooks/useSupabaseQuery.js';
 
 export default
 function KitchenInventoryTab() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+  // Most likely cause of a load error: v2_grocery_aggregation_and_inventory_layer.sql hasn't been run yet.
+  const { data: items, loading, error: loadError, refresh } = useSupabaseQuery(() => listKitchenInventory(), []);
   const [newItem, setNewItem] = useState({ name: '', quantity: '', unit: '' });
   const [addError, setAddError] = useState(null);
-
-  useEffect(() => { refresh(); }, []);
-
-  async function refresh() {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      setItems(await listKitchenInventory());
-    } catch (err) {
-      // Most likely cause: v2_grocery_aggregation_and_inventory_layer.sql hasn't been run yet.
-      setLoadError(err.message || String(err));
-    }
-    setLoading(false);
-  }
 
   async function handleAdd() {
     if (!newItem.name.trim()) return;
@@ -72,7 +58,7 @@ function KitchenInventoryTab() {
           {items.map(item => (
             <div key={item.id} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
               <span>{item.ingredient_name} <span className="faint">{item.quantity} {item.unit}</span></span>
-              <button className="row-remove-btn" onClick={() => handleDelete(item.id)}>×</button>
+              <button className="row-remove-btn" aria-label="Remove" onClick={() => handleDelete(item.id)}>×</button>
             </div>
           ))}
         </div>

@@ -91,3 +91,10 @@
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* --- Breakpoints (documented convention, not real custom properties —
+   CSS media queries can't reference var(), so this is the reference
+   every @media query should match instead of inventing new numbers).
+   --bp-tablet: 900px  (matches the existing .app-shell breakpoint,
+                         global.css / SideNav.css)
+   --bp-mobile: 640px  (phone-width threshold within the 900px tier) */

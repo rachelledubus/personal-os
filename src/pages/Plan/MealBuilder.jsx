@@ -156,7 +156,7 @@ function MealBuilder({ foods, onFoodsChanged }) {
             {extraIngredients.map((ing, i) => (
               <div key={i} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
                 <span>{ing.name} <span className="faint">{ing.amount} {ing.unit}</span></span>
-                <button className="row-remove-btn" onClick={() => removeExtraIngredient(i)}>×</button>
+                <button className="row-remove-btn" aria-label="Remove" onClick={() => removeExtraIngredient(i)}>×</button>
               </div>
             ))}
           </div>

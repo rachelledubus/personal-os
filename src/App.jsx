@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import { TimerProvider } from './context/TimerContext.jsx';
@@ -14,24 +14,30 @@ import Skeleton from './components/ui/Skeleton.jsx';
 import { getFeatureFlag } from './services/settings.js';
 import AuthScreen from './pages/AuthScreen.jsx';
 
-import TodayPage from './pages/Today/TodayPage.jsx';
-import FocusMode from './pages/Today/FocusMode.jsx';
-import ResearchMode from './pages/Today/ResearchMode.jsx';
+// Stage L — route-based code splitting. Each top-level page is its
+// own chunk now instead of one bundle with all 7 zones' worth of code
+// loaded up front. Done after the monolith splits (Batches 6-9) on
+// purpose — a lazy chunk for a 1,700-line BusinessPage was a bad
+// trade before; a lazy chunk for BusinessPage's now-60-line shell
+// (which pulls in its own tab chunks as needed) is a real win.
+const TodayPage = lazy(() => import('./pages/Today/TodayPage.jsx'));
+const FocusMode = lazy(() => import('./pages/Today/FocusMode.jsx'));
+const ResearchMode = lazy(() => import('./pages/Today/ResearchMode.jsx'));
 
-import PlannerPage from './pages/Plan/PlannerPage.jsx';
+const PlannerPage = lazy(() => import('./pages/Plan/PlannerPage.jsx'));
 
-import GrowPage from './pages/Grow/GrowPage.jsx';
+const GrowPage = lazy(() => import('./pages/Grow/GrowPage.jsx'));
 
-import BusinessPage from './pages/Business/BusinessPage.jsx';
-import ContentPiecePage from './pages/Business/ContentPiecePage.jsx';
-import BusinessWeeklyResetPage from './pages/Business/BusinessWeeklyResetPage.jsx';
-import GuidedFlow from './pages/Business/GuidedFlow.jsx';
-import ReviewPage from './pages/Review/ReviewPage.jsx';
+const BusinessPage = lazy(() => import('./pages/Business/BusinessPage.jsx'));
+const ContentPiecePage = lazy(() => import('./pages/Business/ContentPiecePage.jsx'));
+const BusinessWeeklyResetPage = lazy(() => import('./pages/Business/BusinessWeeklyResetPage.jsx'));
+const GuidedFlow = lazy(() => import('./pages/Business/GuidedFlow.jsx'));
+const ReviewPage = lazy(() => import('./pages/Review/ReviewPage.jsx'));
 
-import LibraryPage from './pages/Library/LibraryPage.jsx';
+const LibraryPage = lazy(() => import('./pages/Library/LibraryPage.jsx'));
 
-import InboxPage from './pages/Inbox/InboxPage.jsx';
-import ControlCenterPage from './pages/ControlCenter/ControlCenterPage.jsx';
+const InboxPage = lazy(() => import('./pages/Inbox/InboxPage.jsx'));
+const ControlCenterPage = lazy(() => import('./pages/ControlCenter/ControlCenterPage.jsx'));
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -62,6 +68,12 @@ export default function App() {
       <TimerProvider>
         <div className="app-content">
           <Breadcrumb />
+          <Suspense fallback={
+            <div className="stack" style={{ gap: 'var(--space-3)', padding: 'var(--space-5)' }}>
+              <Skeleton variant="card" />
+              <Skeleton variant="card" />
+            </div>
+          }>
           <Routes>
             <Route path="/" element={<Navigate to="/today" replace />} />
 
@@ -91,6 +103,7 @@ export default function App() {
 
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Routes>
+          </Suspense>
         </div>
         <MiniTimerBar />
       </TimerProvider>

@@ -88,6 +88,7 @@ export default function ScheduleBlock({ block, isCurrent, onToggleTask, onToggle
             <button
               className="row-remove-btn"
               title="Not doing this today — remove it from today's schedule"
+              aria-label="Remove from today's schedule"
               onClick={() => onDismissBlock(block)}
             >
               ×

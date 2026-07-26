@@ -119,7 +119,7 @@ function DayCard({ date, dayPlan, foods, recipes, templates, onAdd, onAddRecipe,
                 {dayPlan[mt].map(item => (
                   <div key={item.planId} className="row-between meal-plan-row">
                     <span>{item.name} <span className="faint">× {item.servings}</span></span>
-                    <button className="row-remove-btn" onClick={() => onRemove(item.planId)}>×</button>
+                    <button className="row-remove-btn" aria-label="Remove" onClick={() => onRemove(item.planId)}>×</button>
                   </div>
                 ))}
               </div>

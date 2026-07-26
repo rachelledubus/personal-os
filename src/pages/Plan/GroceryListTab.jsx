@@ -147,7 +147,7 @@ function GroceryListTab() {
               <span>{item.name}</span>
               {item.total_quantity != null && <span className="faint">× {item.total_quantity} {item.unit}</span>}
               <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{item.category}</span>
-              <button className="row-remove-btn" onClick={() => deleteGroceryItem(item.id).then(refresh)}>×</button>
+              <button className="row-remove-btn" aria-label="Remove" onClick={() => deleteGroceryItem(item.id).then(refresh)}>×</button>
             </label>
           ))}
           {purchased.length > 0 && (
@@ -180,7 +180,7 @@ function GroceryListTab() {
                 {mappings.map(m => (
                   <div key={m.id} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
                     <span>{m.ingredient_name}: {m.qty_per_shopping_unit} → 1 {m.shopping_unit_label}</span>
-                    <button className="row-remove-btn" onClick={() => handleDeleteMapping(m.id)}>×</button>
+                    <button className="row-remove-btn" aria-label="Remove" onClick={() => handleDeleteMapping(m.id)}>×</button>
                   </div>
                 ))}
               </div>

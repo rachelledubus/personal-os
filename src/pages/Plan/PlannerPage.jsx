@@ -87,7 +87,7 @@ function TimeBlocksTab() {
                 {b.auto_generated && ' · from Life Rhythm'}
               </div>
             </div>
-            <button className="row-remove-btn" onClick={() => deleteTimeBlock(b.id).then(refresh)}>×</button>
+            <button className="row-remove-btn" aria-label="Remove" onClick={() => deleteTimeBlock(b.id).then(refresh)}>×</button>
           </div>
         ))}
       </div>

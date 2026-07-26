@@ -26,3 +26,7 @@
   margin-top: 2px;
   color: var(--gold);
 }
+
+@media (max-width: 640px) {
+  .inbox-suggestion { padding: var(--space-2); gap: 4px; }
+}

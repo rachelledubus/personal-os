@@ -100,7 +100,7 @@ export default function InteractionTimeline({ contact }) {
               <div className="interaction-row-header">
                 <span className={`interaction-type-tag interaction-type-${i.type}`}>{typeLabel(i.type)}</span>
                 <span className="muted interaction-date">{i.occurred_at}</span>
-                <button className="row-remove-btn" onClick={() => handleDelete(i.id)} title="Delete">×</button>
+                <button className="row-remove-btn" aria-label="Remove" onClick={() => handleDelete(i.id)} title="Delete">×</button>
               </div>
               {i.notes && <div className="interaction-notes">{i.notes}</div>}
             </div>

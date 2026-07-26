@@ -59,7 +59,7 @@ export default function GlobalCapture() {
           <div className="global-capture-modal" onClick={e => e.stopPropagation()}>
             <div className="row-between">
               <div className="section-label">Capture</div>
-              <button className="row-remove-btn" onClick={() => setOpen(false)}><X size={16} /></button>
+              <button className="row-remove-btn" aria-label="Close" onClick={() => setOpen(false)}><X size={16} /></button>
             </div>
 
             <textarea

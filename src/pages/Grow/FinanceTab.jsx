@@ -296,7 +296,7 @@ export default function FinanceTab() {
               <span>{e.category}{e.notes ? ` — ${e.notes}` : ''}</span>
               <div className="row" style={{ gap: 'var(--space-2)' }}>
                 <span className={e.entry_type === 'income' ? '' : 'muted'}>{e.entry_type === 'income' ? '+' : '-'}${Number(e.amount).toFixed(0)}</span>
-                <button className="row-remove-btn" onClick={() => deleteEntry(e.id).then(refresh)}>×</button>
+                <button className="row-remove-btn" aria-label="Remove" onClick={() => deleteEntry(e.id).then(refresh)}>×</button>
               </div>
             </div>
           ))}

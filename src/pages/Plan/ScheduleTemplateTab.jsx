@@ -171,7 +171,7 @@ export default function ScheduleTemplateTab() {
                 <input type="time" value={block.start_time || ''} onChange={e => handleField(block, 'start_time', e.target.value || null)} />
                 <span className="muted">–</span>
                 <input type="time" value={block.end_time || ''} onChange={e => handleField(block, 'end_time', e.target.value || null)} />
-                <button className="row-remove-btn" onClick={() => handleDelete(block.id)}>×</button>
+                <button className="row-remove-btn" aria-label="Remove" onClick={() => handleDelete(block.id)}>×</button>
               </div>
 
               {block.schedule_mode !== 'fixed' && (
@@ -257,7 +257,7 @@ export default function ScheduleTemplateTab() {
                         onBlur={() => saveSteps(block)}
                         style={{ flex: 1, fontSize: 'var(--text-small)' }}
                       />
-                      <button className="row-remove-btn" onClick={() => handleRemoveStep(block, i)}>×</button>
+                      <button className="row-remove-btn" aria-label="Remove" onClick={() => handleRemoveStep(block, i)}>×</button>
                     </div>
                   ))}
                 </div>

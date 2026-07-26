@@ -163,3 +163,9 @@
   outline: 2px dashed var(--accent);
   outline-offset: 4px;
 }
+
+@media (max-width: 480px) {
+  .schedule-block-header { flex-wrap: wrap; }
+  .schedule-block-rail { width: 24px; }
+  .schedule-block-icon { width: 24px; height: 24px; }
+}

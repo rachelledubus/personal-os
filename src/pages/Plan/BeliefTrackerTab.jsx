@@ -3,6 +3,7 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import { listBeliefs, addBelief, updateBelief, deleteBelief } from '../../services/beliefs.js';
+import { useSupabaseQuery } from '../../hooks/useSupabaseQuery.js';
 
 const FIELDS = [
   { key: 'situation', label: 'Situation', placeholder: 'e.g. Slow business week' },
@@ -12,30 +13,22 @@ const FIELDS = [
 ];
 
 export default function BeliefTrackerTab() {
-  const [beliefs, setBeliefs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+  // Most likely cause of a load error: v2_limiting_belief_tracker_layer.sql
+  // hasn't been run yet.
+  const { data: beliefs, loading, error: loadError, refresh } = useSupabaseQuery(() => listBeliefs(), []);
   const [drafts, setDrafts] = useState({}); // { [id]: { situation, old_belief, new_belief, evidence } }
   const [newEntry, setNewEntry] = useState({ situation: '', old_belief: '', new_belief: '', evidence: '' });
   const [addError, setAddError] = useState(null);
 
-  useEffect(() => { refresh(); }, []);
-
-  async function refresh() {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      const data = await listBeliefs();
-      setBeliefs(data);
-      const nextDrafts = {};
-      data.forEach(b => { nextDrafts[b.id] = { situation: b.situation, old_belief: b.old_belief || '', new_belief: b.new_belief || '', evidence: b.evidence || '' }; });
-      setDrafts(nextDrafts);
-    } catch (err) {
-      // Most likely cause: v2_limiting_belief_tracker_layer.sql hasn't been run yet.
-      setLoadError(err.message || String(err));
-    }
-    setLoading(false);
-  }
+  // Drafts are a real derived side effect of the loaded data (buffer
+  // text per-belief for the save-on-blur pattern) — the hook itself
+  // only owns fetch/loading/error, not this.
+  useEffect(() => {
+    if (!beliefs) return;
+    const nextDrafts = {};
+    beliefs.forEach(b => { nextDrafts[b.id] = { situation: b.situation, old_belief: b.old_belief || '', new_belief: b.new_belief || '', evidence: b.evidence || '' }; });
+    setDrafts(nextDrafts);
+  }, [beliefs]);
 
   async function handleAdd() {
     if (!newEntry.situation.trim()) return;
@@ -93,7 +86,7 @@ export default function BeliefTrackerTab() {
             <Card key={belief.id}>
               <div className="row-between">
                 <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{new Date(belief.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                <button className="row-remove-btn" onClick={() => handleDelete(belief.id)}>×</button>
+                <button className="row-remove-btn" aria-label="Remove" onClick={() => handleDelete(belief.id)}>×</button>
               </div>
               <div className="stack" style={{ gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
                 {FIELDS.map(f => (

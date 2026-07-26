@@ -182,7 +182,7 @@ function NurtureTrackingView() {
               <div style={{ fontWeight: 700 }}>{row.contacts?.name || row.lead_name || 'Unnamed lead'}</div>
               <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{row.lead_magnets?.name} · started {row.date_started}</div>
             </div>
-            <button className="row-remove-btn" onClick={() => deleteNurtureTracking(row.id).then(refresh)}>×</button>
+            <button className="row-remove-btn" aria-label="Remove" onClick={() => deleteNurtureTracking(row.id).then(refresh)}>×</button>
           </div>
           <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
             <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Email sent:</span>

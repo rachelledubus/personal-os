@@ -229,7 +229,7 @@ function BacklogTab() {
                       <span style={{ fontSize: 'var(--text-small)', cursor: 'pointer' }} onClick={() => startEdit(i)}>
                         <span className="muted" style={{ marginRight: 6 }}>⠿</span>{i.idea}
                       </span>
-                      <button className="row-remove-btn" onClick={() => deleteBacklogIdea(i.id).then(refresh)}>×</button>
+                      <button className="row-remove-btn" aria-label="Remove" onClick={() => deleteBacklogIdea(i.id).then(refresh)}>×</button>
                     </div>
                   )}
                 </div>

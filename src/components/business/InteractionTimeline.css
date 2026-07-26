@@ -60,3 +60,8 @@
 .interaction-type-email { background: var(--navy); }
 .interaction-type-meeting { background: var(--gold); }
 .interaction-type-note { background: var(--ink-faint); }
+
+@media (max-width: 640px) {
+  .interaction-row-header { flex-wrap: wrap; gap: 4px; }
+  .interaction-add-form textarea { font-size: var(--text-micro); }
+}
