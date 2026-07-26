@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Battery, BatteryLow, BatteryFull } from 'lucide-react';
 import { logEnergy, logMomentum } from '../../services/energyIntelligence.js';
 import { reassignForEnergyChange } from '../../services/dailyExecution.js';
+import { useCapacityMode, energyLevelToMode } from '../layout/CapacityModeContext.jsx';
 import './EnergyCheckIn.css';
 
 const LEVELS = [
@@ -17,6 +18,7 @@ export default function EnergyCheckIn({ onReplanned }) {
   const [momentum, setMomentum] = useState({ gain: '', drain: '' });
   const [momentumSaved, setMomentumSaved] = useState(false);
   const [momentumError, setMomentumError] = useState(null);
+  const { setMode } = useCapacityMode();
 
   async function handleCheckIn(level) {
     setActive(level);
@@ -26,6 +28,11 @@ export default function EnergyCheckIn({ onReplanned }) {
     setMomentum({ gain: '', drain: '' }); // fresh row = fresh fields, not last check-in's leftover text
     setMomentumSaved(false);
     setMomentumError(null);
+    // The one place this check-in actually does something beyond
+    // logging: it's the sole trigger that sets Capacity Mode. Nothing
+    // else infers or guesses mode from behavior — this keeps the
+    // "you are always the authority on your state" rule literal.
+    setMode(energyLevelToMode(level));
     await reassignForEnergyChange();
     setBusy(false);
     onReplanned?.();
