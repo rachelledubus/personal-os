@@ -15,6 +15,7 @@ import {
 } from '../../services/missions.js';
 import MonthlyThemeCard from './MonthlyThemeCard.jsx';
 import { SECTIONS as DREAM_LIFE_SECTIONS } from './DreamLifeTab.jsx';
+import { importWebsiteBuildProject, PUBLISHED_PAGE_QA_CHECKLIST } from '../../services/websiteBuildImport.js';
 
 const TIMEFRAMES = ['Year', 'Quarter', 'Month', 'Week'];
 const ENERGY_IMPACTS = ['Energizing', 'Neutral', 'Draining'];
@@ -56,6 +57,8 @@ export default function ProjectsTab() {
   const [newProjectGoal, setNewProjectGoal] = useState('');
   const [newProjectVision, setNewProjectVision] = useState('');
   const [newProjectEnergy, setNewProjectEnergy] = useState(null);
+  const [importStatus, setImportStatus] = useState(null);
+  const [showQaChecklist, setShowQaChecklist] = useState(false);
 
   async function refresh() {
     const [g, p] = await Promise.all([listGoals(), listProjects()]);
@@ -109,6 +112,17 @@ export default function ProjectsTab() {
     setNewProjectVision('');
     setNewProjectEnergy(null);
     refresh();
+  }
+
+  async function handleImportWebsiteBuild() {
+    setImportStatus('importing');
+    try {
+      const result = await importWebsiteBuildProject();
+      setImportStatus(result.created ? `Imported \u2014 ${result.count} milestones across all 5 phases.` : 'Already imported \u2014 found an existing "Website Build" project.');
+      refresh();
+    } catch (err) {
+      setImportStatus(`Couldn't import: ${err.message || err}`);
+    }
   }
 
   return (
@@ -188,7 +202,16 @@ export default function ProjectsTab() {
             {goals.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
           </select>
           <Button size="sm" onClick={handleAddProject}>+ Add project</Button>
+          <Button size="sm" variant="text" onClick={handleImportWebsiteBuild}>Import Website Build milestones</Button>
+          <Button size="sm" variant="text" onClick={() => setShowQaChecklist(!showQaChecklist)}>{showQaChecklist ? 'Hide' : 'Show'} Published-Page QA Checklist</Button>
         </div>
+        {importStatus && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{importStatus}</div>}
+        {showQaChecklist && (
+          <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 2, padding: 'var(--space-2)', background: 'var(--cream)', borderRadius: 'var(--radius-sm)' }}>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase' }}>Run on every page before it counts as done</div>
+            {PUBLISHED_PAGE_QA_CHECKLIST.map((item, i) => <div key={i} style={{ fontSize: 'var(--text-small)' }}>☐ {item}</div>)}
+          </div>
+        )}
         <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
           <span className="muted" style={{ fontSize: 'var(--text-micro)', marginRight: 4 }}>Connects to (optional):</span>
           {DREAM_LIFE_SECTIONS.map(s => (

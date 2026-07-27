@@ -153,6 +153,9 @@ const GAP_CTAS = [
   // Partner CTAs not yet in the library
   { audience: 'Partners', stage: 'Partner', cta_text: 'Schedule a housing education session for your team.', page: 'Workshop' },
   { audience: 'Partners', stage: 'Partner', cta_text: 'Help your candidates feel confident about relocating.', page: 'Recruiter / hiring partners' },
+  { audience: 'General', stage: 'Engagement', cta_text: "Send me an address — I'll help verify the details." },
+  { audience: 'General', stage: 'Social', cta_text: 'Save this for when you\u2019re ready.' },
+  { audience: 'General', stage: 'Social', cta_text: "Comment 'GUIDE' and I'll send it over." },
 ];
 
 const GAP_SCRIPTS = [
@@ -216,9 +219,60 @@ const GAP_PROMPTS = [
   { code: 'P15', category: 'AI Editing & Quality Control', title: 'Final Content Quality Check', use_for: 'Pre-publish review — brand voice, audience fit, accuracy of claims' },
 ].map(p => ({ ...p, prompt_text: p.use_for })); // manual only tables these at directory level (P1 is the only one kept in full) — same fidelity as the app's existing P2/P5/etc entries
 
+// AI Workflow Library — System 12. Only A1 and A7 have full verbatim
+// prompts in the manual ("the two most load-bearing... kept in full");
+// the other seven are purpose descriptions only, same treatment as the
+// P3/P4/P6/etc. entries directly above.
+const GAP_AI_WORKFLOW_LIBRARY = [
+  {
+    code: 'A1', category: 'AI Workflow Library', title: 'Monthly Market Research',
+    use_for: 'Maintain current Southwest Broward intelligence — compare findings against the previous report, return what changed, why it matters, and content opportunities',
+    prompt_text: "Run my Southwest Broward monthly research checklist. Research current information for: Cooper City, Pembroke Pines, Plantation, FL. Compare findings against my previous report. Return: (1) what changed (2) why it matters (3) whether it impacts my standing market insights (4) content opportunities created by the changes. Include sources. Do not add filler — focus on actionable changes.",
+  },
+  { code: 'A2', category: 'AI Workflow Library', title: 'Monthly Intelligence Report', use_for: 'Turn verified research into a client-facing authority asset — market update, development, insurance, schools, buyer/seller takeaways' },
+  { code: 'A3', category: 'AI Workflow Library', title: 'Content Creation + Repurposing', use_for: 'Turn one content brief into flagship content, a database email, two short video scripts, a Facebook response, and a partner-shareable version' },
+  { code: 'A4', category: 'AI Workflow Library', title: 'Partner-Specific Guide Creation', use_for: 'Customize the relocation guide for a specific audience/organization — commute, neighborhoods, housing concerns, relevant programs' },
+  { code: 'A5', category: 'AI Workflow Library', title: 'Email & Client Communication', use_for: 'Draft personalized emails — under 150 words, one idea, one CTA, no sales pressure' },
+  { code: 'A6', category: 'AI Workflow Library', title: 'Consultation Preparation Brief', use_for: 'Client priorities, likely concerns, top neighborhood matches with honest trade-offs, payment considerations, questions to ask' },
+  {
+    code: 'A7', category: 'AI Workflow Library', title: 'SOP Creation',
+    use_for: 'Convert a repeated manual task into a documented system',
+    prompt_text: "I have been completing this task manually: [describe task]. Interview me with up to 6 questions. Then create an SOP using this format: Purpose / Outcome / When To Use / Process / Tools / Templates / Automation Opportunities / Metrics / Maintenance. Match my existing business operating system style.",
+  },
+  { code: 'A8', category: 'AI Workflow Library', title: 'Business Review Analysis', use_for: 'Analyze scorecards — leading indicators, underperforming sources, bottleneck, highest-leverage next action' },
+  { code: 'A9', category: 'AI Workflow Library', title: 'Buyer Question Bank Management', use_for: 'Organize client/Facebook questions by content pillar, journey stage, and priority — recommend next month\u2019s topics' },
+].map(p => ({ ...p, prompt_text: p.prompt_text || p.use_for }));
+
 const GAP_PHONE_BOUNDARIES = [
   { section: 'Phone & Communication Boundaries', situation: 'Voicemail greeting', script_text: "Hi, you've reached Rachelle with [Brokerage]. I can't get to the phone right now — for the fastest response, text this number and I'll get right back to you. You can also grab a time on my calendar at [booking link]. Thanks!" },
   { section: 'Phone & Communication Boundaries', situation: 'Texting back a missed call', script_text: "Hi, this is Rachelle — sorry I missed your call! Feel free to text me what you need here, or if you'd rather talk, here's my booking link so we can find a time: [booking link]" },
+];
+
+const GAP_OUTREACH_PLAYBOOK = [
+  { section: 'Sphere Conversations', situation: 'Reconnection', script_text: "Hey! I realized it's been way too long since we caught up. I saw [something relevant] and thought of you. How have you been?" },
+  { section: 'Sphere Conversations', situation: 'Casual check-in', script_text: "Hey! Just checking in. How have you been? How's everything going with [job/family/life update]?" },
+  { section: 'Sphere Conversations', situation: 'Former coworker', script_text: "Hey! I was thinking about old work days and realized we haven't caught up in forever. How have you been?" },
+  { section: 'Sphere Conversations', situation: 'Old friend', script_text: "Randomly thought about you today and realized it's been way too long since we've talked. How are things going?" },
+  { section: 'Sphere Conversations', situation: 'When real estate comes up', script_text: "That's exciting. Have you started looking into what that might look like, or are you just exploring options right now?" },
+  { section: 'Community Conversations', situation: 'If they ask what you do', script_text: "I help people understand Southwest Broward when they're thinking about moving or buying. A lot of what I do is helping people figure out which areas actually fit their lifestyle before they make a decision." },
+  { section: 'Professional Partner Outreach', situation: 'Professional introduction', script_text: "Hi [Name], I came across your work with [organization] and wanted to introduce myself. I specialize in helping people understand Southwest Broward when they're relocating or preparing to buy. A challenge I see often is that people struggle to understand the area before making a move. I create resources that help simplify that process, and I thought they may be useful for the people you work with." },
+  { section: 'Referral Conversations', situation: 'Asking about referrals', script_text: "A lot of my business comes from helping people understand their options before they're ready. If you ever hear someone talking about moving to Southwest Broward, I'm always happy to be a resource for them." },
+  { section: 'Outreach Scripts', situation: 'Local business introduction', script_text: "Hi! I'm Rachelle. I'm a local real estate professional focused on helping people understand Southwest Broward. I'm trying to learn more about the businesses and places that make these communities special. I'd love to hear more about your story and what you do here." },
+  { section: 'Outreach Scripts', situation: 'Community member introduction', script_text: "I'm spending more time learning what residents actually love about these areas because I want to help people moving here understand what daily life is really like. What's something you think people should know about this community?" },
+  { section: 'Outreach Scripts', situation: 'Past contact reconnect', script_text: "Hey! I've been thinking about people I haven't caught up with in a while and realized it's been too long. How have you been?" },
+  { section: 'Outreach Scripts', situation: 'Someone mentions a move', script_text: "That's exciting — have you started looking into what that might look like, or are you just exploring options right now?" },
+];
+
+export const RELATIONSHIP_ENERGY_SCALE = [
+  { level: 'Low', actions: 'React to a story, comment on a post, send a resource, congratulate an achievement, reply to an update', goal: 'Maintain connection' },
+  { level: 'Medium', actions: 'Send a personal text, have a short conversation, follow up with someone you met, ask a genuine question', goal: 'Strengthen familiarity' },
+  { level: 'High', actions: 'Coffee meetings, networking events, community events, phone calls, in-person introductions', goal: 'Deepen important relationships' },
+];
+
+export const DAILY_CONVERSATION_ROUTINE = [
+  { version: 'Minimum (low energy)', time: '10 min', includes: 'Reply to messages, comment on 2 posts, send 1 check-in message' },
+  { version: 'Standard', time: '30 min', includes: '3 personal touches, 1 professional/community interaction, follow up on previous conversations' },
+  { version: 'Growth', time: '60 min', includes: 'Sphere outreach, partner outreach, community engagement, relationship updates' },
 ];
 
 export async function syncLibraryGaps() {
@@ -235,9 +289,9 @@ export async function syncLibraryGaps() {
   const promptCodes = new Set((existingPrompts || []).map(p => p.code));
 
   const newCtas = GAP_CTAS.filter(c => !ctaTexts.has(c.cta_text));
-  const allGapScripts = [...GAP_SCRIPTS, ...GAP_DECISION_RULES, ...GAP_TROUBLESHOOTING, ...GAP_TRIGGERS, ...GAP_PHONE_BOUNDARIES];
+  const allGapScripts = [...GAP_SCRIPTS, ...GAP_DECISION_RULES, ...GAP_TROUBLESHOOTING, ...GAP_TRIGGERS, ...GAP_PHONE_BOUNDARIES, ...GAP_OUTREACH_PLAYBOOK];
   const newScripts = allGapScripts.filter(s => !scriptKeys.has(`${s.section}||${s.situation}`));
-  const newPrompts = GAP_PROMPTS.filter(p => !promptCodes.has(p.code));
+  const newPrompts = [...GAP_PROMPTS, ...GAP_AI_WORKFLOW_LIBRARY].filter(p => !promptCodes.has(p.code));
 
   const inserts = [];
   if (newCtas.length) inserts.push(supabase.from('ctas').insert(newCtas.map(c => ({ ...c, user_id: userId }))));

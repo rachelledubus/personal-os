@@ -23,10 +23,19 @@ import { toggleBlockCompletion, toggleBlockStep, addTransitionStep } from '../..
 import { getDuePrompt } from '../../services/prompts.js';
 import { getNeglectedPriorities } from '../../services/neglected.js';
 import { countOverdue } from '../../services/contacts.js';
+import { useCapacityMode } from '../../components/layout/CapacityModeContext.jsx';
+import { getTodayCommitmentCount, recordCommitmentAdded } from '../../services/commitmentTracking.js';
 import WeeklyResetModal from '../Plan/WeeklyResetModal.jsx';
 import './TodayPage.css';
 
+// Per the interview: a confirmation dialog on elevated days, never a
+// hard block. This threshold is the number of things added *today*
+// before the nudge starts appearing — deliberately not configurable
+// yet, since it needs real use to know if 5 is right.
+const OVERCOMMIT_THRESHOLD = 5;
+
 export default function TodayPage() {
+  const { mode } = useCapacityMode();
   const [schedule, setSchedule] = useState(null);
   const [todayItems, setTodayItems] = useState(null);
   const [duePrompt, setDuePrompt] = useState(null);
@@ -153,7 +162,17 @@ export default function TodayPage() {
 
   async function handleAddCustom(track) {
     if (!customTitle.trim()) return;
+    if (mode === 'elevated') {
+      const countSoFar = await getTodayCommitmentCount();
+      if (countSoFar >= OVERCOMMIT_THRESHOLD) {
+        const proceed = window.confirm(
+          `That's ${countSoFar + 1} things added to today already — want to add this one too, or spread some out?`
+        );
+        if (!proceed) return;
+      }
+    }
     await addCustomTodayItem(customTitle.trim(), track);
+    await recordCommitmentAdded();
     setCustomTitle('');
     setAddingCustom(false);
     refreshTodayItems();
@@ -201,7 +220,7 @@ export default function TodayPage() {
                 <div className="today-headline">
                   {total === 0
                     ? 'Nothing assigned yet'
-                    : doneCount === total ? '🎉 All done — go you!' : (nextUp?.title || 'All caught up')}
+                    : doneCount === total ? (mode === 'elevated' ? 'All done for today' : '🎉 All done — go you!') : (nextUp?.title || 'All caught up')}
                 </div>
               </div>
               {total > 0 && <div className="today-progress-chip">{doneCount} / {total}</div>}

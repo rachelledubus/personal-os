@@ -7,18 +7,35 @@ import { listTimeBlocks, addTimeBlock, deleteTimeBlock } from '../../services/ti
 import { todayStr } from '../../utils/date.js';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Banner from '../../components/ui/Banner.jsx';
-import SubTabNav from '../../components/nav/SubTabNav.jsx';
+import PageHeader from '../../components/layout/PageHeader.jsx';
+import GroupedTabNav from '../../components/nav/GroupedTabNav.jsx';
 import ProjectsTab from './ProjectsTab.jsx';
 import JournalTab from './JournalTab.jsx';
 import DreamLifeTab from './DreamLifeTab.jsx';
 import ScheduleTemplateTab from './ScheduleTemplateTab.jsx';
 import BeliefTrackerTab from './BeliefTrackerTab.jsx';
+import FutureMeTab from './FutureMeTab.jsx';
 
-const TABS = ['blocks', 'goals', 'dream-life', 'journal', 'schedule-template', 'beliefs'];
-const TAB_LABELS = {
-  blocks: 'Time Blocks', goals: 'Goals & Projects', 'dream-life': 'Dream Life',
-  journal: 'Journal', 'schedule-template': 'Schedule Template', beliefs: 'Belief Tracker',
-};
+// Grouped per the Shell spec Section 4 — Now covers the concrete,
+// day-to-day schedule; Reflect & Envision covers the slower,
+// longer-range work. Matches the Master Reference's suggested split.
+const TAB_GROUPS = [
+  {
+    key: 'now', label: 'Now', tabs: [
+      { key: 'blocks', label: 'Time Blocks' },
+      { key: 'schedule-template', label: 'Schedule Template' },
+    ]
+  },
+  {
+    key: 'reflect', label: 'Reflect & Envision', tabs: [
+      { key: 'goals', label: 'Goals & Projects' },
+      { key: 'dream-life', label: 'Dream Life' },
+      { key: 'journal', label: 'Journal' },
+      { key: 'beliefs', label: 'Belief Tracker' },
+      { key: 'future-me', label: 'Future Me' },
+    ]
+  },
+];
 
 export default function PlannerPage() {
   const { tab = 'blocks' } = useParams();
@@ -27,13 +44,8 @@ export default function PlannerPage() {
   return (
     <div>
       <Banner slotKey="plan_banner" scene="plan" />
-      <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Calendar size={20} /> Plan</div>
-
-      <SubTabNav
-        tabs={TABS.map(t => ({ key: t, label: TAB_LABELS[t] }))}
-        active={tab}
-        onChange={t => navigate(t === 'blocks' ? '/plan' : `/plan/${t}`)}
-      />
+      <PageHeader icon={Calendar} title="Plan" />
+      <GroupedTabNav groups={TAB_GROUPS} active={tab} onChange={t => navigate(t === 'blocks' ? '/plan' : `/plan/${t}`)} />
 
       {tab === 'blocks' && <TimeBlocksTab />}
       {tab === 'goals' && <ProjectsTab />}
@@ -41,6 +53,7 @@ export default function PlannerPage() {
       {tab === 'journal' && <JournalTab />}
       {tab === 'schedule-template' && <ScheduleTemplateTab />}
       {tab === 'beliefs' && <BeliefTrackerTab />}
+      {tab === 'future-me' && <FutureMeTab />}
     </div>
   );
 }

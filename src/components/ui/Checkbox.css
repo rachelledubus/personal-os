@@ -1,12 +1,5 @@
 .checkbox-row { display: flex; align-items: center; gap: var(--space-3); cursor: pointer; }
 
-@media (max-width: 900px) {
-  /* The visible box stays 22px (that's a deliberate visual choice),
-     but the tappable row gets padded out to a real touch target so
-     it's not a precision-tap exercise on a phone. */
-  .checkbox-row { min-height: var(--control-height-md); padding: 6px 0; }
-}
-
 .checkbox-box {
   width: 22px; height: 22px;
   border-radius: 7px;

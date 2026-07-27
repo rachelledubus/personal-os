@@ -4,6 +4,7 @@
 // pressure, per the brand voice rules in System 01/14.
 
 const MODEL = 'gemini-2.5-flash';
+const { BRAND_VOICE_PROMPT } = require('./lib/brandVoice.js');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' };
@@ -19,8 +20,9 @@ exports.handler = async (event) => {
   }
   if (!contact?.name) return { statusCode: 400, body: JSON.stringify({ error: 'Missing contact' }) };
 
-  const systemPrompt = `You write follow-up messages for a Southwest Broward real estate agent. Brand voice: warm,
-educational, direct but approachable, protective, never pushy. Under 150 words. One idea, one CTA. Never use "just
+  const systemPrompt = `You write follow-up messages for a Southwest Broward real estate agent.
+${BRAND_VOICE_PROMPT}
+Under 150 words. One idea, one CTA. Never use "just
 checking in," "touching base," "dream home," "don't miss out," "act now," or generic realtor language. Prefer text
 or email tone over phone-call language — never suggest calling. Respond with ONLY a JSON object:
 { "message": "the drafted message", "channel": "text" or "email", "reasoning": "one short sentence on the approach" }

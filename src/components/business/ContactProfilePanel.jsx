@@ -37,6 +37,8 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
 
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesForm, setNotesForm] = useState({});
+  const [editingDiscovery, setEditingDiscovery] = useState(false);
+  const [discoveryForm, setDiscoveryForm] = useState({});
 
   const [draft, setDraft] = useState(null);
   const [drafting, setDrafting] = useState(false);
@@ -55,6 +57,10 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
     setNotesForm({
       goals: c.goals || '', concerns: c.concerns || '', important_personal_details: c.important_personal_details || '',
       relationship_notes: c.relationship_notes || '', last_conversation: c.last_conversation || '',
+    });
+    setDiscoveryForm({
+      discovery_situation: c.discovery_situation || '', discovery_lifestyle_priorities: c.discovery_lifestyle_priorities || '',
+      discovery_financial_reality: c.discovery_financial_reality || '', discovery_decision_factors: c.discovery_decision_factors || '',
     });
   }
   useEffect(() => { refresh(); }, [contactId]);
@@ -89,6 +95,11 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
   async function handleSaveNotes() {
     await applyField(notesForm);
     setEditingNotes(false);
+  }
+
+  async function handleSaveDiscovery() {
+    await applyField(discoveryForm);
+    setEditingDiscovery(false);
   }
 
   async function handleDraftFollowUp() {
@@ -288,6 +299,37 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               {contact.relationship_notes && <div><strong>Relationship notes:</strong> {contact.relationship_notes}</div>}
               {contact.last_conversation && <div><strong>Last conversation:</strong> {contact.last_conversation}</div>}
               {!contact.goals && !contact.concerns && !contact.important_personal_details && !contact.relationship_notes && !contact.last_conversation && (
+                <span className="muted">Nothing recorded yet.</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ---------- Client Discovery Framework (System 08, Phase 1) ---------- */}
+        <div>
+          <div className="row-between">
+            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Discovery</div>
+            <Button size="sm" variant="text" onClick={() => setEditingDiscovery(!editingDiscovery)}>{editingDiscovery ? 'Cancel' : 'Edit'}</Button>
+          </div>
+          {editingDiscovery ? (
+            <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+              <textarea placeholder="Situation — where are they now, moving from, why, timeline?" value={discoveryForm.discovery_situation}
+                onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_situation: e.target.value })} style={{ minHeight: 44 }} />
+              <textarea placeholder="Lifestyle priorities — work location, schools, family, commute" value={discoveryForm.discovery_lifestyle_priorities}
+                onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_lifestyle_priorities: e.target.value })} style={{ minHeight: 44 }} />
+              <textarea placeholder="Financial reality — comfortable monthly payment, not just price range" value={discoveryForm.discovery_financial_reality}
+                onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_financial_reality: e.target.value })} style={{ minHeight: 44 }} />
+              <textarea placeholder="Decision factors — must-haves, deal-breakers, biggest concerns" value={discoveryForm.discovery_decision_factors}
+                onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_decision_factors: e.target.value })} style={{ minHeight: 44 }} />
+              <div><Button size="sm" onClick={handleSaveDiscovery}>Save</Button></div>
+            </div>
+          ) : (
+            <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
+              {contact.discovery_situation && <div><strong>Situation:</strong> {contact.discovery_situation}</div>}
+              {contact.discovery_lifestyle_priorities && <div><strong>Lifestyle:</strong> {contact.discovery_lifestyle_priorities}</div>}
+              {contact.discovery_financial_reality && <div><strong>Financial reality:</strong> {contact.discovery_financial_reality}</div>}
+              {contact.discovery_decision_factors && <div><strong>Decision factors:</strong> {contact.discovery_decision_factors}</div>}
+              {!contact.discovery_situation && !contact.discovery_lifestyle_priorities && !contact.discovery_financial_reality && !contact.discovery_decision_factors && (
                 <span className="muted">Nothing recorded yet.</span>
               )}
             </div>

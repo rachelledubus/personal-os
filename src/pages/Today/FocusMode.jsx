@@ -7,9 +7,18 @@ import { getTodayItems, toggleTodayItem } from '../../services/todayItems.js';
 import { startFocusSession, endFocusSession } from '../../services/focusSessions.js';
 import './FocusMode.css';
 
+// Hyperfocus PROTECTION, not hyperfocus interruption — the Today
+// page's existing nudge already encourages continuing when a block
+// runs long, correctly, per the UX spec. This is the complementary
+// piece: a single, quiet, dismissible check on basic needs (water,
+// a stretch, whether you've eaten) after sustained focus — never a
+// pause, never an exit, never repeated within the same session.
+const PROTECTION_CHECK_MINUTES = 60;
+
 export default function FocusMode() {
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
+  const [showProtectionNudge, setShowProtectionNudge] = useState(false);
   const sessionIdRef = useRef(null);
 
   useEffect(() => {
@@ -24,6 +33,11 @@ export default function FocusMode() {
   useEffect(() => {
     startFocusSession().then(id => { sessionIdRef.current = id; });
     return () => { endFocusSession(sessionIdRef.current); };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowProtectionNudge(true), PROTECTION_CHECK_MINUTES * 60 * 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   async function handleComplete() {
@@ -48,6 +62,13 @@ export default function FocusMode() {
           {item.context && <p className="focus-context">{item.context}</p>}
 
           <TimerWidget mission={{ sourceTable: item.sourceTable, sourceId: item.sourceId, title: item.title }} />
+
+          {showProtectionNudge && (
+            <div className="focus-protection-nudge">
+              You've been at this a while — water, a stretch, or a bite to eat, whenever you get a natural pause. No need to stop now.
+              <button className="focus-protection-dismiss" onClick={() => setShowProtectionNudge(false)} aria-label="Dismiss">×</button>
+            </div>
+          )}
 
           <div className="row" style={{ justifyContent: 'center', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
             <Button variant="primary" onClick={handleComplete}>Mark complete</Button>

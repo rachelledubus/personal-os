@@ -5,7 +5,7 @@ import Checkbox from '../../components/ui/Checkbox.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import { listContacts } from '../../services/contacts.js';
 import {
-  seedLeadMagnetsIfEmpty, listLeadMagnets, updateLeadMagnetStatus, LANDING_PAGE_STANDARDS, NURTURE_SEQUENCES,
+  seedLeadMagnetsIfEmpty, syncLeadMagnetGaps, listLeadMagnets, updateLeadMagnetStatus, LANDING_PAGE_STANDARDS, NURTURE_SEQUENCES,
   CTAS_BY_FUNNEL, listNurtureTracking, addNurtureTracking, updateNurtureTracking, deleteNurtureTracking, getFunnelDashboardStats,
 } from '../../services/leadMagnets.js';
 
@@ -36,9 +36,24 @@ function LeadMagnetsView() {
   const [magnets, setMagnets] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [showStandards, setShowStandards] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(null);
 
   useEffect(() => { refresh(); }, []);
   async function refresh() { setMagnets(await listLeadMagnets()); }
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncStatus(null);
+    try {
+      const result = await syncLeadMagnetGaps();
+      setSyncStatus(result.added === 0 ? "You're fully caught up — nothing new to add." : `Added ${result.added} new lead magnet${result.added === 1 ? '' : 's'} from the Website-Build content.`);
+      refresh();
+    } catch (err) {
+      setSyncStatus(`Couldn't sync: ${err.message || err}`);
+    }
+    setSyncing(false);
+  }
 
   async function handleStatusChange(id, status) {
     await updateLeadMagnetStatus(id, status);
@@ -50,8 +65,12 @@ function LeadMagnetsView() {
       <Card>
         <div className="row-between">
           <div className="section-label">Landing page standards</div>
-          <Button size="sm" variant="text" onClick={() => setShowStandards(!showStandards)}>{showStandards ? 'Hide' : 'Show'}</Button>
+          <div className="row" style={{ gap: 'var(--space-2)' }}>
+            <Button size="sm" variant="ghost" onClick={handleSync} disabled={syncing}>{syncing ? 'Syncing…' : 'Sync latest from Website-Build'}</Button>
+            <Button size="sm" variant="text" onClick={() => setShowStandards(!showStandards)}>{showStandards ? 'Hide' : 'Show'}</Button>
+          </div>
         </div>
+        {syncStatus && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{syncStatus}</div>}
         {showStandards && (
           <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
             {LANDING_PAGE_STANDARDS.map((s, i) => (
@@ -85,9 +104,16 @@ function LeadMagnetsView() {
               </div>
               {NURTURE_SEQUENCES[m.funnel] && (
                 <>
-                  <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 'var(--space-3)', textTransform: 'uppercase' }}>5-email nurture sequence</div>
-                  <div className="stack" style={{ marginTop: 4, gap: 2 }}>
-                    {NURTURE_SEQUENCES[m.funnel].map((email, i) => <div key={i} style={{ fontSize: 'var(--text-small)' }}>{i + 1}. {email}</div>)}
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 'var(--space-3)', textTransform: 'uppercase' }}>
+                    {NURTURE_SEQUENCES[m.funnel].length}-email nurture sequence
+                  </div>
+                  <div className="stack" style={{ marginTop: 4, gap: 6 }}>
+                    {NURTURE_SEQUENCES[m.funnel].map((email, i) => (
+                      <div key={i} style={{ fontSize: 'var(--text-small)' }}>
+                        <strong>{i + 1}. {email.subject}</strong>
+                        {email.body && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 2, whiteSpace: 'pre-line' }}>{email.body}</div>}
+                      </div>
+                    ))}
                   </div>
                 </>
               )}

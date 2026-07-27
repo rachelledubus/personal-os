@@ -5,6 +5,7 @@
 // System 03 repurposing waterfall, automated instead of manual.
 
 const MODEL = 'gemini-2.5-flash';
+const { BRAND_VOICE_PROMPT } = require('./lib/brandVoice.js');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' };
@@ -21,8 +22,9 @@ exports.handler = async (event) => {
   if (!title) return { statusCode: 400, body: JSON.stringify({ error: 'Missing title' }) };
 
   const systemPrompt = `You are a real estate content strategist for an education-first Southwest Broward (Cooper City,
-Pembroke Pines, Plantation) relocation and first-time-buyer specialist. Brand voice: warm, educational, analytical,
-direct but approachable, protective. Never use hype, urgency, or generic realtor language ("dream home," "don't miss
+Pembroke Pines, Plantation) relocation and first-time-buyer specialist.
+${BRAND_VOICE_PROMPT}
+Never use hype, urgency, or generic realtor language ("dream home," "don't miss
 out," "act now"). Every piece should answer a real question and leave the reader feeling more prepared.
 
 Given one flagship content piece, draft 5 short derivative versions for different channels. Respond with ONLY a JSON

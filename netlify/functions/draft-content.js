@@ -5,6 +5,7 @@
 // never silently wrong.
 
 const MODEL = 'gemini-2.5-flash';
+const { BRAND_VOICE_PROMPT } = require('./lib/brandVoice.js');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' };
@@ -20,8 +21,9 @@ exports.handler = async (event) => {
   }
   if (!piece?.title) return { statusCode: 400, body: JSON.stringify({ error: 'Missing content piece' }) };
 
-  const systemPrompt = `You write flagship content for a Southwest Broward real estate agent's audience. Brand voice: warm,
-educational, direct but approachable, protective, never pushy or salesy. Write a complete first draft ready for the
+  const systemPrompt = `You write flagship content for a Southwest Broward real estate agent's audience.
+${BRAND_VOICE_PROMPT}
+Write a complete first draft ready for the
 agent to fact-check and personalize — not an outline, not bullet points unless the format calls for it. Never use
 "just checking in," "touching base," "dream home," "don't miss out," "act now," or generic realtor language.
 Respond with ONLY a JSON object: { "draft": "the full draft text" }

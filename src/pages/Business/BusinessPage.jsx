@@ -14,6 +14,9 @@ import ClientsTab from './ClientsTab.jsx';
 import RoadmapTab from './RoadmapTab.jsx';
 import ReportsTab from './ReportsTab.jsx';
 import FunnelsTab from './FunnelsTab.jsx';
+import CommunityTab from './CommunityTab.jsx';
+import ResearchLogTab from './ResearchLogTab.jsx';
+import ImprovementLogTab from './ImprovementLogTab.jsx';
 
 // Grouped per the Shell & Layout Specification, Section 4 — Business
 // had grown to 10 flat tabs, past the point a flat row stays
@@ -34,6 +37,7 @@ const TAB_GROUPS = [
       { key: 'relationships', label: 'Relationships' },
       { key: 'pipeline', label: 'Pipeline' },
       { key: 'clients', label: 'Clients' },
+      { key: 'community', label: 'Community' },
     ]
   },
   {
@@ -48,6 +52,8 @@ const TAB_GROUPS = [
     key: 'reference', label: 'Reference', tabs: [
       { key: 'library', label: 'Library' },
       { key: 'reports', label: 'Reports' },
+      { key: 'research', label: 'Research' },
+      { key: 'improvement', label: 'Improvement Log' },
     ]
   },
 ];
@@ -79,6 +85,9 @@ export default function BusinessPage() {
       {tab === 'roadmap' && <RoadmapTab />}
       {tab === 'reports' && <ReportsTab />}
       {tab === 'funnels' && <FunnelsTab />}
+      {tab === 'community' && <CommunityTab />}
+      {tab === 'research' && <ResearchLogTab />}
+      {tab === 'improvement' && <ImprovementLogTab />}
     </div>
   );
 }

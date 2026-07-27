@@ -112,14 +112,6 @@ input, textarea, select {
   padding: 9px 12px; font-size: var(--text-compact); background: var(--white); color: var(--navy);
 }
 
-@media (max-width: 900px) {
-  input, select { min-height: var(--control-height-md); }
-  /* iOS zooms the page on focus if a field's font-size is under 16px —
-     bump it just on mobile rather than resizing text everywhere. */
-  input, textarea, select { font-size: 16px; }
-  .sub-tab { min-height: var(--control-height-md); display: inline-flex; align-items: center; }
-}
-
 .app-loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: var(--ink-soft); }
 
 .reset-field { display: flex; flex-direction: column; gap: 4px; font-size: var(--text-small); }
@@ -145,3 +137,12 @@ input, textarea, select {
   0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
   100% { opacity: 0; transform: translate(var(--drift, 0px), 70px) rotate(200deg); }
 }
+
+/* Elevated capacity mode — per the interview: don't suppress that
+   something completed (the banner text stays, plain), just the
+   celebratory motion around it. Confetti particles are removed from
+   layout entirely rather than just hidden, so they don't still take
+   up space or fire their animation silently. */
+[data-mode="elevated"] .confetti-particle { display: none; }
+[data-mode="elevated"] .completion-celebration { animation: none; }
+

@@ -78,5 +78,13 @@ export async function sendTestPush() {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
     body: JSON.stringify({ title: 'Test notification', body: 'If you can see this, push is working end to end.' }),
   });
-  if (!res.ok) throw new Error((await res.json())?.error || 'Failed to send test push');
+  if (!res.ok) {
+    let detail;
+    try {
+      detail = (await res.json())?.error;
+    } catch {
+      detail = await res.text().catch(() => null);
+    }
+    throw new Error(detail || `Server returned ${res.status} with no error detail.`);
+  }
 }

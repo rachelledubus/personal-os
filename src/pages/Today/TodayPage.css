@@ -61,6 +61,32 @@
   .today-schedule-col, .today-items-col { width: 100%; }
 }
 
+/* ============================================================
+   CAPACITY MODE — the behavior half of what Batch 1's scaffold and
+   the Energy Check-In wiring made possible. Zone 1 (the hero card)
+   is deliberately absent from every rule below — full weight on
+   every mode, always, per the Shell spec's own rule that only one
+   thing ever gets to be Zone 1 and it never shrinks.
+   ============================================================ */
+
+/* Low capacity — Zone 2 (schedule/items columns) and Zone 3
+   (Guardian) visually recede. Nothing here is hidden or removed —
+   same content, same structure, just quieter, per the ADHD
+   object-permanence principle. */
+[data-mode="low"] .today-columns {
+  font-size: var(--text-compact);
+  opacity: 0.82;
+}
+[data-mode="low"] .today-columns .section-label {
+  color: var(--ink-faint);
+}
+[data-mode="low"] .guardian-strip {
+  opacity: 0.55;
+}
+[data-mode="low"] .today-progress-chip {
+  display: none; /* a count of what's undone is exactly the kind of language the spec says to drop on a low day */
+}
+
 .hyperfocus-nudge {
   margin-top: var(--space-3);
   border-left: 3px solid var(--gold);

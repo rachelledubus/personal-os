@@ -27,3 +27,23 @@
   .focus-timer { font-size: 40px; margin: var(--space-5) 0 var(--space-4); }
   .research-notes { min-height: 100px; }
 }
+
+/* Hyperfocus protection nudge — quiet, not an interruption. Sits in
+   the normal flow of the page rather than as an overlay/modal, so it
+   never actually stops what you were doing. */
+.focus-protection-nudge {
+  position: relative;
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-5) var(--space-3) var(--space-3);
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--sage);
+  font-size: var(--text-caption);
+  color: var(--ink-soft);
+  text-align: left;
+}
+.focus-protection-dismiss {
+  position: absolute; top: 8px; right: 8px;
+  background: none; border: none; color: var(--ink-faint); cursor: pointer;
+  font-size: var(--text-body); line-height: 1; padding: 4px;
+}

@@ -15,13 +15,6 @@
 .btn-md { font-size: 12.5px; padding: 11px 20px; }
 .btn-lg { font-size: var(--text-small); padding: 13px 26px; }
 
-@media (max-width: 900px) {
-  /* Desktop-sized buttons read fine with a mouse pointer but are
-     genuinely hard to tap accurately below ~44px. Raise the floor
-     without changing how any of them look on desktop. */
-  .btn-sm, .btn-md, .btn-lg { min-height: var(--control-height-md); }
-}
-
 .btn-primary { background: var(--navy); color: var(--white); }
 .btn-primary:hover:not(:disabled) { box-shadow: var(--shadow-active); }
 

@@ -28,6 +28,16 @@ export async function addFutureIdea(fields) {
   if (error) throw error;
 }
 
+export async function updateFutureIdea(id, fields) {
+  const { error } = await supabase.from('future_roadmap_ideas').update(fields).eq('id', id);
+  if (error) throw error;
+}
+
+export async function deleteFutureIdea(id) {
+  const { error } = await supabase.from('future_roadmap_ideas').delete().eq('id', id);
+  if (error) throw error;
+}
+
 /** Promotes an idea into a real roadmap_item — the moment a quarterly
  *  review decides it's time, per the manual's own promotion rule. */
 export async function promoteToRoadmap(idea, phase = 'Foundation') {

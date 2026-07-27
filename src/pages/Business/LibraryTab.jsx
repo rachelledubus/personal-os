@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button.jsx';
 import SubTabNav from '../../components/nav/SubTabNav.jsx';
 import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt, syncLibraryGaps } from '../../services/library.js';
 import { FLOWS } from '../../services/flows.js';
+import { CITY_PROFILES, BUYER_INTELLIGENCE_TOPICS, LOCAL_EXPERTISE_CATEGORIES, DECISION_FRAMEWORK } from '../../services/localKnowledge.js';
 
 // ============================================================
 // LIBRARY — CTAs, Scripts, Prompts, and Playbooks (Flows) in one
@@ -37,7 +38,7 @@ function LibraryTab() {
       <div className="row-between" style={{ marginBottom: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
         <div style={{ minWidth: 260 }}>
           <SubTabNav
-            tabs={['ctas', 'scripts', 'prompts', 'playbooks'].map(t => ({ key: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
+            tabs={['ctas', 'scripts', 'prompts', 'playbooks', 'knowledge'].map(t => ({ key: t, label: t === 'knowledge' ? 'Local Knowledge' : t.charAt(0).toUpperCase() + t.slice(1) }))}
             active={subTab}
             onChange={setSubTab}
           />
@@ -51,6 +52,7 @@ function LibraryTab() {
       {subTab === 'scripts' && <ScriptLibrary key={syncVersion} />}
       {subTab === 'prompts' && <PromptLibrary key={syncVersion} />}
       {subTab === 'playbooks' && <FlowsTab />}
+      {subTab === 'knowledge' && <LocalKnowledgeView />}
     </div>
   );
 }
@@ -162,6 +164,67 @@ function FlowsTab() {
           </div>
         </Card>
       ))}
+    </div>
+  );
+}
+
+// ============================================================
+// LOCAL KNOWLEDGE — System 02. Reference content, same treatment as
+// the Comfort Ladder/Relationship Energy Scale — fixed manual
+// content this powers consultations and content creation with, not
+// something edited in-app.
+// ============================================================
+function LocalKnowledgeView() {
+  const [expandedCity, setExpandedCity] = useState(null);
+
+  return (
+    <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <Card>
+        <div className="section-label">Decision framework</div>
+        <p style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>{DECISION_FRAMEWORK}</p>
+      </Card>
+
+      {CITY_PROFILES.map(c => (
+        <Card key={c.city}>
+          <div className="row-between" onClick={() => setExpandedCity(expandedCity === c.city ? null : c.city)} style={{ cursor: 'pointer' }}>
+            <div>
+              <div style={{ fontWeight: 700 }}>{c.city}</div>
+              <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.mainStrength} · trade-off: {c.tradeOff}</div>
+            </div>
+          </div>
+          {expandedCity === c.city && (
+            <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 6 }}>
+              <div style={{ fontSize: 'var(--text-small)' }}><strong>Identity:</strong> {c.identity}</div>
+              <div style={{ fontSize: 'var(--text-small)' }}><strong>Best fit:</strong> {c.bestFit}</div>
+              <div style={{ fontSize: 'var(--text-small)' }}><strong>Housing:</strong> {c.housing}</div>
+              <div style={{ fontSize: 'var(--text-small)' }}><strong>Buyer considerations:</strong> {c.buyerConsiderations}</div>
+              <div style={{ fontSize: 'var(--text-small)', fontStyle: 'italic', color: 'var(--sage)' }}>"{c.honestLine}"</div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, textTransform: 'uppercase' }}>Priority neighborhoods</div>
+              <div className="stack" style={{ gap: 2 }}>
+                {c.neighborhoods.map((n, i) => <div key={i} style={{ fontSize: 'var(--text-caption)' }}>• {n}</div>)}
+              </div>
+            </div>
+          )}
+        </Card>
+      ))}
+
+      <Card>
+        <div className="section-label">Buyer intelligence topics</div>
+        <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 6 }}>
+          {BUYER_INTELLIGENCE_TOPICS.map(t => (
+            <div key={t.topic} style={{ fontSize: 'var(--text-small)' }}><strong>{t.topic}:</strong> <span className="muted">{t.cover}</span></div>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <div className="section-label">Local expertise categories</div>
+        <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 6 }}>
+          {LOCAL_EXPERTISE_CATEGORIES.map(cat => (
+            <div key={cat.code} style={{ fontSize: 'var(--text-small)' }}><strong>{cat.code} — {cat.name}:</strong> <span className="muted">{cat.understanding}</span></div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }

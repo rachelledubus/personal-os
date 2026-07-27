@@ -10,6 +10,7 @@ import {
   syncRoadmapStatuses, listRoadmapItems, syncRoadmapItemFromSubtasks, setRoadmapItemInProgress,
   setRoadmapItemStatus, resetRoadmapItemToAutomatic,
 } from '../../services/timeline.js';
+import { listFutureIdeas, addFutureIdea, updateFutureIdea, deleteFutureIdea, promoteToRoadmap } from '../../services/futureRoadmap.js';
 
 // ============================================================
 // ROADMAP — unchanged from the last pass (links + sub-tasks already built).
@@ -28,17 +29,88 @@ function RoadmapTab() {
   const [items, setItems] = useState([]);
   const [expanded, setExpanded] = useState(null);
   const [phases, setPhases] = useState(['Foundation', 'Growth', 'Expansion']);
+  const [ideas, setIdeas] = useState([]);
+  const [addingIdea, setAddingIdea] = useState(false);
+  const [ideaForm, setIdeaForm] = useState({ idea: '', why_deferred: '', effort: '', value: '' });
+
   useEffect(() => {
     syncRoadmapStatuses().then(load);
     getCategoryList('roadmap_phases').then(setPhases);
+    listFutureIdeas().then(setIdeas);
   }, []);
 
   async function load() {
     setItems(await listRoadmapItems());
   }
 
+  async function refreshIdeas() { setIdeas(await listFutureIdeas()); }
+
+  async function handleAddIdea() {
+    if (!ideaForm.idea.trim()) return;
+    await addFutureIdea(ideaForm);
+    setIdeaForm({ idea: '', why_deferred: '', effort: '', value: '' });
+    setAddingIdea(false);
+    refreshIdeas();
+  }
+
+  async function handlePromote(idea) {
+    await promoteToRoadmap(idea, phases[0] || 'Foundation');
+    refreshIdeas();
+    load();
+  }
+
   return (
     <div className="stack">
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Opportunity Inbox</div>
+          <Button size="sm" variant="ghost" onClick={() => setAddingIdea(!addingIdea)}>{addingIdea ? 'Cancel' : '+ Capture an idea'}</Button>
+        </div>
+        <p className="muted" style={{ fontSize: 'var(--text-caption)' }}>
+          Not everything belongs on the roadmap right now. Capture it here instead of losing it — promote to the roadmap when it's actually time.
+        </p>
+        {addingIdea && (
+          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+            <textarea placeholder="The idea" value={ideaForm.idea} onChange={e => setIdeaForm({ ...ideaForm, idea: e.target.value })} style={{ minHeight: 44 }} />
+            <input placeholder="Why deferred / not now (optional)" value={ideaForm.why_deferred} onChange={e => setIdeaForm({ ...ideaForm, why_deferred: e.target.value })} />
+            <div className="row">
+              <select value={ideaForm.effort} onChange={e => setIdeaForm({ ...ideaForm, effort: e.target.value })}>
+                <option value="">Effort...</option>
+                <option value="Low">Low effort</option>
+                <option value="Medium">Medium effort</option>
+                <option value="High">High effort</option>
+              </select>
+              <select value={ideaForm.value} onChange={e => setIdeaForm({ ...ideaForm, value: e.target.value })}>
+                <option value="">Value...</option>
+                <option value="Low">Low value</option>
+                <option value="Medium">Medium value</option>
+                <option value="High">High value</option>
+              </select>
+            </div>
+            <div><Button size="sm" onClick={handleAddIdea}>Save</Button></div>
+          </div>
+        )}
+        {ideas.length > 0 && (
+          <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
+            {ideas.map(idea => (
+              <div key={idea.id} className="row-between" style={{ padding: '8px 0', borderBottom: '1px solid var(--sand)' }}>
+                <div>
+                  <div style={{ fontSize: 'var(--text-small)' }}>{idea.idea}</div>
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>
+                    {idea.effort && `${idea.effort} effort`}{idea.effort && idea.value && ' · '}{idea.value && `${idea.value} value`}
+                    {idea.why_deferred && ` · ${idea.why_deferred}`}
+                  </div>
+                </div>
+                <div className="row" style={{ gap: 4 }}>
+                  <Button size="sm" variant="text" onClick={() => handlePromote(idea)}>Promote to roadmap</Button>
+                  <button className="row-remove-btn" aria-label="Remove" onClick={() => deleteFutureIdea(idea.id).then(refreshIdeas)}>×</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
       {phases.map(phase => (
         <Card key={phase}>
           <div className="section-label">{phase}</div>
