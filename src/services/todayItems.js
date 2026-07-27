@@ -43,6 +43,30 @@ async function getUserId() {
 
 // ---------- Individual source fetchers ----------
 
+/** The real fix for "tasks don't land anywhere": assignTasksToBlocks
+ *  (dailyExecution.js) explicitly skips any task that doesn't fit
+ *  today's available work-block capacity — by design, so a task
+ *  never gets force-crammed somewhere it doesn't belong. But nothing
+ *  ever surfaced those skipped tasks anywhere else, since this file
+ *  never queried the `tasks` table at all. This does. */
+async function fetchUnscheduledTaskItems(userId) {
+  const { data } = await supabase
+    .from('tasks').select('id, title, priority, due_date, energy_type')
+    .eq('user_id', userId).eq('completed', false).is('time_block_id', null)
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .limit(10);
+  return (data || []).map(t => ({
+    id: `task-${t.id}`,
+    sourceTable: 'tasks',
+    sourceId: t.id,
+    track: 'personal',
+    icon: 'circle',
+    title: t.title,
+    context: t.due_date ? `Due ${t.due_date} \u2014 didn't fit today's schedule` : "Didn't fit today's schedule",
+    done: false,
+  }));
+}
+
 async function fetchWorkoutItem(userId) {
   const wk = WEEKDAY_WORKOUT[new Date().getDay()];
   if (!wk.context) return null; // rest day — no item
@@ -63,6 +87,7 @@ async function fetchWorkoutItem(userId) {
     context: wk.context,
     done: false,
     linkTo: '/grow/workouts',
+    informational: true,
   };
 }
 
@@ -247,6 +272,7 @@ async function fetchNudgeItems(userId) {
     context: 'Consider a sphere or partner touch today',
     done: false,
     linkTo: '/business/flows/phone_boundaries',
+    informational: true,
   }];
 }
 
@@ -298,7 +324,7 @@ export async function getTodayItems() {
 
   const [
     workout, habits, priorities, appts, content, meals,
-    followUps, roadmap, nudges, maintenance, custom, dismissed,
+    followUps, roadmap, nudges, maintenance, custom, dismissed, unscheduledTasks,
   ] = await Promise.all([
     fetchWorkoutItem(userId),
     fetchHabitItems(userId),
@@ -312,6 +338,7 @@ export async function getTodayItems() {
     fetchMaintenanceItems(userId),
     fetchCustomItems(userId),
     fetchDismissedIds(userId),
+    fetchUnscheduledTaskItems(userId),
   ]);
 
   const all = [
@@ -326,6 +353,7 @@ export async function getTodayItems() {
     ...habits,
     ...nudges,
     ...custom,
+    ...unscheduledTasks,
   ];
 
   return all.filter(m => !dismissed.has(`${m.sourceTable}-${m.sourceId}`));
@@ -333,6 +361,9 @@ export async function getTodayItems() {
 
 export async function toggleTodayItem(item, done) {
   switch (item.sourceTable) {
+    case 'tasks':
+      await supabase.from('tasks').update({ completed: done }).eq('id', item.sourceId);
+      return;
     case 'habits': {
       const userId = await getUserId();
       if (done) {

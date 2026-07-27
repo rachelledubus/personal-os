@@ -186,9 +186,15 @@ export default function TodayPage() {
   const allScheduledTasks = schedule ? schedule.flatMap(b => b.tasks || []) : [];
   const visibleBlocks = schedule ? schedule.filter(b => !b.completed || justCompletedIds.has(b.id)) : schedule;
   const completedBlocks = schedule ? schedule.filter(b => b.completed && !justCompletedIds.has(b.id)) : [];
-  const doneCount = allScheduledTasks.filter(t => t.completed).length;
-  const total = allScheduledTasks.length;
-  const nextUp = allScheduledTasks.find(t => !t.completed);
+  // Was scheduled-tasks-only, which is why this permanently read "Nothing
+  // assigned yet" for anyone whose day isn't built entirely out of
+  // time-blocked tasks — the far more common case. Now reflects
+  // everything actually actionable today, matching what "Other Things
+  // Today" already shows below it.
+  const actionableTodayItems = (todayItems || []).filter(i => !i.informational);
+  const doneCount = allScheduledTasks.filter(t => t.completed).length + actionableTodayItems.filter(i => i.done).length;
+  const total = allScheduledTasks.length + actionableTodayItems.length;
+  const nextUp = allScheduledTasks.find(t => !t.completed) || actionableTodayItems.find(i => !i.done);
   const overrunningBlock = !hyperfocusDismissed ? getOverrunningBlock(schedule, focusSessions) : null;
 
   // Zone 2 has something to show above the schedule/items columns only

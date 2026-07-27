@@ -30,7 +30,7 @@ export async function getNeglectedPriorities() {
   // "neglected" was worse than one correct one.
   const [{ data: goals }, { data: habits }, { data: habitLogs }, { data: maintenance }] = await Promise.all([
     supabase.from('goals').select('id, title, updated_at, status').eq('user_id', userId).eq('status', 'In Progress'),
-    supabase.from('habits').select('id, name').eq('user_id', userId),
+    supabase.from('habits').select('id, name').eq('user_id', userId).eq('archived', false),
     supabase.from('habit_logs').select('habit_id, log_date').eq('user_id', userId).gte('log_date', new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)),
     supabase.from('maintenance_items').select('id, title, next_due_date').eq('user_id', userId),
   ]);

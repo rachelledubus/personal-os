@@ -7,6 +7,7 @@ import Skeleton from '../../components/ui/Skeleton.jsx';
 import {
   addEntry, deleteEntry, listThisMonthEntries, listLegacyBills, getMonthSummary,
   listBudgets, listSavingsGoals, addToSavingsGoal, addSavingsGoal,
+  listDebts, addDebt, updateDebt, deleteDebt, logDebtPayment, getTotalDebt,
 } from '../../services/finance.js';
 import { getCategoryList } from '../../services/settings.js';
 import {
@@ -33,6 +34,11 @@ export default function FinanceTab() {
   const [editingEnvelopeId, setEditingEnvelopeId] = useState(null);
   const [editEnvelope, setEditEnvelope] = useState({ name: '', assigned_amount: '' });
 
+  const [debts, setDebts] = useState([]);
+  const [addingDebt, setAddingDebt] = useState(false);
+  const [newDebt, setNewDebt] = useState({ name: '', debt_type: 'Credit Card', original_balance: '', interest_rate: '', minimum_payment: '' });
+  const [paymentAmounts, setPaymentAmounts] = useState({});
+
   async function refresh() {
     setSummary(await getMonthSummary());
     setEntries(await listThisMonthEntries());
@@ -42,8 +48,25 @@ export default function FinanceTab() {
     setExpenseCategories(await getCategoryList('finance_expense_categories'));
     setIncomeCategories(await getCategoryList('finance_income_categories'));
     setEnvelopeSummary(await getEnvelopeSummary());
+    setDebts(await listDebts());
   }
   useEffect(() => { refresh(); }, []);
+
+  async function handleAddDebt() {
+    if (!newDebt.name.trim()) return;
+    await addDebt(newDebt);
+    setNewDebt({ name: '', debt_type: 'Credit Card', original_balance: '', interest_rate: '', minimum_payment: '' });
+    setAddingDebt(false);
+    refresh();
+  }
+
+  async function handleLogPayment(debt) {
+    const amount = Number(paymentAmounts[debt.id]);
+    if (!amount) return;
+    await logDebtPayment(debt, amount);
+    setPaymentAmounts({ ...paymentAmounts, [debt.id]: '' });
+    refresh();
+  }
 
   async function handleSaveStarting() {
     if (startingInput === '') return;
@@ -271,6 +294,72 @@ export default function FinanceTab() {
             </div>
           ) : (
             <Button size="sm" variant="ghost" onClick={() => setAddingGoal(true)}>+ Add savings goal</Button>
+          )}
+        </div>
+      </Card>
+
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Debts</div>
+          {debts.length > 0 && (
+            <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>${getTotalDebt(debts).toFixed(0)} total</span>
+          )}
+        </div>
+        {debts.length === 0 ? <EmptyState icon="leaf" title="No debts tracked" /> : (
+          <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
+            {debts.map(d => (
+              <div key={d.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--sand)' }}>
+                <div className="row-between">
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{d.name}</div>
+                    <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>
+                      {d.debt_type}{d.interest_rate ? ` \u00b7 ${d.interest_rate}% APR` : ''}{d.minimum_payment ? ` \u00b7 $${d.minimum_payment} min` : ''}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 700 }}>${Number(d.current_balance).toFixed(0)}</div>
+                    <button className="row-remove-btn" aria-label="Remove" onClick={() => deleteDebt(d.id).then(refresh)}>×</button>
+                  </div>
+                </div>
+                {d.original_balance > 0 && <ProgressBar value={d.original_balance - d.current_balance} max={d.original_balance} tone="sage" />}
+                <div className="row" style={{ marginTop: 'var(--space-2)' }}>
+                  <input type="number" placeholder="Log a payment" value={paymentAmounts[d.id] || ''}
+                    onChange={e => setPaymentAmounts({ ...paymentAmounts, [d.id]: e.target.value })} style={{ width: 120 }} />
+                  <Button size="sm" variant="ghost" onClick={() => handleLogPayment(d)}>Log payment</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ marginTop: 'var(--space-3)' }}>
+          {addingDebt ? (
+            <div className="stack">
+              <input placeholder="Debt name (e.g. Visa card)" value={newDebt.name} onChange={e => setNewDebt({ ...newDebt, name: e.target.value })} />
+              <select value={newDebt.debt_type} onChange={e => setNewDebt({ ...newDebt, debt_type: e.target.value })}>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Student Loan">Student Loan</option>
+                <option value="Auto Loan">Auto Loan</option>
+                <option value="Mortgage">Mortgage</option>
+                <option value="Personal Loan">Personal Loan</option>
+                <option value="Medical">Medical</option>
+                <option value="Other">Other</option>
+              </select>
+              <div className="row">
+                <input type="number" placeholder="Current balance" value={newDebt.original_balance}
+                  onChange={e => setNewDebt({ ...newDebt, original_balance: e.target.value })} style={{ width: 130 }} />
+                <input type="number" placeholder="Interest rate %" value={newDebt.interest_rate}
+                  onChange={e => setNewDebt({ ...newDebt, interest_rate: e.target.value })} style={{ width: 130 }} />
+                <input type="number" placeholder="Min payment" value={newDebt.minimum_payment}
+                  onChange={e => setNewDebt({ ...newDebt, minimum_payment: e.target.value })} style={{ width: 130 }} />
+              </div>
+              <div className="row">
+                <Button size="sm" onClick={handleAddDebt}>Add debt</Button>
+                <Button size="sm" variant="text" onClick={() => setAddingDebt(false)}>Cancel</Button>
+              </div>
+            </div>
+          ) : (
+            <Button size="sm" variant="ghost" onClick={() => setAddingDebt(true)}>+ Add debt</Button>
           )}
         </div>
       </Card>

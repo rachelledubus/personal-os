@@ -89,10 +89,23 @@ function CtaLibrary() {
   );
 }
 
+// Classifies each script's `section` into one of 4 top-level
+// categories for filtering — was a single flat list of 25 sections,
+// which is exactly why Troubleshooting/Triggers were easy to forget
+// about entirely.
+function categoryFor(section) {
+  if (section.startsWith('Troubleshooting')) return 'Troubleshooting';
+  if (section.startsWith('Trigger')) return 'Triggers';
+  if (section === 'Decision Rules') return 'Decision Rules';
+  return 'Conversation Scripts';
+}
+const SCRIPT_CATEGORIES = ['Conversation Scripts', 'Decision Rules', 'Troubleshooting', 'Triggers'];
+
 function ScriptLibrary() {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState(null);
+  const [category, setCategory] = useState('Conversation Scripts');
 
   async function refresh() { setItems(await listScripts(search)); }
   useEffect(() => { refresh(); }, [search]);
@@ -103,11 +116,21 @@ function ScriptLibrary() {
     setTimeout(() => setCopiedId(null), 1200);
   }
 
+  const filtered = items.filter(s => search || categoryFor(s.section) === category);
+
   return (
     <Card>
       <input placeholder="Search scripts..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: '100%', marginBottom: 12 }} />
+      {!search && (
+        <div className="row" style={{ gap: 4, marginBottom: 'var(--space-3)', flexWrap: 'wrap' }}>
+          {SCRIPT_CATEGORIES.map(c => (
+            <button key={c} className={`sub-tab ${category === c ? 'active' : ''}`} onClick={() => setCategory(c)}>{c}</button>
+          ))}
+        </div>
+      )}
       <div className="stack">
-        {items.map(s => (
+        {filtered.length === 0 && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>Nothing in this category yet.</div>}
+        {filtered.map(s => (
           <details key={s.id} open={!!search} style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)' }}>
             <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-small)' }}>{s.section} — {s.situation}</summary>
             <p className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>{s.script_text}</p>

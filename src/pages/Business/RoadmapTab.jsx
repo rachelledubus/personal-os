@@ -10,7 +10,7 @@ import {
   syncRoadmapStatuses, listRoadmapItems, syncRoadmapItemFromSubtasks, setRoadmapItemInProgress,
   setRoadmapItemStatus, resetRoadmapItemToAutomatic,
 } from '../../services/timeline.js';
-import { listFutureIdeas, addFutureIdea, updateFutureIdea, deleteFutureIdea, promoteToRoadmap } from '../../services/futureRoadmap.js';
+import { listFutureIdeas, addFutureIdea, updateFutureIdea, deleteFutureIdea, promoteToRoadmap, scoreOpportunityIdea } from '../../services/futureRoadmap.js';
 
 // ============================================================
 // ROADMAP — unchanged from the last pass (links + sub-tasks already built).
@@ -59,8 +59,33 @@ function RoadmapTab() {
     load();
   }
 
+  const nextRoadmapItem = items
+    .filter(i => i.status === 'Not Started')
+    .sort((a, b) => (phases.indexOf(a.phase) - phases.indexOf(b.phase)) || ((a.sort_order || 0) - (b.sort_order || 0)))[0];
+  const topOpportunity = [...ideas].sort((a, b) => scoreOpportunityIdea(b) - scoreOpportunityIdea(a))[0];
+
   return (
     <div className="stack">
+      {(nextRoadmapItem || topOpportunity) && (
+        <Card style={{ border: '1px solid var(--gold)' }}>
+          <div className="section-label">Build this next</div>
+          {nextRoadmapItem && (
+            <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-small)' }}>
+              <strong>On the roadmap:</strong> {nextRoadmapItem.title}
+              <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Next in line — {nextRoadmapItem.phase}, earliest unstarted item</div>
+            </div>
+          )}
+          {topOpportunity && (
+            <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-small)' }}>
+              <strong>Best opportunity, if you want to deviate:</strong> {topOpportunity.idea}
+              <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>
+                {topOpportunity.value || 'Unrated'} value, {topOpportunity.effort || 'unrated'} effort — the highest-value, lowest-effort idea waiting in the inbox
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
       <Card>
         <div className="row-between">
           <div className="section-label">Opportunity Inbox</div>

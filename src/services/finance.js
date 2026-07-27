@@ -106,3 +106,56 @@ export async function addSavingsGoal(fields) {
   });
   if (error) throw error;
 }
+
+// ============================================================
+// DEBT TRACKER
+// Balance lives on the debt row itself. Logging a payment both
+// reduces that balance AND inserts a real finance_entries expense row
+// (category "Debt Payment"), so a debt payment shows up in the
+// existing monthly summary too — not a second, disconnected place to
+// look for where money went.
+// ============================================================
+
+export async function listDebts() {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('debts').select('*').eq('user_id', userId).order('current_balance', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addDebt(fields) {
+  const userId = await getUserId();
+  const { error } = await supabase.from('debts').insert({
+    ...fields, user_id: userId, current_balance: fields.current_balance ?? fields.original_balance ?? 0,
+  });
+  if (error) throw error;
+}
+
+export async function updateDebt(id, fields) {
+  const { error } = await supabase.from('debts').update(fields).eq('id', id);
+  if (error) throw error;
+}
+
+export async function deleteDebt(id) {
+  const { error } = await supabase.from('debts').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/** Reduces the balance and logs a real expense entry in the same
+ *  action — the two things a debt payment actually is, done together
+ *  instead of two separate steps you could forget to do both of. */
+export async function logDebtPayment(debt, amount) {
+  const userId = await getUserId();
+  const newBalance = Math.max(0, Number(debt.current_balance) - Number(amount));
+  const { error: updateErr } = await supabase.from('debts').update({ current_balance: newBalance }).eq('id', debt.id);
+  if (updateErr) throw updateErr;
+  const { error: entryErr } = await supabase.from('finance_entries').insert({
+    user_id: userId, entry_type: 'expense', category: 'Debt Payment', amount, notes: debt.name,
+  });
+  if (entryErr) throw entryErr;
+  return newBalance;
+}
+
+export function getTotalDebt(debts) {
+  return debts.reduce((sum, d) => sum + Number(d.current_balance || 0), 0);
+}

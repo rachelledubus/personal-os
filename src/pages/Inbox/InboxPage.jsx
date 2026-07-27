@@ -29,6 +29,7 @@ export default function InboxPage() {
   const [items, setItems] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
   const [lastResolved, setLastResolved] = useState(null);
+  const [resolveError, setResolveError] = useState(null);
   const [contactPickerFor, setContactPickerFor] = useState(null);
   const [contactSearch, setContactSearch] = useState('');
   const [contactResults, setContactResults] = useState([]);
@@ -65,7 +66,14 @@ export default function InboxPage() {
   }
 
   async function handleResolve(item, action) {
-    const record = await action.fn(item);
+    setResolveError(null);
+    let record;
+    try {
+      record = await action.fn(item);
+    } catch (err) {
+      setResolveError(`Couldn't resolve to ${action.label}: ${err.message || err}`);
+      return;
+    }
     const destLink = typeof action.destLink === 'function' ? action.destLink(record) : action.destLink;
     setLastResolved({ text: item.raw_text, destLabel: action.destLabel, destLink, destNote: action.destNote });
     refresh();
@@ -98,6 +106,15 @@ export default function InboxPage() {
       <p className="muted" style={{ marginBottom: 'var(--space-4)' }}>
         Everything you've captured, unsorted. Organize each into its real home — or archive it.
       </p>
+
+      {resolveError && (
+        <Card style={{ border: '1px solid var(--danger)' }}>
+          <div className="row-between">
+            <div style={{ fontSize: 'var(--text-small)', color: 'var(--danger)' }}>{resolveError}</div>
+            <Button size="sm" variant="text" onClick={() => setResolveError(null)}>Dismiss</Button>
+          </div>
+        </Card>
+      )}
 
       {lastResolved && (
         <Card className="inbox-resolved-banner">

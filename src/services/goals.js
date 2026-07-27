@@ -64,6 +64,11 @@ export async function updateProject(id, fields) {
   if (error) throw error;
 }
 
+export async function deleteProject(id) {
+  const { error } = await supabase.from('projects').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // Tasks that belong to a project — reuses the EXISTING tasks table,
 // just filtered by the new nullable project_id column.
 export async function listProjectTasks(projectId) {

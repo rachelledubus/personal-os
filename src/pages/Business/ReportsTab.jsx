@@ -6,6 +6,8 @@ import {
   STATUS_LEGEND, getSystemStatusFolders, setSystemStatusFolders, DO_NOT_BUILD_LIST,
 } from '../../services/businessReports.js';
 import { currentMonthStr } from '../../utils/date.js';
+import { getWeeklyPersonalEconomy } from '../../services/personalEconomy.js';
+import Skeleton from '../../components/ui/Skeleton.jsx';
 
 // ============================================================
 // REPORTS — Bundle 3. Three "zoom out" views: CEO Dashboard (monthly
@@ -18,13 +20,14 @@ function ReportsTab() {
   return (
     <div>
       <div className="row" style={{ marginBottom: 'var(--space-4)', gap: 4 }}>
-        {[['ceo', 'CEO Dashboard'], ['calendar', 'Campaign Calendar'], ['status', 'System Status']].map(([key, label]) => (
+        {[['ceo', 'CEO Dashboard'], ['calendar', 'Campaign Calendar'], ['status', 'System Status'], ['economy', 'Personal Economy']].map(([key, label]) => (
           <button key={key} className={`sub-tab ${subTab === key ? 'active' : ''}`} onClick={() => setSubTab(key)}>{label}</button>
         ))}
       </div>
       {subTab === 'ceo' && <CeoDashboardView />}
       {subTab === 'calendar' && <CampaignCalendarView />}
       {subTab === 'status' && <SystemStatusView />}
+      {subTab === 'economy' && <PersonalEconomyView />}
     </div>
   );
 }
@@ -194,6 +197,69 @@ function SystemStatusView() {
         <div className="section-label">Not now — do-not-build list</div>
         <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
           {DO_NOT_BUILD_LIST.map((item, i) => <div key={i} style={{ fontSize: 'var(--text-small)' }}>• {item}</div>)}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// PERSONAL ECONOMY — Phase 4 backlog item, built from a one-line
+// description. Time, energy, and money as one combined weekly
+// picture, built entirely from data that already exists elsewhere in
+// the app (time_blocks, energy_logs, finance_entries) rather than a
+// fourth kind of daily input.
+// ============================================================
+function PersonalEconomyView() {
+  const [economy, setEconomy] = useState(null);
+
+  useEffect(() => { getWeeklyPersonalEconomy().then(setEconomy); }, []);
+
+  if (!economy) {
+    return (
+      <div className="stack" style={{ gap: 'var(--space-3)' }}>
+        <Skeleton variant="card" />
+      </div>
+    );
+  }
+
+  const totalMinutes = economy.timeByTrack.personal + economy.timeByTrack.business;
+  const businessPct = totalMinutes ? Math.round((economy.timeByTrack.business / totalMinutes) * 100) : 0;
+
+  return (
+    <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <Card>
+        <div className="section-label">Week of {economy.weekOf}</div>
+        <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
+          Time, energy, and money for the same week — pulled from what's already tracked elsewhere, not a new log.
+        </p>
+
+        <div className="macro-grid" style={{ marginTop: 'var(--space-4)' }}>
+          <div className="macro-cell">
+            <span className="muted">Time — scheduled hours</span>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>
+              {Math.round(totalMinutes / 60)}h total
+            </div>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>
+              {Math.round(economy.timeByTrack.personal / 60)}h personal · {Math.round(economy.timeByTrack.business / 60)}h business ({businessPct}%)
+            </div>
+          </div>
+
+          <div className="macro-cell">
+            <span className="muted">Energy — average check-in</span>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>
+              {economy.avgEnergy ? economy.avgEnergy.toFixed(1) + ' / 3' : 'No check-ins yet'}
+            </div>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>{economy.energyCheckins} check-in{economy.energyCheckins === 1 ? '' : 's'} this week</div>
+          </div>
+
+          <div className="macro-cell">
+            <span className="muted">Money — this week</span>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: economy.money.net >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+              ${economy.money.net.toFixed(0)} net
+            </div>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>${economy.money.income.toFixed(0)} in · ${economy.money.spend.toFixed(0)} out</div>
+          </div>
         </div>
       </Card>
     </div>

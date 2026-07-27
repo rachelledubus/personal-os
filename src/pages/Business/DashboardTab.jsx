@@ -10,10 +10,15 @@ import { FOLLOWUP_STANDARD_TYPES, getCadenceStandards, setCadenceStandards } fro
 import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, setWeeklyTargets, getWeeklyRunningTotals, getWeeklyReview, setWeeklyReview } from '../../services/dailyCheckin.js';
 import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses } from '../../services/timeline.js';
 import { getAutonomyLevel } from '../../services/aiOperator.js';
+import { getDailyBriefing } from '../../services/dailyBriefing.js';
+import Skeleton from '../../components/ui/Skeleton.jsx';
 
 // ============================================================
 // DASHBOARD — a control panel, not the product. Today's four boxes
-// and this week's build task, nothing more added here on purpose.
+// and this week's build task were the original scope, deliberately
+// kept minimal. One addition since: a daily briefing (the "Executive
+// Assistant" item), because it's not another number to restate —
+// it's the one thing on this page that synthesizes rather than lists.
 // ============================================================
 export default
 function DashboardTab() {
@@ -23,6 +28,8 @@ function DashboardTab() {
   const [running, setRunning] = useState({ conversations: 0, consultations: 0 });
   const [thisWeekBuild, setThisWeekBuild] = useState(null);
   const [overdue, setOverdue] = useState([]);
+  const [briefing, setBriefing] = useState(null);
+  const [briefingLoading, setBriefingLoading] = useState(true);
   const [health, setHealth] = useState(null);
   const [editingTargets, setEditingTargets] = useState(false);
   const [targetForm, setTargetForm] = useState({ conversations_target: 10, knowledge_items_target: 10, consultations_target: 0, pipeline_moves_target: 0 });
@@ -37,7 +44,18 @@ function DashboardTab() {
   const [cadenceStandards, setCadenceStandardsState] = useState({});
   const [editingStandards, setEditingStandards] = useState(false);
 
-  useEffect(() => { seedMasterTimelineIfEmpty().then(syncRoadmapStatuses).then(refresh); getAutonomyLevel().then(setAutonomy); }, []);
+  useEffect(() => {
+    seedMasterTimelineIfEmpty().then(syncRoadmapStatuses).then(refresh);
+    getAutonomyLevel().then(setAutonomy);
+    getDailyBriefing().then(b => { setBriefing(b); setBriefingLoading(false); });
+  }, []);
+
+  async function handleRefreshBriefing() {
+    setBriefingLoading(true);
+    const b = await getDailyBriefing(true);
+    setBriefing(b);
+    setBriefingLoading(false);
+  }
 
   async function refresh() {
     const [c, wc, t, r, w, ov, h, rv, ph, rh, cs] = await Promise.all([
@@ -105,6 +123,25 @@ function DashboardTab() {
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Today's briefing</div>
+          <Button size="sm" variant="text" onClick={handleRefreshBriefing} disabled={briefingLoading}>{briefingLoading ? '…' : 'Regenerate'}</Button>
+        </div>
+        {briefingLoading ? (
+          <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
+            <Skeleton width="90%" />
+            <Skeleton width="70%" />
+          </div>
+        ) : briefing ? (
+          <p style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>{briefing}</p>
+        ) : (
+          <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
+            No briefing available right now — this needs the AI service configured (GOOGLE_AI_API_KEY).
+          </p>
+        )}
+      </Card>
+
       <Card className="today-summary-card">
         <div className="section-label">Today's four boxes</div>
         <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-4)', marginTop: 'var(--space-3)' }}>

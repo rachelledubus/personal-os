@@ -38,6 +38,22 @@ export async function deleteFutureIdea(id) {
   if (error) throw error;
 }
 
+/** "Build This Next" — scores using the Business Decision Framework's
+ *  own stated priority order (System 09): revenue impact first,
+ *  system impact next, long-term asset value last. Roadmap items and
+ *  opportunity ideas are fundamentally different shapes (a scheduled
+ *  phase item vs. a value/effort-tagged idea) — rather than force
+ *  them onto one false combined ranking, this picks the top of each
+ *  pool separately and lets the two options speak for themselves. */
+const EFFORT_SCORE = { Low: 3, Medium: 2, High: 1 };
+const VALUE_SCORE = { Low: 1, Medium: 2, High: 3 };
+
+export function scoreOpportunityIdea(idea) {
+  const effort = EFFORT_SCORE[idea.effort] || 2;
+  const value = VALUE_SCORE[idea.value] || 2;
+  return value * 2 - (3 - effort); // high value dominates; low effort is the tiebreaker
+}
+
 /** Promotes an idea into a real roadmap_item — the moment a quarterly
  *  review decides it's time, per the manual's own promotion rule. */
 export async function promoteToRoadmap(idea, phase = 'Foundation') {

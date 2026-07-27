@@ -7,7 +7,7 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import {
-  listGoals, addGoal, deleteGoal, listProjects, addProject,
+  listGoals, addGoal, deleteGoal, listProjects, addProject, updateProject, deleteProject,
   listProjectTasks, listMilestones, addMilestone, toggleMilestone, markGoalAchieved,
 } from '../../services/goals.js';
 import {
@@ -191,6 +191,7 @@ export default function ProjectsTab() {
                 project={p}
                 expanded={expandedProject === p.id}
                 onToggleExpand={() => setExpandedProject(expandedProject === p.id ? null : p.id)}
+                onChanged={refresh}
               />
             ))}
           </div>
@@ -322,6 +323,7 @@ function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved, onDelete }) {
 function MissionRow({ mission, expanded, onToggleExpand, onComplete, onDelete }) {
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [addTaskError, setAddTaskError] = useState(null);
 
   useEffect(() => {
     if (!expanded) return;
@@ -334,7 +336,13 @@ function MissionRow({ mission, expanded, onToggleExpand, onComplete, onDelete })
 
   async function handleAddTask() {
     if (!newTaskTitle.trim()) return;
-    await addTaskToMission(mission.id, newTaskTitle.trim());
+    setAddTaskError(null);
+    try {
+      await addTaskToMission(mission.id, newTaskTitle.trim());
+    } catch (err) {
+      setAddTaskError(err.message || String(err));
+      return;
+    }
     setNewTaskTitle('');
     refreshTasks();
   }
@@ -373,19 +381,22 @@ function MissionRow({ mission, expanded, onToggleExpand, onComplete, onDelete })
             <input placeholder="New task..." value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} />
             <Button size="sm" variant="ghost" onClick={handleAddTask}>+ Add</Button>
           </div>
+          {addTaskError && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, color: 'var(--danger)' }}>Couldn't add: {addTaskError}</div>}
         </div>
       )}
     </div>
   );
 }
 
-function ProjectRow({ project, expanded, onToggleExpand }) {
+function ProjectRow({ project, expanded, onToggleExpand, onChanged }) {
   const [tasks, setTasks] = useState([]);
   const [milestones, setMilestones] = useState([]);
   const [resources, setResources] = useState([]);
   const [notes, setNotes] = useState([]);
   const [newMilestone, setNewMilestone] = useState('');
   const [newResource, setNewResource] = useState({ title: '', url: '' });
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ title: project.title, status: project.status });
 
   useEffect(() => {
     if (!expanded) return;
@@ -418,6 +429,20 @@ function ProjectRow({ project, expanded, onToggleExpand }) {
     setResources(await listProjectResources(project.id));
   }
 
+  async function handleSaveEdit() {
+    if (!editForm.title.trim()) return;
+    await updateProject(project.id, editForm);
+    setEditing(false);
+    onChanged?.();
+  }
+
+  async function handleDeleteProject() {
+    const confirmed = window.confirm(`Delete "${project.title}"? Any milestones directly on this project go with it — tasks and notes stay, just unlinked. This can't be undone.`);
+    if (!confirmed) return;
+    await deleteProject(project.id);
+    onChanged?.();
+  }
+
   return (
     <div className="planner-block" style={{ cursor: 'pointer' }}>
       <div className="row-between" onClick={onToggleExpand}>
@@ -432,6 +457,30 @@ function ProjectRow({ project, expanded, onToggleExpand }) {
         </div>
         {project.due_date && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{project.due_date}</div>}
       </div>
+
+      {expanded && (
+        <div style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
+          {editing ? (
+            <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+              <input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} style={{ flex: 1, minWidth: 140 }} />
+              <select value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
+                <option value="Planning">Planning</option>
+                <option value="Active">Active</option>
+                <option value="Blocked">Blocked</option>
+                <option value="Done">Done</option>
+                <option value="Archived">Archived</option>
+              </select>
+              <Button size="sm" onClick={handleSaveEdit}>Save</Button>
+              <Button size="sm" variant="text" onClick={() => setEditing(false)}>Cancel</Button>
+            </div>
+          ) : (
+            <div className="row" style={{ gap: 'var(--space-2)' }}>
+              <Button size="sm" variant="text" onClick={() => setEditing(true)}>Edit</Button>
+              <Button size="sm" variant="text" onClick={handleDeleteProject}>Delete</Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {expanded && (
         <div style={{ marginTop: 'var(--space-4)' }} onClick={e => e.stopPropagation()}>
