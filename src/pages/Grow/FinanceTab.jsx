@@ -7,7 +7,7 @@ import Skeleton from '../../components/ui/Skeleton.jsx';
 import {
   addEntry, deleteEntry, listThisMonthEntries, listLegacyBills, getMonthSummary,
   listBudgets, listSavingsGoals, addToSavingsGoal, addSavingsGoal,
-  listDebts, addDebt, updateDebt, deleteDebt, logDebtPayment, getTotalDebt,
+  listDebts, addDebt, updateDebt, deleteDebt, logDebtPayment, getTotalDebt, simulateSnowball,
 } from '../../services/finance.js';
 import { getCategoryList } from '../../services/settings.js';
 import {
@@ -36,7 +36,10 @@ export default function FinanceTab() {
 
   const [debts, setDebts] = useState([]);
   const [addingDebt, setAddingDebt] = useState(false);
+  const [addDebtError, setAddDebtError] = useState(null);
   const [newDebt, setNewDebt] = useState({ name: '', debt_type: 'Credit Card', original_balance: '', interest_rate: '', minimum_payment: '' });
+  const [extraMonthly, setExtraMonthly] = useState('');
+  const [showSnowball, setShowSnowball] = useState(false);
   const [paymentAmounts, setPaymentAmounts] = useState({});
 
   async function refresh() {
@@ -54,7 +57,13 @@ export default function FinanceTab() {
 
   async function handleAddDebt() {
     if (!newDebt.name.trim()) return;
-    await addDebt(newDebt);
+    setAddDebtError(null);
+    try {
+      await addDebt(newDebt);
+    } catch (err) {
+      setAddDebtError(err.message || String(err));
+      return;
+    }
     setNewDebt({ name: '', debt_type: 'Credit Card', original_balance: '', interest_rate: '', minimum_payment: '' });
     setAddingDebt(false);
     refresh();
@@ -63,7 +72,12 @@ export default function FinanceTab() {
   async function handleLogPayment(debt) {
     const amount = Number(paymentAmounts[debt.id]);
     if (!amount) return;
-    await logDebtPayment(debt, amount);
+    try {
+      await logDebtPayment(debt, amount);
+    } catch (err) {
+      setAddDebtError(err.message || String(err));
+      return;
+    }
     setPaymentAmounts({ ...paymentAmounts, [debt.id]: '' });
     refresh();
   }
@@ -305,6 +319,7 @@ export default function FinanceTab() {
             <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>${getTotalDebt(debts).toFixed(0)} total</span>
           )}
         </div>
+        {addDebtError && <div className="muted" style={{ fontSize: 'var(--text-micro)', color: 'var(--danger)', marginTop: 4 }}>{addDebtError}</div>}
         {debts.length === 0 ? <EmptyState icon="leaf" title="No debts tracked" /> : (
           <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
             {debts.map(d => (
@@ -364,6 +379,22 @@ export default function FinanceTab() {
         </div>
       </Card>
 
+      {debts.length > 0 && (
+        <Card>
+          <div className="row-between">
+            <div className="section-label">Snowball payoff plan</div>
+            <Button size="sm" variant="text" onClick={() => setShowSnowball(!showSnowball)}>{showSnowball ? 'Hide' : 'Show'}</Button>
+          </div>
+          <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
+            Smallest balance first — every debt keeps getting its minimum payment, and any extra goes entirely at the smallest one.
+            When that's paid off, its payment rolls into the next smallest. The wins come fast at the start, which is the whole point.
+          </p>
+          {showSnowball && (
+            <SnowballPlan debts={debts} extraMonthly={extraMonthly} setExtraMonthly={setExtraMonthly} />
+          )}
+        </Card>
+      )}
+
       {legacyBills.length > 0 && (
         <Card>
           <div className="section-label">Older bills</div>
@@ -391,6 +422,46 @@ export default function FinanceTab() {
           ))}
         </div>
       </Card>
+    </div>
+  );
+}
+
+function SnowballPlan({ debts, extraMonthly, setExtraMonthly }) {
+  const result = simulateSnowball(debts, Number(extraMonthly) || 0);
+
+  function formatMonths(m) {
+    if (m === null) return null;
+    const years = Math.floor(m / 12);
+    const months = m % 12;
+    if (years === 0) return `${months} month${months === 1 ? '' : 's'}`;
+    return `${years} year${years === 1 ? '' : 's'}${months ? `, ${months} month${months === 1 ? '' : 's'}` : ''}`;
+  }
+
+  return (
+    <div style={{ marginTop: 'var(--space-3)' }}>
+      <label className="reset-field">
+        <span>Extra you can put toward debt each month, beyond minimums</span>
+        <input type="number" placeholder="0" value={extraMonthly} onChange={e => setExtraMonthly(e.target.value)} style={{ width: 140 }} />
+      </label>
+
+      {result.stalled ? (
+        <p style={{ fontSize: 'var(--text-small)', color: 'var(--danger)', marginTop: 'var(--space-3)' }}>
+          At these minimums and rates, {result.unresolvedCount} debt{result.unresolvedCount === 1 ? '' : 's'} won't actually shrink over time — the interest is outpacing what's being paid. Adding some extra monthly amount above will change this.
+        </p>
+      ) : result.totalMonths ? (
+        <p style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-3)' }}>
+          Debt-free in <strong>{formatMonths(result.totalMonths)}</strong> at this pace.
+        </p>
+      ) : null}
+
+      <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 4 }}>
+        {result.order.map((d, i) => (
+          <div key={d.id} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
+            <span>{i + 1}. {d.name}</span>
+            <span className="muted">{d.payoffMonth ? `paid off in ${formatMonths(d.payoffMonth)}` : 'beyond 50 years at this pace'}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

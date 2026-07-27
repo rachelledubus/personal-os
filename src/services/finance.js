@@ -159,3 +159,67 @@ export async function logDebtPayment(debt, amount) {
 export function getTotalDebt(debts) {
   return debts.reduce((sum, d) => sum + Number(d.current_balance || 0), 0);
 }
+
+/** Debt Snowball — smallest balance first (not smallest term, not
+ *  highest interest — that's the Avalanche method, a different
+ *  thing). Every debt's minimum payment gets paid every month; any
+ *  extra goes entirely at the smallest remaining balance. When that
+ *  one hits zero, its minimum payment rolls into the extra amount
+ *  for the next-smallest — the "snowball" getting bigger. This is a
+ *  real month-by-month simulation (interest accrues monthly on
+ *  whatever balance remains), not just a sorted list. */
+export function simulateSnowball(debts, extraMonthly = 0) {
+  const MAX_MONTHS = 600; // 50-year safety cap, in case minimums don't outpace interest
+
+  const ordered = [...debts]
+    .sort((a, b) => Number(a.current_balance) - Number(b.current_balance))
+    .map(d => ({
+      id: d.id, name: d.name,
+      balance: Number(d.current_balance) || 0,
+      minPayment: Number(d.minimum_payment) || 0,
+      rate: Number(d.interest_rate) || 0,
+    }));
+
+  const payoffMonth = {};
+  let freedUp = 0;
+  let month = 0;
+  let stalled = false;
+
+  while (ordered.some(d => d.balance > 0) && month < MAX_MONTHS) {
+    month += 1;
+    let availableExtra = extraMonthly + freedUp;
+    let anyProgress = false;
+
+    for (const d of ordered) {
+      if (d.balance <= 0) continue;
+      const before = d.balance;
+
+      d.balance += d.balance * (d.rate / 100 / 12); // monthly interest accrual
+      d.balance -= Math.min(d.minPayment, d.balance); // minimum payment, every debt, every month
+
+      if (availableExtra > 0 && d.balance > 0) {
+        const extra = Math.min(availableExtra, d.balance);
+        d.balance -= extra;
+        availableExtra -= extra;
+      }
+
+      if (d.balance < before) anyProgress = true;
+
+      if (d.balance <= 0.5 && !payoffMonth[d.id]) {
+        d.balance = 0;
+        payoffMonth[d.id] = month;
+        freedUp += d.minPayment; // the snowball grows
+      }
+    }
+
+    if (!anyProgress) { stalled = true; break; } // minimums don't even cover interest — no amount of time fixes this without a plan change
+  }
+
+  const stillOwing = ordered.filter(d => d.balance > 0);
+  return {
+    order: ordered.map(d => ({ id: d.id, name: d.name, payoffMonth: payoffMonth[d.id] || null })),
+    totalMonths: stillOwing.length === 0 ? month : null,
+    stalled,
+    unresolvedCount: stillOwing.length,
+  };
+}

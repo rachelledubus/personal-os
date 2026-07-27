@@ -1,14 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Dumbbell, Sparkles, Star, Calendar, Megaphone, Phone, Map, Lightbulb, Circle,
+  Dumbbell, Sparkles, Star, Calendar, Megaphone, Phone, Map, Lightbulb, Circle, Coffee,
 } from 'lucide-react';
 import Checkbox from '../ui/Checkbox.jsx';
 import './TodayItemCard.css';
 
 const ICONS = {
   dumbbell: Dumbbell, sparkles: Sparkles, star: Star, calendar: Calendar,
-  megaphone: Megaphone, phone: Phone, map: Map, lightbulb: Lightbulb, circle: Circle,
+  megaphone: Megaphone, phone: Phone, map: Map, lightbulb: Lightbulb, circle: Circle, coffee: Coffee,
 };
 
 export default function TodayItemCard({ item, active, onToggle, onDismiss }) {
