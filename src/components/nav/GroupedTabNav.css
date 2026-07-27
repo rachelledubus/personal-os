@@ -1,0 +1,45 @@
+.grouped-tab-nav { margin-bottom: var(--space-1); }
+
+.grouped-tab-nav-top {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+/* Deliberately plainer than .sub-tab (no uppercase, no shadow) so the
+   group pills read as one level senior to the sub-tabs below them,
+   not a second competing row of the same style. */
+.grouped-tab-pill {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: 600;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: background var(--duration-base), color var(--duration-base), border-color var(--duration-base);
+}
+
+.grouped-tab-pill:hover { border-color: var(--navy); color: var(--navy); }
+
+.grouped-tab-pill.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+
+@media (max-width: 900px) {
+  .grouped-tab-nav-top {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 2px 6px;
+    margin: 0 calc(var(--space-1) * -1) var(--space-2);
+  }
+  .grouped-tab-nav-top::-webkit-scrollbar { display: none; }
+  .grouped-tab-pill { flex-shrink: 0; }
+}

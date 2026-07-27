@@ -2,7 +2,7 @@ import React from 'react';
 import { Briefcase } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/layout/PageHeader.jsx';
-import SubTabNav from '../../components/nav/SubTabNav.jsx';
+import GroupedTabNav from '../../components/nav/GroupedTabNav.jsx';
 import Banner from '../../components/ui/Banner.jsx';
 import DashboardTab from './DashboardTab.jsx';
 import PipelineTab from './PipelineTab.jsx';
@@ -15,17 +15,41 @@ import RoadmapTab from './RoadmapTab.jsx';
 import ReportsTab from './ReportsTab.jsx';
 import FunnelsTab from './FunnelsTab.jsx';
 
-const TABS = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'pipeline', label: 'Pipeline' },
-  { key: 'relationships', label: 'Relationships' },
-  { key: 'content', label: 'Content' },
-  { key: 'marketing', label: 'Marketing' },
-  { key: 'library', label: 'Library' },
-  { key: 'clients', label: 'Clients' },
-  { key: 'roadmap', label: 'Roadmap' },
-  { key: 'reports', label: 'Reports' },
-  { key: 'funnels', label: 'Funnels' },
+// Grouped per the Shell & Layout Specification, Section 4 — Business
+// had grown to 10 flat tabs, past the point a flat row stays
+// predictable, especially on mobile. Grouping is fixed and permanent:
+// a new tab gets slotted into one of these four, it doesn't earn a
+// new top-level group without a deliberate conversation about it.
+//
+// Dashboard stands alone (it's the landing view, not a category of
+// its own). The other nine split into three groups matching how the
+// business actually thinks about them, not how they were built:
+//   Relationships — the people side: pipeline, contacts, clients
+//   Growth — the output side: content, marketing, funnels, roadmap
+//   Reference — things you consult rather than act on: library, reports
+const TAB_GROUPS = [
+  { key: 'dashboard', label: 'Dashboard', tabs: [{ key: 'dashboard', label: 'Dashboard' }] },
+  {
+    key: 'relationships', label: 'Relationships', tabs: [
+      { key: 'relationships', label: 'Relationships' },
+      { key: 'pipeline', label: 'Pipeline' },
+      { key: 'clients', label: 'Clients' },
+    ]
+  },
+  {
+    key: 'growth', label: 'Growth', tabs: [
+      { key: 'content', label: 'Content' },
+      { key: 'marketing', label: 'Marketing' },
+      { key: 'funnels', label: 'Funnels' },
+      { key: 'roadmap', label: 'Roadmap' },
+    ]
+  },
+  {
+    key: 'reference', label: 'Reference', tabs: [
+      { key: 'library', label: 'Library' },
+      { key: 'reports', label: 'Reports' },
+    ]
+  },
 ];
 
 // Batch 8 — full split, same pattern as Batches 6-7. 1,740 lines (10
@@ -43,7 +67,7 @@ export default function BusinessPage() {
     <div>
       <Banner slotKey="business_banner" scene="business" />
       <PageHeader icon={Briefcase} title="Business" />
-      <SubTabNav tabs={TABS} active={tab} onChange={t => navigate(`/business/${t}`)} />
+      <GroupedTabNav groups={TAB_GROUPS} active={tab} onChange={t => navigate(`/business/${t}`)} />
 
       {tab === 'dashboard' && <DashboardTab />}
       {tab === 'pipeline' && <PipelineTab />}
