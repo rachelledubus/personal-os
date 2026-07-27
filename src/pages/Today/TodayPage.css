@@ -1,5 +1,4 @@
-.today-summary-card { background: var(--navy); color: var(--white); }
-.today-summary-card .section-label { color: rgba(255,255,255,0.6); }
+/* .today-summary-card moved to global.css — was never actually page-specific */
 .today-headline { font-family: var(--font-display); font-weight: 800; font-size: var(--text-display); margin-top: 4px; }
 .today-progress-chip {
   font-family: var(--font-display); font-weight: 800; font-size: 20px;

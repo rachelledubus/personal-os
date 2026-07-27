@@ -92,6 +92,28 @@ input, textarea, select { font-family: var(--font-body); }
 .row { display: flex; align-items: center; gap: var(--space-3); }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 
+/* Was only ever defined in MealPlannerPage.css despite being used as
+   a de facto global utility across 20+ files — worked by accident
+   while all CSS shipped in one bundle, broke for real once Stage L's
+   React.lazy() conversion made Vite code-split CSS per route. Any
+   page that never happened to load MealPlannerPage.css rendered this
+   with zero matching CSS rule, falling back to raw browser button
+   chrome — the "grey box." */
+.row-remove-btn { background: none; border: none; color: var(--ink-faint); font-size: var(--text-card-title); cursor: pointer; padding: 0; }
+
+/* Same fix, same root cause — a stat-grid pattern used across
+   Business/Grow/Plan, only ever defined in MealPlannerPage.css. */
+.macro-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
+.macro-cell { display: flex; flex-direction: column; gap: 6px; font-size: var(--text-small); }
+@media (max-width: 640px) {
+  .macro-grid { grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+}
+
+/* Same fix again — the Today hero card style, used on both Today and
+   Business's dashboard, only ever defined in TodayPage.css. */
+.today-summary-card { background: var(--navy); color: var(--white); }
+.today-summary-card .section-label { color: rgba(255,255,255,0.6); }
+
 /* Sub-tab pills, used by Grow/Business/Library zone pages */
 .sub-tab {
   font-family: var(--font-display); font-weight: 700; font-size: var(--text-caption);

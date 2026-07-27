@@ -1,8 +1,7 @@
-.macro-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
-.macro-cell { display: flex; flex-direction: column; gap: 6px; font-size: var(--text-small); }
+/* .macro-grid / .macro-cell moved to global.css — were never actually page-specific */
 
 .meal-plan-row { padding: 6px 0; border-bottom: 1px solid var(--sand); font-size: var(--text-compact); }
-.row-remove-btn { background: none; border: none; color: var(--ink-faint); font-size: var(--text-card-title); }
+/* .row-remove-btn moved to global.css — was never actually page-specific */
 
 .food-quick-add {
   background: var(--cream); border: none; border-radius: var(--radius-pill);
@@ -11,6 +10,5 @@
 .food-quick-add.suggestion { background: var(--blush); }
 
 @media (max-width: 640px) {
-  .macro-grid { grid-template-columns: 1fr 1fr; gap: var(--space-2); }
   .food-quick-add { padding: 5px 10px; font-size: var(--text-micro); margin: 2px; }
 }
