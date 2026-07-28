@@ -4,12 +4,12 @@
   functions = "netlify/functions"
 
 # Reminder check — every 15 minutes. This is what actually reaches you
-# without the app being open; see check-reminders.js.
+# without the app being open; see check-reminders.cjs.
 [functions."check-reminders"]
   schedule = "*/15 * * * *"
 
 # Marketing automation engine — every 15 minutes, checks for due
-# sequence emails and sends them; see send-automation-emails.js.
+# sequence emails and sends them; see send-automation-emails.cjs.
 [functions."send-automation-emails"]
   schedule = "*/15 * * * *"
 

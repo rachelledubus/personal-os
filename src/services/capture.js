@@ -41,7 +41,7 @@ export async function archiveCapture(id) {
 }
 
 // ---------- AI suggestion (optional — degrades gracefully) ----------
-// Calls a Netlify serverless function (see netlify/functions/classify-capture.js)
+// Calls a Netlify serverless function (see netlify/functions/classify-capture.cjs)
 // that holds the actual Anthropic API key server-side. If that
 // function isn't deployed/configured yet, this fails quietly and the
 // item just stays fully manually-triageable — capture and organizing
