@@ -9,6 +9,7 @@ import PipelineTab from './PipelineTab.jsx';
 import RelationshipsTab from './RelationshipsTab.jsx';
 import ContentTab from './ContentTab.jsx';
 import MarketingTab from './MarketingTab.jsx';
+import MarketingAutomationTab from './MarketingAutomationTab.jsx';
 import LibraryTab from './LibraryTab.jsx';
 import ClientsTab from './ClientsTab.jsx';
 import RoadmapTab from './RoadmapTab.jsx';
@@ -44,6 +45,7 @@ const TAB_GROUPS = [
     key: 'growth', label: 'Growth', tabs: [
       { key: 'content', label: 'Content' },
       { key: 'marketing', label: 'Marketing' },
+      { key: 'automations', label: 'Email Automation' },
       { key: 'funnels', label: 'Funnels' },
       { key: 'roadmap', label: 'Roadmap' },
     ]
@@ -80,6 +82,7 @@ export default function BusinessPage() {
       {tab === 'relationships' && <RelationshipsTab />}
       {tab === 'content' && <ContentTab />}
       {tab === 'marketing' && <MarketingTab />}
+      {tab === 'automations' && <MarketingAutomationTab />}
       {tab === 'library' && <LibraryTab />}
       {tab === 'clients' && <ClientsTab />}
       {tab === 'roadmap' && <RoadmapTab />}

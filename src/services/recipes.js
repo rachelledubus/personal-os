@@ -110,8 +110,8 @@ export async function addRecipeToGroceryList(recipeId, servings) {
       ? `${ing.name} — ${ing.scaledQuantity} ${ing.unit}`
       : `${ing.name} — ${ing.scaledQuantity}`;
     const { data: exists } = await supabase.from('grocery_items').select('id')
-      .eq('user_id', userId).ilike('name', label).maybeSingle();
-    if (!exists) {
+      .eq('user_id', userId).ilike('name', label).limit(1);
+    if (!exists || exists.length === 0) {
       await supabase.from('grocery_items').insert({ user_id: userId, name: label, category: 'Other' });
     }
   }

@@ -8,6 +8,11 @@
 [functions."check-reminders"]
   schedule = "*/15 * * * *"
 
+# Marketing automation engine — every 15 minutes, checks for due
+# sequence emails and sends them; see send-automation-emails.js.
+[functions."send-automation-emails"]
+  schedule = "*/15 * * * *"
+
 # Client-side routing (react-router) needs every path to fall back to
 # index.html, or a hard refresh on e.g. /business/contacts will 404.
 [[redirects]]

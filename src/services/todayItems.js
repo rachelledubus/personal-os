@@ -91,35 +91,6 @@ async function fetchWorkoutItem(userId) {
   };
 }
 
-async function fetchMealItems(userId) {
-  const { data: items } = await supabase.from('meal_plan_items')
-    .select('id, meal_type, eaten, servings, foods(name)')
-    .eq('user_id', userId).eq('plan_date', todayStr());
-  if (!items || items.length === 0) return [];
-
-  const byMealType = {};
-  items.forEach(item => { (byMealType[item.meal_type] ||= []).push(item); });
-
-  const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snacks'];
-  const MEAL_LABEL = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks' };
-
-  return MEAL_ORDER.filter(t => byMealType[t]).map(mealType => {
-    const mealItems = byMealType[mealType];
-    const foodNames = mealItems.map(i => i.foods?.name).filter(Boolean).join(', ');
-    return {
-      id: `meal-${mealType}`,
-      sourceTable: 'meal_plan_items',
-      sourceId: mealType,
-      track: 'personal',
-      icon: 'coffee',
-      title: MEAL_LABEL[mealType],
-      context: foodNames || 'Planned',
-      done: mealItems.every(i => i.eaten),
-      linkTo: '/grow/nutrition',
-    };
-  });
-}
-
 async function fetchHabitItems(userId) {
   const { data: habits } = await supabase
     .from('habits').select('*').eq('user_id', userId).eq('archived', false);
@@ -323,7 +294,7 @@ export async function getTodayItems() {
   if (!userId) return [];
 
   const [
-    workout, habits, priorities, appts, content, meals,
+    workout, habits, priorities, appts, content,
     followUps, roadmap, nudges, maintenance, custom, dismissed, unscheduledTasks,
   ] = await Promise.all([
     fetchWorkoutItem(userId),
@@ -331,7 +302,6 @@ export async function getTodayItems() {
     fetchPriorityItems(userId),
     fetchAppointmentItems(userId),
     fetchContentItem(userId),
-    fetchMealItems(userId),
     fetchFollowUpItems(userId),
     fetchRoadmapItem(userId),
     fetchNudgeItems(userId),
@@ -345,7 +315,6 @@ export async function getTodayItems() {
     ...appts,
     ...(workout ? [workout] : []),
     ...priorities,
-    ...meals,
     ...followUps,
     ...maintenance,
     ...roadmap,
@@ -376,12 +345,6 @@ export async function toggleTodayItem(item, done) {
         await supabase.from('habit_logs').delete()
           .eq('habit_id', item.sourceId).eq('log_date', todayStr());
       }
-      return;
-    }
-    case 'meal_plan_items': {
-      const userId = await getUserId();
-      await supabase.from('meal_plan_items').update({ eaten: done })
-        .eq('user_id', userId).eq('plan_date', todayStr()).eq('meal_type', item.sourceId);
       return;
     }
     case 'daily_priorities':

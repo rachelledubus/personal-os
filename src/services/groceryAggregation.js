@@ -132,10 +132,10 @@ export async function generateAggregatedGroceryList(weekStart) {
     }
 
     const { data: existing } = await supabase.from('grocery_items').select('id')
-      .eq('user_id', userId).ilike('name', ing.name).eq('purchased', false).maybeSingle();
+      .eq('user_id', userId).ilike('name', ing.name).eq('purchased', false).limit(1);
 
-    if (existing) {
-      await supabase.from('grocery_items').update({ total_quantity: totalQuantity, unit }).eq('id', existing.id);
+    if (existing && existing.length > 0) {
+      await supabase.from('grocery_items').update({ total_quantity: totalQuantity, unit }).eq('id', existing[0].id);
     } else {
       await supabase.from('grocery_items').insert({
         user_id: userId, name: ing.name, category: 'Other', total_quantity: totalQuantity, unit,

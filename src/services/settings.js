@@ -45,6 +45,10 @@ export async function setPreference(category, key, value) {
 // different resolve functions). Renaming those needs a real
 // migration, not a settings screen.
 export const CATEGORY_LISTS = {
+  personal_values: {
+    label: 'Personal values (Aligned Action Filter)',
+    default: ['Family', 'Health', 'Growth', 'Financial Security', 'Creativity', 'Connection', 'Freedom', 'Integrity', 'Contribution', 'Adventure'],
+  },
   pipeline_categories: {
     label: 'Pipeline contact categories',
     default: ['Lead', 'Future Client', 'Active Client', 'Past Client', 'Sphere', 'Partner', 'Agent Referral'],

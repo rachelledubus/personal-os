@@ -52,8 +52,8 @@ export async function addPlannedItemsToGroceryList(items) {
   for (const item of items) {
     if (item.isRecipe) continue;
     const { data: exists } = await supabase.from('grocery_items').select('id')
-      .eq('user_id', userId).ilike('name', item.name).maybeSingle();
-    if (!exists) {
+      .eq('user_id', userId).ilike('name', item.name).limit(1);
+    if (!exists || exists.length === 0) {
       await supabase.from('grocery_items').insert({ user_id: userId, name: item.name, category: 'Other' });
     }
   }

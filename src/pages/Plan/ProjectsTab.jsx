@@ -16,6 +16,7 @@ import {
 import MonthlyThemeCard from './MonthlyThemeCard.jsx';
 import { SECTIONS as DREAM_LIFE_SECTIONS } from './DreamLifeTab.jsx';
 import { importWebsiteBuildProject, PUBLISHED_PAGE_QA_CHECKLIST } from '../../services/websiteBuildImport.js';
+import { getCategoryList } from '../../services/settings.js';
 
 const TIMEFRAMES = ['Year', 'Quarter', 'Month', 'Week'];
 const ENERGY_IMPACTS = ['Energizing', 'Neutral', 'Draining'];
@@ -57,6 +58,9 @@ export default function ProjectsTab() {
   const [newProjectGoal, setNewProjectGoal] = useState('');
   const [newProjectVision, setNewProjectVision] = useState('');
   const [newProjectEnergy, setNewProjectEnergy] = useState(null);
+  const [newProjectValue, setNewProjectValue] = useState('');
+  const [newProjectIdentity, setNewProjectIdentity] = useState('');
+  const [personalValues, setPersonalValues] = useState([]);
   const [importStatus, setImportStatus] = useState(null);
   const [showQaChecklist, setShowQaChecklist] = useState(false);
 
@@ -65,7 +69,7 @@ export default function ProjectsTab() {
     setGoals(g);
     setProjects(p);
   }
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh(); getCategoryList('personal_values').then(setPersonalValues); }, []);
 
   async function handleAddGoal() {
     if (!newGoalTitle.trim()) return;
@@ -106,11 +110,14 @@ export default function ProjectsTab() {
     await addProject({
       title: newProjectTitle.trim(), goal_id: newProjectGoal || null,
       vision_link: newProjectVision || null, energy_impact: newProjectEnergy,
+      value_link: newProjectValue || null, identity_link: newProjectIdentity.trim() || null,
     });
     setNewProjectTitle('');
     setNewProjectGoal('');
     setNewProjectVision('');
     setNewProjectEnergy(null);
+    setNewProjectValue('');
+    setNewProjectIdentity('');
     refresh();
   }
 
@@ -192,6 +199,7 @@ export default function ProjectsTab() {
                 expanded={expandedProject === p.id}
                 onToggleExpand={() => setExpandedProject(expandedProject === p.id ? null : p.id)}
                 onChanged={refresh}
+                personalValues={personalValues}
               />
             ))}
           </div>
@@ -224,6 +232,19 @@ export default function ProjectsTab() {
             <button key={e} className={`sub-tab ${newProjectEnergy === e ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
               onClick={() => setNewProjectEnergy(newProjectEnergy === e ? null : e)}>{e}</button>
           ))}
+        </div>
+        <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+          <span className="muted" style={{ fontSize: 'var(--text-micro)', marginRight: 4 }}>Value (optional):</span>
+          {personalValues.map(v => (
+            <button key={v} className={`sub-tab ${newProjectValue === v ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
+              onClick={() => setNewProjectValue(newProjectValue === v ? '' : v)}>{v}</button>
+          ))}
+          <input
+            placeholder="Who am I becoming by doing this? (optional)"
+            value={newProjectIdentity}
+            onChange={e => setNewProjectIdentity(e.target.value)}
+            style={{ minWidth: 220, fontSize: 'var(--text-micro)' }}
+          />
         </div>
       </Card>
     </div>
@@ -388,7 +409,7 @@ function MissionRow({ mission, expanded, onToggleExpand, onComplete, onDelete })
   );
 }
 
-function ProjectRow({ project, expanded, onToggleExpand, onChanged }) {
+function ProjectRow({ project, expanded, onToggleExpand, onChanged, personalValues }) {
   const [tasks, setTasks] = useState([]);
   const [milestones, setMilestones] = useState([]);
   const [resources, setResources] = useState([]);
@@ -396,7 +417,10 @@ function ProjectRow({ project, expanded, onToggleExpand, onChanged }) {
   const [newMilestone, setNewMilestone] = useState('');
   const [newResource, setNewResource] = useState({ title: '', url: '' });
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ title: project.title, status: project.status });
+  const [editForm, setEditForm] = useState({
+    title: project.title, status: project.status, vision_link: project.vision_link || '',
+    energy_impact: project.energy_impact || '', value_link: project.value_link || '', identity_link: project.identity_link || '',
+  });
 
   useEffect(() => {
     if (!expanded) return;
@@ -461,17 +485,44 @@ function ProjectRow({ project, expanded, onToggleExpand, onChanged }) {
       {expanded && (
         <div style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
           {editing ? (
-            <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-              <input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} style={{ flex: 1, minWidth: 140 }} />
-              <select value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
-                <option value="Planning">Planning</option>
-                <option value="Active">Active</option>
-                <option value="Blocked">Blocked</option>
-                <option value="Done">Done</option>
-                <option value="Archived">Archived</option>
-              </select>
-              <Button size="sm" onClick={handleSaveEdit}>Save</Button>
-              <Button size="sm" variant="text" onClick={() => setEditing(false)}>Cancel</Button>
+            <div className="stack" style={{ gap: 'var(--space-2)' }}>
+              <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                <input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} style={{ flex: 1, minWidth: 140 }} />
+                <select value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
+                  <option value="Planning">Planning</option>
+                  <option value="Active">Active</option>
+                  <option value="Blocked">Blocked</option>
+                  <option value="Done">Done</option>
+                  <option value="Archived">Archived</option>
+                </select>
+              </div>
+              <div className="row" style={{ flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Vision:</span>
+                {DREAM_LIFE_SECTIONS.map(s => (
+                  <button key={s.key} className={`sub-tab ${editForm.vision_link === s.key ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
+                    onClick={() => setEditForm({ ...editForm, vision_link: editForm.vision_link === s.key ? '' : s.key })}>{s.label}</button>
+                ))}
+              </div>
+              <div className="row" style={{ flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Energy:</span>
+                {['Energizing', 'Neutral', 'Draining'].map(e => (
+                  <button key={e} className={`sub-tab ${editForm.energy_impact === e ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
+                    onClick={() => setEditForm({ ...editForm, energy_impact: editForm.energy_impact === e ? '' : e })}>{e}</button>
+                ))}
+              </div>
+              <div className="row" style={{ flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Value:</span>
+                {(personalValues || []).map(v => (
+                  <button key={v} className={`sub-tab ${editForm.value_link === v ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }}
+                    onClick={() => setEditForm({ ...editForm, value_link: editForm.value_link === v ? '' : v })}>{v}</button>
+                ))}
+              </div>
+              <input placeholder="Who am I becoming by doing this?" value={editForm.identity_link}
+                onChange={e => setEditForm({ ...editForm, identity_link: e.target.value })} style={{ fontSize: 'var(--text-micro)' }} />
+              <div className="row" style={{ gap: 'var(--space-2)' }}>
+                <Button size="sm" onClick={handleSaveEdit}>Save</Button>
+                <Button size="sm" variant="text" onClick={() => setEditing(false)}>Cancel</Button>
+              </div>
             </div>
           ) : (
             <div className="row" style={{ gap: 'var(--space-2)' }}>

@@ -22,17 +22,6 @@ async function getUserId() {
 
 const SEED_LEAD_MAGNETS = [
   {
-    name: 'Real Payment Guide', funnel: 'First-Time Buyer + Future Homeowner', build_phase: 'Phase 1', status: 'planned',
-    audience: "Want to buy first home, currently renting, planning 6\u201318 months ahead",
-    primary_problem: "I don't know what buying will actually cost or whether I'm ready.",
-    next_step: 'Future Home Plan',
-    whats_inside: [
-      'Purchase price education \u2014 what different price points buy, examples across all three cities',
-      'Monthly cost breakdown \u2014 mortgage, taxes, insurance, HOA, maintenance',
-      'Buyer preparation \u2014 savings goals, credit prep, timeline planning',
-    ],
-  },
-  {
     name: 'Southwest Broward Relocation Starter Guide', funnel: 'Southwest Broward Relocation', build_phase: 'Phase 1', status: 'building',
     audience: 'Moving from out of state \u2014 work, family, weather, or a reset',
     primary_problem: "We don't know where we should live, or what life actually costs here.",
@@ -122,6 +111,11 @@ export async function syncLeadMagnetGaps() {
   const missing = SEED_LEAD_MAGNETS.filter(m => !existingNames.has(m.name));
   if (missing.length) await supabase.from('lead_magnets').insert(missing.map(m => ({ ...m, user_id: userId })));
   return { added: missing.length };
+}
+
+export async function deleteLeadMagnet(id) {
+  const { error } = await supabase.from('lead_magnets').delete().eq('id', id);
+  if (error) throw error;
 }
 
 export async function listLeadMagnets() {

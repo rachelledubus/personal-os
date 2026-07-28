@@ -19,3 +19,11 @@ alter table debts add column if not exists minimum_payment numeric;
 alter table debts add column if not exists due_day integer check (due_day between 1 and 31);
 alter table debts add column if not exists notes text;
 alter table debts add column if not exists created_at timestamptz default now();
+
+-- ============================================================
+-- Cleanup: "Real Payment Guide" was a duplicate of "Future Home
+-- Plan" under an earlier name — same audience, same purpose, from
+-- before the real Website-Build content existed. Removing the
+-- superseded one. Safe to run even if you never had this row.
+-- ============================================================
+delete from lead_magnets where name = 'Real Payment Guide';

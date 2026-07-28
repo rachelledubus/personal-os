@@ -37,9 +37,39 @@ export async function loadHabitsData() {
   return { habits: habits || [], doneIds, streaks };
 }
 
-export async function addHabit(name) {
+export async function listHabitSystems() {
   const userId = await getUserId();
-  const { error } = await supabase.from('habits').insert({ user_id: userId, name, archived: false });
+  const { data, error } = await supabase.from('habit_systems').select('*')
+    .eq('user_id', userId).eq('archived', false).order('sort_order');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addHabitSystem(name, description = null) {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('habit_systems')
+    .insert({ user_id: userId, name, description }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function archiveHabitSystem(systemId) {
+  // Ungroups its habits rather than orphaning them silently — they
+  // fall back to the ungrouped section, same as if they'd never had
+  // a system, not deleted or hidden.
+  await supabase.from('habits').update({ system_id: null }).eq('system_id', systemId);
+  const { error } = await supabase.from('habit_systems').update({ archived: true }).eq('id', systemId);
+  if (error) throw error;
+}
+
+export async function addHabit(name, systemId = null) {
+  const userId = await getUserId();
+  const { error } = await supabase.from('habits').insert({ user_id: userId, name, archived: false, system_id: systemId });
+  if (error) throw error;
+}
+
+export async function moveHabitToSystem(habitId, systemId) {
+  const { error } = await supabase.from('habits').update({ system_id: systemId }).eq('id', habitId);
   if (error) throw error;
 }
 

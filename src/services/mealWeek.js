@@ -69,8 +69,8 @@ export async function generateWeekGroceryList(weekStart) {
   let added = 0;
   for (const name of names) {
     const { data: exists } = await supabase.from('grocery_items').select('id')
-      .eq('user_id', userId).ilike('name', name).maybeSingle();
-    if (!exists) {
+      .eq('user_id', userId).ilike('name', name).limit(1);
+    if (!exists || exists.length === 0) {
       await supabase.from('grocery_items').insert({ user_id: userId, name, category: 'Other' });
       added += 1;
     }
