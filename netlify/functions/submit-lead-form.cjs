@@ -78,6 +78,7 @@ exports.handler = async (event) => {
     }
 
     let enrolled = false;
+    let enrollReason = automation_name ? null : 'No automation_name was provided in the submission';
     if (automation_name) {
       const { data: automation } = await supabase.from('automations').select('id')
         .eq('user_id', ownerUserId).eq('name', automation_name).eq('active', true).maybeSingle();
@@ -95,11 +96,22 @@ exports.handler = async (event) => {
             current_step: 0, next_send: nextSend.toISOString(), status: 'active',
           });
           enrolled = true;
+        } else {
+          enrollReason = 'Already actively enrolled in this automation \u2014 not enrolled a second time';
         }
+      } else {
+        // Distinguish "doesn't exist" from "exists but isn't active" — genuinely
+        // different fixes, and the ambiguity is exactly what left this
+        // undebuggable the first time.
+        const { data: anyMatch } = await supabase.from('automations').select('active')
+          .eq('user_id', ownerUserId).eq('name', automation_name).maybeSingle();
+        enrollReason = anyMatch
+          ? `An automation named "${automation_name}" exists but is not active`
+          : `No automation named "${automation_name}" found for this account \u2014 check the exact name (case-sensitive) and that SITE_OWNER_USER_ID matches the account that created it`;
       }
     }
 
-    return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ ok: true, enrolled }) };
+    return { statusCode: 200, headers: corsHeaders(), body: JSON.stringify({ ok: true, enrolled, enrollReason }) };
   } catch (err) {
     console.error('submit-lead-form failed:', err);
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: err.message || String(err) }) };
