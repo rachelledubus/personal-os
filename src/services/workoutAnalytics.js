@@ -130,6 +130,22 @@ export async function removeTemplateExercise(id) {
   if (error) throw error;
 }
 
+/** Renaming and/or retargeting sets/reps on an existing template row —
+ *  edits the template itself (so it sticks for future sessions on this
+ *  day), same as addTemplateExercise/removeTemplateExercise do. */
+export async function updateTemplateExercise(id, fields) {
+  const { error } = await supabase.from('workout_exercise_templates').update(fields).eq('id', id);
+  if (error) throw error;
+}
+
+/** Drag-to-reorder — same durable-sort_order pattern as
+ *  reorderBacklogIdeas: takes the full ordered list of exercise ids
+ *  for one day after a drop and writes fresh sequential sort_order
+ *  values so the order survives a reload. */
+export async function reorderTemplateExercises(orderedIds) {
+  await Promise.all(orderedIds.map((id, i) => supabase.from('workout_exercise_templates').update({ sort_order: i }).eq('id', id)));
+}
+
 /** Last logged numbers for one exercise — what a "last session" line
  *  under each exercise reads, so you can see what you lifted last
  *  time without leaving the page. */
