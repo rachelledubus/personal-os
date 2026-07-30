@@ -18,6 +18,17 @@
   animation: fab-breathe 3.5s ease-in-out infinite;
 }
 
+/* On mobile the bottom nav occupies the bottom var(--mobile-nav-height)
+   (plus the home-indicator safe area) of the screen — without this,
+   the FAB's default bottom:32px put roughly its bottom third behind
+   the nav bar instead of clearing it. */
+@media (max-width: 900px) {
+  .global-capture-fab {
+    right: var(--space-4);
+    bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-3));
+  }
+}
+
 @keyframes fab-breathe {
   0%, 100% { box-shadow: var(--shadow-active); }
   50% { box-shadow: 0 6px 28px rgba(192, 112, 79, 0.4); }

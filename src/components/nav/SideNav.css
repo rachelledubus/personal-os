@@ -39,20 +39,24 @@
   .side-nav {
     position: fixed;
     bottom: 0; top: auto; left: 0; right: 0;
-    height: auto;
+    height: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
     flex-direction: row;
-    padding: var(--space-2);
+    padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
     box-shadow: 0 -2px 14px rgba(22,50,79,0.1);
     z-index: 50;
   }
-  .side-nav-brand, .side-nav-signout, .side-nav-quickjump { display: none; }
+  .side-nav-brand, .side-nav-signout, .side-nav-quickjump, .side-nav-avatar-row, .cozy-clock { display: none; }
   .side-nav-links { flex-direction: row; flex: 1; justify-content: space-around; }
-  .side-nav-link { flex-direction: column; gap: 2px; font-size: 10px; padding: 6px 8px; }
+  /* 44px is the standard minimum comfortable tap target — the old
+     6px/8px padding gave each icon+label about 34px of tall real
+     estate, which is why the bottom row felt fiddly to hit precisely
+     next to the home-indicator gesture bar. */
+  .side-nav-link { flex-direction: column; gap: 3px; font-size: 11px; padding: 8px 8px; min-width: 44px; min-height: 44px; justify-content: center; }
   /* Shell spec 5.1 — bottom bar keeps only the 5 primary destinations;
      everything else (Library, Review, Control Center) moves into the
      More sheet instead of cramming a 9th icon into a thumb-width bar. */
   .side-nav-link[data-mobile-overflow="true"] { display: none; }
-  .side-nav-more { display: flex; }
+  .side-nav-more { display: flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; flex-direction: column; gap: 3px; }
 }
 .side-nav-more { display: none; background: none; border: none; cursor: pointer; }
 

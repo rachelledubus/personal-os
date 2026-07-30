@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- viewport-fit=cover is what makes env(safe-area-inset-*) report
+       real values on iOS at all — without it, every safe-area-inset
+       used anywhere in the CSS silently resolves to 0, which is why
+       the notch/status-bar and home-indicator overlap existed even
+       though some safe-area code was already written. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Rachelle's System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
