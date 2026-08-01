@@ -6,8 +6,9 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import { listContacts } from '../../services/contacts.js';
 import {
   seedLeadMagnetsIfEmpty, syncLeadMagnetGaps, listLeadMagnets, updateLeadMagnetStatus, LANDING_PAGE_STANDARDS, NURTURE_SEQUENCES,
-  CTAS_BY_FUNNEL, listNurtureTracking, addNurtureTracking, updateNurtureTracking, deleteNurtureTracking, getFunnelDashboardStats,
+  listNurtureTracking, addNurtureTracking, updateNurtureTracking, deleteNurtureTracking, getFunnelDashboardStats,
 } from '../../services/leadMagnets.js';
+import { listCtas } from '../../services/library.js';
 
 // ============================================================
 // FUNNELS — Bundle 5 / System 04C. Lead magnets as real entities, the
@@ -38,9 +39,18 @@ function LeadMagnetsView() {
   const [showStandards, setShowStandards] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null);
+  const [ctasByAudience, setCtasByAudience] = useState({});
 
   useEffect(() => { refresh(); }, []);
-  async function refresh() { setMagnets(await listLeadMagnets()); }
+  async function refresh() {
+    setMagnets(await listLeadMagnets());
+    const allCtas = await listCtas();
+    const grouped = {};
+    for (const c of allCtas) {
+      (grouped[c.audience || 'General'] ||= []).push(c.cta_text);
+    }
+    setCtasByAudience(grouped);
+  }
 
   async function handleSync() {
     setSyncing(true);
@@ -123,10 +133,13 @@ function LeadMagnetsView() {
       ))}
 
       <Card>
-        <div className="section-label">CTA library by funnel</div>
+        <div className="row-between">
+          <div className="section-label">CTA library by funnel</div>
+          <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>Full editable list: Business → Library → CTAs</span>
+        </div>
         <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
-          {Object.entries(CTAS_BY_FUNNEL).map(([category, ctas]) => (
-            <div key={category} style={{ fontSize: 'var(--text-small)' }}><strong>{category}:</strong> {ctas.join(' · ')}</div>
+          {Object.entries(ctasByAudience).map(([audience, texts]) => (
+            <div key={audience} style={{ fontSize: 'var(--text-small)' }}><strong>{audience}:</strong> {texts.join(' \u00b7 ')}</div>
           ))}
         </div>
       </Card>

@@ -22,6 +22,64 @@ export async function addGoal(fields) {
   return data;
 }
 
+// ============================================================
+// STARTER GOALS/PROJECTS — same idea as habits.js's
+// generateStarterSystems(), same discipline: small, grounded in what
+// actually exists rather than inventing new obligations. Both goals
+// here connect directly to real, recently-built systems (the
+// automation engine that was just debugged into working, the weekly
+// review that isn't happening yet) — not aspirational new work.
+// Idempotent: checks by goal title, safe to click more than once.
+// ============================================================
+
+const STARTER_GOALS = [
+  {
+    title: 'Get the lead magnet funnels actually generating leads',
+    category: 'Business',
+    project: {
+      title: 'Activate & verify the automation system',
+      milestones: [
+        'Confirm the test automation actually sent a real email end to end',
+        'All 5 lead magnet forms live and submitting correctly on the real website',
+        'First 10 real contacts enrolled in a sequence',
+      ],
+    },
+  },
+  {
+    title: 'Build a sustainable weekly business rhythm',
+    category: 'Business',
+    project: {
+      title: 'Weekly Business Review, actually happening',
+      milestones: [
+        'Complete the first Weekly Business Review',
+        'Two consecutive weeks of a completed review',
+      ],
+    },
+  },
+];
+
+export async function generateStarterGoals() {
+  const userId = await getUserId();
+  const { data: existingGoals } = await supabase.from('goals').select('title').eq('user_id', userId);
+  const existingTitles = new Set((existingGoals || []).map(g => g.title));
+
+  let goalsCreated = 0, projectsCreated = 0, milestonesCreated = 0;
+  for (const template of STARTER_GOALS) {
+    if (existingTitles.has(template.title)) continue;
+    const goal = await addGoal({ title: template.title, category: template.category });
+    goalsCreated += 1;
+
+    const project = await addProject({ title: template.project.title, goal_id: goal.id, status: 'Active' });
+    projectsCreated += 1;
+
+    for (const milestoneTitle of template.project.milestones) {
+      await addMilestone({ project_id: project.id, title: milestoneTitle });
+      milestonesCreated += 1;
+    }
+  }
+  return { goalsCreated, projectsCreated, milestonesCreated, skipped: STARTER_GOALS.length - goalsCreated };
+}
+
 export async function updateGoal(id, fields) {
   const { error } = await supabase.from('goals').update({ ...fields, updated_at: new Date().toISOString() }).eq('id', id);
   if (error) throw error;
@@ -29,6 +87,12 @@ export async function updateGoal(id, fields) {
 
 export async function deleteGoal(id) {
   const { error } = await supabase.from('goals').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function bulkDeleteGoals(ids) {
+  if (ids.length === 0) return;
+  const { error } = await supabase.from('goals').delete().in('id', ids);
   if (error) throw error;
 }
 
@@ -66,6 +130,12 @@ export async function updateProject(id, fields) {
 
 export async function deleteProject(id) {
   const { error } = await supabase.from('projects').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function bulkDeleteProjects(ids) {
+  if (ids.length === 0) return;
+  const { error } = await supabase.from('projects').delete().in('id', ids);
   if (error) throw error;
 }
 

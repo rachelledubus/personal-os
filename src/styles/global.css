@@ -48,11 +48,7 @@ input, textarea, select { font-family: var(--font-body); }
 
 @media (max-width: 900px) {
   .app-shell { flex-direction: column; }
-  .app-content {
-    padding: var(--space-4);
-    padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
-    padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4));
-  }
+  .app-content { padding: var(--space-4); padding-bottom: 96px; }
 }
 
 /* ---------------- Page header ---------------- */
@@ -140,27 +136,6 @@ input, textarea, select {
 
 .app-loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: var(--ink-soft); }
 
-/* Shared icon-only button — a bare <Pencil>/<Trash2> etc with no
-   padding renders around 14-18px, well under a comfortable tap
-   target. This gives every icon-only action button in the app a real
-   44x44 hit area (Apple/Google's own minimum) without changing how
-   large the icon itself looks. */
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0;
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--ink-soft);
-  cursor: pointer;
-  transition: background var(--duration-fast);
-}
-.icon-button:hover { background: var(--cream); color: var(--navy); }
-
 .reset-field { display: flex; flex-direction: column; gap: 4px; font-size: var(--text-small); }
 .reset-field span { font-family: var(--font-display); font-weight: 700; font-size: var(--text-micro); text-transform: uppercase; letter-spacing: 0.04em; color: var(--sage); }
 .reset-field textarea { min-height: 70px; resize: vertical; }
@@ -192,3 +167,4 @@ input, textarea, select {
    up space or fire their animation silently. */
 [data-mode="elevated"] .confetti-particle { display: none; }
 [data-mode="elevated"] .completion-celebration { animation: none; }
+

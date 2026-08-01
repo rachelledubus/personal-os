@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Lightbulb, Check, RefreshCw, Pencil, Trash2, Plus, X } from 'lucide-react';
+import { Lightbulb, Check, RefreshCw } from 'lucide-react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
@@ -8,7 +8,6 @@ import {
   seedDefaultWorkoutTemplatesIfEmpty, listTemplateForDay, addTemplateExercise, getLastExerciseEntry,
   logWorkoutSession, generateInsights, requestExerciseSwap,
   saveWorkoutDraft, loadWorkoutDraft, clearWorkoutDraft,
-  removeTemplateExercise, updateTemplateExercise, reorderTemplateExercises,
 } from '../../services/workoutAnalytics.js';
 
 const LIFTING_DAYS = [
@@ -31,9 +30,6 @@ export default function WorkoutsTab() {
   const [newExercise, setNewExercise] = useState({ exercise_name: '', target_sets: 3, target_reps: '' });
   const [saved, setSaved] = useState(false);
   const [restoredDraft, setRestoredDraft] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [editFields, setEditFields] = useState({ exercise_name: '', target_sets: 3, target_reps: '' });
-  const [dragId, setDragId] = useState(null);
   const draftSaveTimer = useRef(null);
 
   useEffect(() => { seedDefaultWorkoutTemplatesIfEmpty().then(loadDay); generateInsights().then(setInsights); }, []);
@@ -76,82 +72,6 @@ export default function WorkoutsTab() {
       return next;
     });
     setRestoredDraft(false); // once you're actively editing, the "restored" banner has served its purpose
-  }
-
-  /** Appends one more weight/reps box to an exercise for today's
-   *  session only — doesn't touch the template's target_sets, so a
-   *  one-off extra set (or a drop set) doesn't change what future
-   *  sessions default to. */
-  function addSetBox(displayName) {
-    setEntries(prev => {
-      const next = { ...prev, [displayName]: [...(prev[displayName] || []), { weight: '', reps: '' }] };
-      saveWorkoutDraft(activeDay, next);
-      return next;
-    });
-  }
-
-  function removeSetBox(displayName, setIndex) {
-    setEntries(prev => {
-      const next = { ...prev, [displayName]: prev[displayName].filter((_, i) => i !== setIndex) };
-      saveWorkoutDraft(activeDay, next);
-      return next;
-    });
-  }
-
-  function startEditExercise(ex) {
-    setEditingId(ex.id);
-    setEditFields({ exercise_name: ex.exercise_name, target_sets: ex.target_sets || 3, target_reps: ex.target_reps || '' });
-  }
-
-  async function saveEditExercise(ex) {
-    const renamed = editFields.exercise_name.trim() !== ex.exercise_name;
-    await updateTemplateExercise(ex.id, {
-      exercise_name: editFields.exercise_name.trim() || ex.exercise_name,
-      target_sets: Number(editFields.target_sets) || ex.target_sets,
-      target_reps: editFields.target_reps || null,
-    });
-    // If the name changed, carry today's already-entered numbers over
-    // to the new name so renaming mid-session doesn't wipe them.
-    if (renamed) {
-      setEntries(prev => {
-        const next = { ...prev };
-        next[editFields.exercise_name.trim()] = next[ex.exercise_name] || [];
-        delete next[ex.exercise_name];
-        return next;
-      });
-    }
-    setEditingId(null);
-    loadDay();
-  }
-
-  async function handleRemoveExercise(ex) {
-    await removeTemplateExercise(ex.id);
-    setEntries(prev => {
-      const next = { ...prev };
-      delete next[ex.exercise_name];
-      return next;
-    });
-    loadDay();
-  }
-
-  function handleDragStart(id) { setDragId(id); }
-
-  function handleDragOverExercise(e, targetId) {
-    e.preventDefault();
-    if (!dragId || dragId === targetId || !template) return;
-    const fromIdx = template.findIndex(t => t.id === dragId);
-    const toIdx = template.findIndex(t => t.id === targetId);
-    if (fromIdx === -1 || toIdx === -1) return;
-    const reordered = [...template];
-    const [moved] = reordered.splice(fromIdx, 1);
-    reordered.splice(toIdx, 0, moved);
-    setTemplate(reordered);
-  }
-
-  async function handleDropExercise() {
-    if (!dragId || !template) return;
-    setDragId(null);
-    await reorderTemplateExercises(template.map(t => t.id));
   }
 
   async function handleRequestSwap(ex) {
@@ -236,117 +156,46 @@ export default function WorkoutsTab() {
         const displayName = swaps[ex.exercise_name] || ex.exercise_name;
         const last = lastEntries[ex.exercise_name];
         const proposalHere = swapProposal?.originalName === ex.exercise_name;
-        const isEditing = editingId === ex.id;
 
         return (
-          <Card
-            key={ex.id}
-            draggable={!isEditing}
-            onDragStart={() => handleDragStart(ex.id)}
-            onDragOver={e => handleDragOverExercise(e, ex.id)}
-            onDrop={handleDropExercise}
-            onDragEnd={() => setDragId(null)}
-            style={{ cursor: isEditing ? 'default' : 'grab', opacity: dragId === ex.id ? 0.4 : 1 }}
-          >
-            {isEditing ? (
-              <div className="stack" style={{ gap: 'var(--space-2)' }}>
-                <input
-                  autoFocus
-                  value={editFields.exercise_name}
-                  onChange={e => setEditFields({ ...editFields, exercise_name: e.target.value })}
-                  onKeyDown={e => e.key === 'Enter' && saveEditExercise(ex)}
-                  style={{ fontWeight: 700 }}
-                />
-                <div className="row" style={{ gap: 'var(--space-2)' }}>
-                  <input
-                    type="number"
-                    placeholder="Target sets"
-                    value={editFields.target_sets}
-                    onChange={e => setEditFields({ ...editFields, target_sets: e.target.value })}
-                    style={{ width: 100 }}
-                  />
-                  <input
-                    placeholder="Target reps (e.g. 8-10)"
-                    value={editFields.target_reps}
-                    onChange={e => setEditFields({ ...editFields, target_reps: e.target.value })}
-                    style={{ width: 140 }}
-                  />
-                  <Button size="sm" onClick={() => saveEditExercise(ex)}>Save</Button>
-                  <Button size="sm" variant="text" onClick={() => setEditingId(null)}>Cancel</Button>
+          <Card key={ex.id}>
+            <div className="row-between">
+              <div style={{ fontWeight: 700 }}>
+                {displayName}
+                {swaps[ex.exercise_name] && <span className="muted" style={{ fontSize: 'var(--text-micro)' }}> (swapped from {ex.exercise_name}, today only)</span>}
+              </div>
+              <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{ex.target_reps} reps · {ex.target_sets} sets</div>
+            </div>
+            <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 2 }}>
+              {last ? `Last: ${(last.sets_detail || []).map(s => `${s.weight}×${s.reps}`).join(', ') || `${last.weight}×${last.reps}`} on ${last.workouts?.workout_date}` : 'No sessions logged yet'}
+            </div>
+
+            <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+              {(entries[displayName] || []).map((s, i) => (
+                <div key={i}>
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>SET {i + 1} · LB</div>
+                  <input type="number" value={s.weight} onChange={e => updateSet(displayName, i, 'weight', e.target.value)} style={{ width: 64 }} />
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>REPS</div>
+                  <input type="number" value={s.reps} onChange={e => updateSet(displayName, i, 'reps', e.target.value)} style={{ width: 64 }} />
+                </div>
+              ))}
+            </div>
+
+            {!swaps[ex.exercise_name] && !proposalHere && (
+              <Button size="sm" variant="text" onClick={() => handleRequestSwap(ex)} disabled={swapping === ex.exercise_name} style={{ marginTop: 'var(--space-2)' }}>
+                {swapping === ex.exercise_name ? 'Finding a swap…' : <><RefreshCw size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Not feeling this one? Swap it</>}
+              </Button>
+            )}
+            {proposalHere && (
+              <div className="inbox-suggestion" style={{ marginTop: 'var(--space-2)' }}>
+                <span>
+                  Try <strong>{swapProposal.substitute_name}</strong> ({swapProposal.target_reps}) instead — {swapProposal.reasoning}
+                </span>
+                <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
+                  <Button size="sm" onClick={acceptSwap}>Swap it</Button>
+                  <Button size="sm" variant="text" onClick={() => setSwapProposal(null)}>Never mind</Button>
                 </div>
               </div>
-            ) : (
-              <>
-                <div className="row-between">
-                  <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span className="muted" style={{ cursor: 'grab' }}>⠿</span>
-                    {displayName}
-                    {swaps[ex.exercise_name] && <span className="muted" style={{ fontSize: 'var(--text-micro)' }}> (swapped from {ex.exercise_name}, today only)</span>}
-                  </div>
-                  <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
-                    <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>{ex.target_reps} reps · {ex.target_sets} sets</span>
-                    <button
-                      className="icon-button"
-                      title="Edit exercise"
-                      onClick={() => startEditExercise(ex)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      className="icon-button"
-                      title="Remove exercise"
-                      onClick={() => handleRemoveExercise(ex)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-                <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 2 }}>
-                  {last ? `Last: ${(last.sets_detail || []).map(s => `${s.weight}×${s.reps}`).join(', ') || `${last.weight}×${last.reps}`} on ${last.workouts?.workout_date}` : 'No sessions logged yet'}
-                </div>
-
-                <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-4)', alignItems: 'flex-end' }}>
-                  {(entries[displayName] || []).map((s, i) => (
-                    <div key={i} style={{ position: 'relative' }}>
-                      {(entries[displayName] || []).length > 1 && (
-                        <button
-                          title="Remove this set"
-                          onClick={() => removeSetBox(displayName, i)}
-                          style={{ position: 'absolute', top: -8, right: -8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2 }}
-                        >
-                          <X size={11} />
-                        </button>
-                      )}
-                      <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>SET {i + 1} · LB</div>
-                      <input type="number" value={s.weight} onChange={e => updateSet(displayName, i, 'weight', e.target.value)} style={{ width: 64 }} />
-                      <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>REPS</div>
-                      <input type="number" value={s.reps} onChange={e => updateSet(displayName, i, 'reps', e.target.value)} style={{ width: 64 }} />
-                    </div>
-                  ))}
-                  <Button size="sm" variant="ghost" onClick={() => addSetBox(displayName)} style={{ height: 32 }}>
-                    <Plus size={13} style={{ verticalAlign: 'middle' }} /> Add set
-                  </Button>
-                </div>
-
-                {!swaps[ex.exercise_name] && !proposalHere && (
-                  <Button size="sm" variant="text" onClick={() => handleRequestSwap(ex)} disabled={swapping === ex.exercise_name} style={{ marginTop: 'var(--space-2)' }}>
-                    {swapping === ex.exercise_name ? 'Finding a swap…' : <><RefreshCw size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Not feeling this one? Swap it</>}
-                  </Button>
-                )}
-                {proposalHere && (
-                  <div className="inbox-suggestion" style={{ marginTop: 'var(--space-2)' }}>
-                    <span>
-                      Try <strong>{swapProposal.substitute_name}</strong> ({swapProposal.target_reps}) instead — {swapProposal.reasoning}
-                    </span>
-                    <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
-                      <Button size="sm" onClick={acceptSwap}>Swap it</Button>
-                      <Button size="sm" variant="text" onClick={() => setSwapProposal(null)}>Never mind</Button>
-                    </div>
-                  </div>
-                )}
-              </>
             )}
           </Card>
         );

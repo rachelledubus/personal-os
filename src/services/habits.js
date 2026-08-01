@@ -73,6 +73,53 @@ export async function moveHabitToSystem(habitId, systemId) {
   if (error) throw error;
 }
 
+// ============================================================
+// STARTER SYSTEMS — three systems, grounded specifically in what's
+// actually been said in this project, not generic habit suggestions:
+// medication consistency (explicitly named as a recurring struggle),
+// solo-agent business momentum (the whole point of Realtor OS), and
+// sleep consistency (a real mood-stability lever, not just "good
+// sleep hygiene" advice). Deliberately small — 3 systems, 8 habits
+// total — so this doesn't recreate the exact overwhelm that made the
+// manual version get abandoned. Idempotent: checks by system name,
+// safe to click more than once.
+// ============================================================
+
+const STARTER_SYSTEMS = [
+  {
+    name: 'Medication & Health Basics',
+    description: 'The things that are easy to lose track of on a busy or low day.',
+    habits: ['Take morning medication', 'Drink water', 'Eat something before noon'],
+  },
+  {
+    name: 'Business Momentum',
+    description: 'The minimum that keeps the pipeline alive, even on a slow day.',
+    habits: ['3 sphere or referral touches today', "Log today's conversations"],
+  },
+  {
+    name: 'Evening Wind-Down',
+    description: 'Sleep consistency matters more than most other single things for mood stability.',
+    habits: ['Screens off 30 min before bed', 'Consistent bedtime'],
+  },
+];
+
+export async function generateStarterSystems() {
+  const existing = await listHabitSystems();
+  const existingNames = new Set(existing.map(s => s.name));
+
+  let systemsCreated = 0, habitsCreated = 0;
+  for (const template of STARTER_SYSTEMS) {
+    if (existingNames.has(template.name)) continue;
+    const system = await addHabitSystem(template.name, template.description);
+    systemsCreated += 1;
+    for (const habitName of template.habits) {
+      await addHabit(habitName, system.id);
+      habitsCreated += 1;
+    }
+  }
+  return { systemsCreated, habitsCreated, skipped: STARTER_SYSTEMS.length - systemsCreated };
+}
+
 /** Soft-delete — sets archived, doesn't drop the row. Matches the
  *  existing pattern (loadHabitsData already filters .eq('archived',
  *  false)) and keeps past habit_logs/streak history intact instead of

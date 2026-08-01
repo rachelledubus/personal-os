@@ -192,19 +192,6 @@ export const NURTURE_SEQUENCES = {
 };
 
 // ============================================================
-// CTA LIBRARY BY FUNNEL — System 04C. These overlap partly with the
-// System 13 CTA Library already synced in Bundle 1; kept here too as
-// the funnel-grouped view the manual presents them in.
-// ============================================================
-
-export const CTAS_BY_FUNNEL = {
-  Relocation: ['Get the Southwest Broward Relocation Guide', 'Compare Southwest Broward Communities', 'Plan My Move'],
-  Buyers: ['Get the Real Payment Guide', 'Create My Future Home Plan', 'Understand My Buying Options'],
-  'Community Fit': ['Find My Best-Fit Community', 'Compare Local Areas'],
-  'General Education': ['Subscribe to the Southwest Broward Intelligence Report'],
-};
-
-// ============================================================
 // NURTURE TRACKING — the live spreadsheet replacement: name / magnet /
 // date started / emails sent / replied? / booked?
 // ============================================================

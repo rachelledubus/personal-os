@@ -101,13 +101,20 @@ exports.handler = async (event) => {
         }
       } else {
         // Distinguish "doesn't exist" from "exists but isn't active" — genuinely
-        // different fixes, and the ambiguity is exactly what left this
-        // undebuggable the first time.
+        // different fixes. And show what DOES exist for this user_id, which
+        // immediately reveals whether SITE_OWNER_USER_ID matches nothing at
+        // all (wrong id) versus matches other automations but not this exact
+        // name (typo or case mismatch) — the ambiguity that made this
+        // undebuggable without seeing real data.
         const { data: anyMatch } = await supabase.from('automations').select('active')
           .eq('user_id', ownerUserId).eq('name', automation_name).maybeSingle();
+        const { data: allForUser } = await supabase.from('automations').select('name, active').eq('user_id', ownerUserId);
+        const existingNames = (allForUser || []).map(a => `"${a.name}"${a.active ? '' : ' (inactive)'}`);
         enrollReason = anyMatch
           ? `An automation named "${automation_name}" exists but is not active`
-          : `No automation named "${automation_name}" found for this account \u2014 check the exact name (case-sensitive) and that SITE_OWNER_USER_ID matches the account that created it`;
+          : existingNames.length > 0
+            ? `No automation named exactly "${automation_name}" for this account. Automations that DO exist for SITE_OWNER_USER_ID: ${existingNames.join(', ')}`
+            : `SITE_OWNER_USER_ID sees zero automations at all \u2014 this almost certainly means the UUID in that env var doesn't match your real account. Double-check it against Supabase Authentication > Users.`;
       }
     }
 

@@ -31,6 +31,12 @@ export async function deleteGroceryItem(id) {
   if (error) throw error;
 }
 
+export async function bulkDeleteGroceryItems(ids) {
+  if (ids.length === 0) return;
+  const { error } = await supabase.from('grocery_items').delete().in('id', ids);
+  if (error) throw error;
+}
+
 /** Clears everything already checked off — the "start next week's
  *  list clean" action, since items are marked purchased rather than
  *  deleted immediately (keeps the existing dedupe-by-name checks in

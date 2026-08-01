@@ -1,7 +1,6 @@
 import React from 'react';
 import ScheduleBlock from './ScheduleBlock.jsx';
 import EmptyState from '../ui/EmptyState.jsx';
-import { todayStr } from '../../utils/date.js';
 
 function isCurrentBlock(block) {
   if (!block.start_time) return false;
@@ -28,7 +27,7 @@ export function getOverrunningBlock(blocks, focusSessions = []) {
   if (!blocks) return null;
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
-  const todayDateStr = todayStr();
+  const todayDateStr = now.toISOString().slice(0, 10);
 
   function hadOverlappingFocusSession(block) {
     if (!block.start_time || !block.end_time) return false;

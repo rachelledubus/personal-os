@@ -6,13 +6,6 @@
    hex value, so the whole app stays consistent from one place.
    ============================================================ */
 :root {
-  /* Content height of the mobile bottom nav bar itself, NOT including
-     safe-area-inset-bottom (that's added separately wherever this is
-     used, since the safe area is device-specific). One shared number
-     so the nav bar, the content's bottom padding, the capture FAB,
-     and the mini timer bar can never drift out of sync with each
-     other again. */
-  --mobile-nav-height: 60px;
   /* --- Color: original palette, unchanged --- */
   --navy: #16324F;
   --sand: #F5F1EA;

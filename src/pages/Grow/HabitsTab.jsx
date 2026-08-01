@@ -6,7 +6,7 @@ import Checkbox from '../../components/ui/Checkbox.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import {
   loadHabitsData, addHabit, toggleHabitLog, archiveHabit,
-  listHabitSystems, addHabitSystem, archiveHabitSystem, moveHabitToSystem,
+  listHabitSystems, addHabitSystem, archiveHabitSystem, moveHabitToSystem, generateStarterSystems,
 } from '../../services/habits.js';
 import { getHabitPatternInsights } from '../../services/habitInsights.js';
 import { suggestInterval, setHabitReminderInterval, setHabitReminderTimes, clearHabitReminder } from '../../services/habitReminders.js';
@@ -59,6 +59,24 @@ export default function HabitsTab() {
     }
     setNewSystemName('');
     setAddingSystem(false);
+    load();
+  }
+
+  async function handleGenerateStarters() {
+    const confirmed = window.confirm(
+      "This creates 3 starter systems (7 habits total): Medication & Health Basics, Business Momentum, and Evening Wind-Down — grounded in what's actually come up in this project, not generic suggestions. You can archive anything you don't want afterward. Create them?"
+    );
+    if (!confirmed) return;
+    setAddError(null);
+    try {
+      const result = await generateStarterSystems();
+      if (result.systemsCreated === 0) {
+        setAddError('All three starter systems already exist \u2014 nothing new to add.');
+      }
+    } catch (err) {
+      setAddError(err.message || String(err));
+      return;
+    }
     load();
   }
 
@@ -136,6 +154,7 @@ export default function HabitsTab() {
         ) : (
           <Button size="sm" variant="text" onClick={() => setAddingSystem(true)}>+ New system</Button>
         )}
+        <Button size="sm" variant="ghost" onClick={handleGenerateStarters}>Generate starter systems for me</Button>
       </div>
       {addError && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4, color: 'var(--danger)' }}>Couldn't add: {addError}</div>}
     </Card>

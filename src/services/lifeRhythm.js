@@ -224,7 +224,18 @@ export function computeChainTimes(templates, { anchorOverrideMinutes = null } = 
       endMin = toMinutes(block.target_arrival_time);
       startMin = endMin != null ? endMin - (block.travel_minutes || 0) : (toMinutes(block.start_time) ?? null);
       if (prevResult && startMin != null && prevResult.endMin > startMin) {
+        // Previously: recorded the overlap but left startMin/endMin
+        // untouched, so every later anchored block (which bases its
+        // own start on THIS block's endMin) inherited a compressed,
+        // overlapping chain — this is very likely why times further
+        // into the day (dinner, evening blocks) could come out
+        // nonsensically early after a late anchor override. Now the
+        // block actually gets pushed to start when the previous one
+        // really ends, keeping its own duration intact.
         conflictMinutes = prevResult.endMin - startMin;
+        const duration = endMin - startMin;
+        startMin = prevResult.endMin;
+        endMin = startMin + duration;
       }
     } else {
       startMin = toMinutes(block.start_time);

@@ -35,7 +35,7 @@
 @media (max-width: 900px) {
   .mini-timer-bar {
     top: auto;
-    bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 10px);
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 10px);
     left: var(--space-4);
     right: var(--space-4);
     justify-content: space-between;

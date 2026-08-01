@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
-import { listGroceryItems, toggleGroceryItemPurchased, deleteGroceryItem, clearPurchasedGroceryItems } from '../../services/groceryList.js';
+import { listGroceryItems, toggleGroceryItemPurchased, deleteGroceryItem, bulkDeleteGroceryItems, clearPurchasedGroceryItems } from '../../services/groceryList.js';
 import { nextMonday } from '../../services/mealWeek.js';
 import {
   listShoppingUnitMappings, addShoppingUnitMapping, deleteShoppingUnitMapping, generateAggregatedGroceryList,
@@ -21,6 +21,7 @@ function GroceryListTab() {
   const [mappings, setMappings] = useState([]);
   const [newMapping, setNewMapping] = useState({ ingredient_name: '', qty_per_shopping_unit: '', shopping_unit_label: '' });
   const [mappingError, setMappingError] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => { refresh(); }, []);
   useEffect(() => { if (showMappings) loadMappings(); }, [showMappings]);
@@ -101,6 +102,24 @@ function GroceryListTab() {
     refresh();
   }
 
+  function toggleSelect(id) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function handleBulkDelete() {
+    const count = selectedIds.size;
+    if (count === 0) return;
+    const confirmed = window.confirm(`Delete ${count} item${count === 1 ? '' : 's'} from the list? This can't be undone.`);
+    if (!confirmed) return;
+    await bulkDeleteGroceryItems([...selectedIds]);
+    setSelectedIds(new Set());
+    refresh();
+  }
+
   if (loading) return null;
   if (loadError) {
     return (
@@ -121,7 +140,10 @@ function GroceryListTab() {
     <Card>
       <div className="row-between">
         <div className="section-label">Grocery List</div>
-        {purchased.length > 0 && <Button size="sm" variant="text" onClick={handleClearPurchased}>Clear checked ({purchased.length})</Button>}
+        <div className="row" style={{ gap: 'var(--space-2)' }}>
+          {selectedIds.size > 0 && <Button size="sm" variant="text" onClick={handleBulkDelete}>Delete {selectedIds.size} selected</Button>}
+          {purchased.length > 0 && <Button size="sm" variant="text" onClick={handleClearPurchased}>Clear checked ({purchased.length})</Button>}
+        </div>
       </div>
 
       <div className="row-between" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
@@ -143,7 +165,8 @@ function GroceryListTab() {
         <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 4 }}>
           {needed.map(item => (
             <label key={item.id} className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
-              <input type="checkbox" checked={false} onChange={() => handleToggle(item)} />
+              <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => toggleSelect(item.id)} title="Select for bulk delete" />
+              <input type="checkbox" checked={false} onChange={() => handleToggle(item)} title="Mark purchased" />
               <span>{item.name}</span>
               {item.total_quantity != null && <span className="faint">× {item.total_quantity} {item.unit}</span>}
               <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{item.category}</span>
@@ -155,7 +178,8 @@ function GroceryListTab() {
               <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 'var(--space-3)' }}>Checked off</div>
               {purchased.map(item => (
                 <label key={item.id} className="row" style={{ gap: 'var(--space-2)', alignItems: 'center', opacity: 0.5 }}>
-                  <input type="checkbox" checked={true} onChange={() => handleToggle(item)} />
+                  <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => toggleSelect(item.id)} title="Select for bulk delete" />
+                  <input type="checkbox" checked={true} onChange={() => handleToggle(item)} title="Mark purchased" />
                   <span style={{ textDecoration: 'line-through' }}>{item.name}</span>
                 </label>
               ))}

@@ -7,7 +7,7 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { supabase } from '../../lib/supabaseClient.js';
 import {
-  listGoals, addGoal, deleteGoal, listProjects, addProject, updateProject, deleteProject,
+  listGoals, addGoal, deleteGoal, bulkDeleteGoals, listProjects, addProject, updateProject, deleteProject, bulkDeleteProjects, generateStarterGoals,
   listProjectTasks, listMilestones, addMilestone, toggleMilestone, markGoalAchieved,
 } from '../../services/goals.js';
 import {
@@ -15,7 +15,7 @@ import {
 } from '../../services/missions.js';
 import MonthlyThemeCard from './MonthlyThemeCard.jsx';
 import { SECTIONS as DREAM_LIFE_SECTIONS } from './DreamLifeTab.jsx';
-import { importWebsiteBuildProject, PUBLISHED_PAGE_QA_CHECKLIST } from '../../services/websiteBuildImport.js';
+import { importWebsiteBuildProject, importPostBuildChecklist, PUBLISHED_PAGE_QA_CHECKLIST } from '../../services/websiteBuildImport.js';
 import { getCategoryList } from '../../services/settings.js';
 
 const TIMEFRAMES = ['Year', 'Quarter', 'Month', 'Week'];
@@ -62,6 +62,8 @@ export default function ProjectsTab() {
   const [newProjectIdentity, setNewProjectIdentity] = useState('');
   const [personalValues, setPersonalValues] = useState([]);
   const [importStatus, setImportStatus] = useState(null);
+  const [selectedGoalIds, setSelectedGoalIds] = useState(new Set());
+  const [selectedProjectIds, setSelectedProjectIds] = useState(new Set());
   const [showQaChecklist, setShowQaChecklist] = useState(false);
 
   async function refresh() {
@@ -132,13 +134,82 @@ export default function ProjectsTab() {
     }
   }
 
-  return (
-    <div className="stack" style={{ gap: 'var(--space-5)' }}>
-      <MonthlyThemeCard />
+  async function handleImportPostBuildChecklist() {
+    setImportStatus('importing');
+    try {
+      const result = await importPostBuildChecklist();
+      if (result.created) {
+        setImportStatus(`Added ${result.count} new post-build items${result.skipped ? ` (${result.skipped} already there, skipped)` : ''}.`);
+        refresh();
+      } else {
+        setImportStatus(result.reason);
+      }
+    } catch (err) {
+      setImportStatus(`Couldn't import: ${err.message || err}`);
+    }
+  }
+
+  async function handleGenerateStarterGoals() {
+    const confirmed = window.confirm(
+      "This creates 2 goals, 2 projects, 5 milestones: getting the lead magnet funnels actually generating leads, and building a real weekly business review rhythm — both tied to things already built, not new work. Create them?"
+    );
+    if (!confirmed) return;
+    setImportStatus('importing');
+    try {
+      const result = await generateStarterGoals();
+      setImportStatus(result.goalsCreated === 0
+        ? 'Both starter goals already exist — nothing new to add.'
+        : `Added ${result.goalsCreated} goal${result.goalsCreated === 1 ? '' : 's'}, ${result.projectsCreated} project${result.projectsCreated === 1 ? '' : 's'}, ${result.milestonesCreated} milestones.`);
+      refresh();
+    } catch (err) {
+      setImportStatus(`Couldn't generate: ${err.message || err}`);
+    }
+  }
+
+  function toggleGoalSelect(id) {
+    setSelectedGoalIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleProjectSelect(id) {
+    setSelectedProjectIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function handleBulkDeleteGoals() {
+    const count = selectedGoalIds.size;
+    if (count === 0) return;
+    const confirmed = window.confirm(`Delete ${count} goal${count === 1 ? '' : 's'}? Milestones directly on any linked projects go with them; tasks and notes stay, just unlinked. This can't be undone.`);
+    if (!confirmed) return;
+    await bulkDeleteGoals([...selectedGoalIds]);
+    setSelectedGoalIds(new Set());
+    refresh();
+  }
+
+  async function handleBulkDeleteProjects() {
+    const count = selectedProjectIds.size;
+    if (count === 0) return;
+    const confirmed = window.confirm(`Delete ${count} project${count === 1 ? '' : 's'}? Their milestones go with them; tasks and notes stay, just unlinked. This can't be undone.`);
+    if (!confirmed) return;
+    await bulkDeleteProjects([...selectedProjectIds]);
+    setSelectedProjectIds(new Set());
+    refresh();
+  }
+
+
 
       <Card>
         <div className="row-between">
           <div className="section-label">Goals</div>
+          {selectedGoalIds.size > 0 && (
+            <Button size="sm" variant="text" onClick={handleBulkDeleteGoals}>Delete {selectedGoalIds.size} selected</Button>
+          )}
         </div>
         {goals.length === 0 ? <EmptyState icon="star" title="No goals yet" /> : (
           <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
@@ -150,6 +221,8 @@ export default function ProjectsTab() {
                 onToggleExpand={() => setExpandedGoal(expandedGoal === g.id ? null : g.id)}
                 onMarkAchieved={() => handleMarkAchieved(g.id)}
                 onDelete={() => handleDeleteGoal(g.id, g.title)}
+                selected={selectedGoalIds.has(g.id)}
+                onToggleSelect={toggleGoalSelect}
               />
             ))}
           </div>
@@ -189,7 +262,12 @@ export default function ProjectsTab() {
       </Card>
 
       <Card>
-        <div className="section-label">Projects</div>
+        <div className="row-between">
+          <div className="section-label">Projects</div>
+          {selectedProjectIds.size > 0 && (
+            <Button size="sm" variant="text" onClick={handleBulkDeleteProjects}>Delete {selectedProjectIds.size} selected</Button>
+          )}
+        </div>
         {projects.length === 0 ? <EmptyState icon="map" title="No projects yet" /> : (
           <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-2)' }}>
             {projects.map(p => (
@@ -200,6 +278,8 @@ export default function ProjectsTab() {
                 onToggleExpand={() => setExpandedProject(expandedProject === p.id ? null : p.id)}
                 onChanged={refresh}
                 personalValues={personalValues}
+                selected={selectedProjectIds.has(p.id)}
+                onToggleSelect={toggleProjectSelect}
               />
             ))}
           </div>
@@ -212,6 +292,8 @@ export default function ProjectsTab() {
           </select>
           <Button size="sm" onClick={handleAddProject}>+ Add project</Button>
           <Button size="sm" variant="text" onClick={handleImportWebsiteBuild}>Import Website Build milestones</Button>
+          <Button size="sm" variant="text" onClick={handleImportPostBuildChecklist}>Import post-build checklist</Button>
+          <Button size="sm" variant="ghost" onClick={handleGenerateStarterGoals}>Generate starter goals for me</Button>
           <Button size="sm" variant="text" onClick={() => setShowQaChecklist(!showQaChecklist)}>{showQaChecklist ? 'Hide' : 'Show'} Published-Page QA Checklist</Button>
         </div>
         {importStatus && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{importStatus}</div>}
@@ -251,7 +333,7 @@ export default function ProjectsTab() {
   );
 }
 
-function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved, onDelete }) {
+function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved, onDelete, selected, onToggleSelect }) {
   const [missions, setMissions] = useState([]);
   const [newMissionTitle, setNewMissionTitle] = useState('');
   const [expandedMission, setExpandedMission] = useState(null);
@@ -285,13 +367,16 @@ function GoalRow({ goal, expanded, onToggleExpand, onMarkAchieved, onDelete }) {
   return (
     <div style={{ padding: '6px 0', borderBottom: '1px solid var(--sand)', cursor: 'pointer' }}>
       <div className="row-between" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }} onClick={onToggleExpand}>
-        <div>
-          <div style={{ fontWeight: 700 }}>{goal.title}</div>
-          <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>
-            {goal.category} · {goal.status}
-            {goal.timeframe && ` · ${goal.timeframe}`}
-            {goal.energy_impact && ` · ${goal.energy_impact}`}
-            {missions.length > 0 && ` · ${missions.filter(m => m.status === 'completed').length}/${missions.length} missions`}
+        <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+          <input type="checkbox" checked={!!selected} onChange={() => onToggleSelect(goal.id)} onClick={e => e.stopPropagation()} style={{ marginTop: 4 }} />
+          <div>
+            <div style={{ fontWeight: 700 }}>{goal.title}</div>
+            <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>
+              {goal.category} · {goal.status}
+              {goal.timeframe && ` · ${goal.timeframe}`}
+              {goal.energy_impact && ` · ${goal.energy_impact}`}
+              {missions.length > 0 && ` · ${missions.filter(m => m.status === 'completed').length}/${missions.length} missions`}
+            </div>
           </div>
         </div>
         <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
@@ -409,7 +494,7 @@ function MissionRow({ mission, expanded, onToggleExpand, onComplete, onDelete })
   );
 }
 
-function ProjectRow({ project, expanded, onToggleExpand, onChanged, personalValues }) {
+function ProjectRow({ project, expanded, onToggleExpand, onChanged, personalValues, selected, onToggleSelect }) {
   const [tasks, setTasks] = useState([]);
   const [milestones, setMilestones] = useState([]);
   const [resources, setResources] = useState([]);
@@ -470,13 +555,16 @@ function ProjectRow({ project, expanded, onToggleExpand, onChanged, personalValu
   return (
     <div className="planner-block" style={{ cursor: 'pointer' }}>
       <div className="row-between" onClick={onToggleExpand}>
-        <div>
-          <div style={{ fontWeight: 700 }}>{project.title}</div>
-          <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>
-            {project.status}
-            {project.goals?.title && ` · ${project.goals.title}`}
-            {tasks.length > 0 && ` · ${doneTasks}/${tasks.length} tasks`}
-            {progressPct !== null && ` · ${progressPct}% milestones`}
+        <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+          <input type="checkbox" checked={!!selected} onChange={() => onToggleSelect(project.id)} onClick={e => e.stopPropagation()} style={{ marginTop: 4 }} />
+          <div>
+            <div style={{ fontWeight: 700 }}>{project.title}</div>
+            <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>
+              {project.status}
+              {project.goals?.title && ` · ${project.goals.title}`}
+              {tasks.length > 0 && ` · ${doneTasks}/${tasks.length} tasks`}
+              {progressPct !== null && ` · ${progressPct}% milestones`}
+            </div>
           </div>
         </div>
         {project.due_date && <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{project.due_date}</div>}
