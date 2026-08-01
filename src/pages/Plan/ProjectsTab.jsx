@@ -202,7 +202,9 @@ export default function ProjectsTab() {
     refresh();
   }
 
-
+  return (
+    <div className="stack" style={{ gap: 'var(--space-5)' }}>
+      <MonthlyThemeCard />
 
       <Card>
         <div className="row-between">
