@@ -1,4 +1,4 @@
-import { addProject, addMilestone, listProjects, listMilestones, toggleMilestone } from './goals.js';
+import { addProject, addMilestone, listProjects, listMilestones, toggleMilestone, deleteMilestone } from './goals.js';
 import { supabase } from '../lib/supabaseClient.js';
 
 async function getUserId() {
@@ -147,10 +147,11 @@ export async function markSiteBuildComplete() {
 }
 
 /** Real business/website progress for the Business \u2192 Roadmap
- *  redesign \u2014 grouped by phase (M1-M5 prefix), with completion
- *  stats per phase. This replaces the old software-roadmap phase
- *  cards, which tracked the app's own build (not something actionable
- *  day-to-day for the person actually running the business). */
+ *  redesign \u2014 grouped by phase (M1-M5 or P1-P4 prefix), with
+ *  completion stats per phase. This replaces the old software-roadmap
+ *  phase cards, which tracked the app's own build (not something
+ *  actionable day-to-day for the person actually running the
+ *  business). */
 export async function getWebsiteBuildProgress() {
   const existing = await listProjects();
   const project = existing.find(p => p.title === 'Website Build');
@@ -159,24 +160,95 @@ export async function getWebsiteBuildProgress() {
   const milestones = await listMilestones({ projectId: project.id });
   const phases = {};
   for (const m of milestones) {
-    const match = m.title.match(/^(M[1-5]):\s*(.+)/);
+    const match = m.title.match(/^(M[1-5]|P[1-4]):\s*(.+)/);
     const phase = match ? match[1] : 'Other';
     const label = match ? match[2] : m.title;
     (phases[phase] ||= []).push({ ...m, label });
   }
 
   const PHASE_NAMES = {
-    M1: 'Launchable Website', M2: 'Relocation Funnel', M3: 'Neighborhood Guides',
-    M4: 'Buyer Education Funnel', M5: 'Scale & Optimize',
+    M1: 'Launchable Website', M2: 'Relocation Funnel', M3: 'Neighborhood Guides', M4: 'Buyer Education Funnel',
+    P1: 'Finish the last mile', P2: 'Get real leads moving', P3: 'Build the operating rhythm', P4: 'Build authority & scale',
   };
 
-  const phaseList = Object.keys(phases).sort().map(key => ({
+  const PHASE_ORDER = ['M1', 'M2', 'M3', 'M4', 'M5', 'P1', 'P2', 'P3', 'P4', 'Other'];
+  const phaseList = Object.keys(phases).sort((a, b) => PHASE_ORDER.indexOf(a) - PHASE_ORDER.indexOf(b)).map(key => ({
     key, name: PHASE_NAMES[key] || key, items: phases[key],
     doneCount: phases[key].filter(m => m.completed).length,
     total: phases[key].length,
   }));
 
   return { projectId: project.id, phases: phaseList };
+}
+
+// ============================================================
+// THE NEW ROADMAP — replaces the old, generic M5 "Scale & Optimize"
+// catch-all with 4 concrete phases reflecting where things actually
+// are: the site is live, the automation engine exists but needs real
+// verification, and the actual work now is finishing the last
+// pieces, getting real leads through the system, and building the
+// habits that make it a business instead of a project. One picture,
+// not two separate trackers for "finish the site" and "grow the
+// business" \u2014 those were never really separate things.
+// ============================================================
+
+const OLD_M5_TITLES_TO_RETIRE = [
+  'M5: First-Time Homebuyer Guide as Google Doc + Sequence C',
+  'M5: Selling Strategy landing page + Google Doc + Sequence D (seller funnel)',
+  'M5: Build Resources page (indexes everything)',
+  'M5: Canva batch \u2014 redesign all five lead magnets, swap Doc links for PDFs',
+  'M5: First blog post \u2014 "Cooper City vs Plantation," links both guides',
+  'M5: Work the Version 2 list in batches',
+];
+
+const NEW_ROADMAP_ITEMS = [
+  // P1 — Finish the last mile (migrates the still-real M5 work + the one thing that actually needs verifying)
+  'P1: Confirm the automation system sent a real email end to end \u2014 not just "enrolled," an actual received email',
+  'P1: Finish the Canva batch \u2014 all five lead magnets redesigned, real PDF links live',
+  'P1: Build the Resources page (indexes everything)',
+  'P1: First-Time Homebuyer Guide live as a Google Doc + Sequence C',
+  'P1: Selling Strategy Guide live as a Google Doc + Sequence D',
+  'P1: Verify the 8 loose-thread items from the post-build checklist are actually resolved',
+  // P2 — Get real leads moving
+  'P2: First 10 real contacts enrolled in an automation',
+  'P2: Confirm tags are applying correctly on real form submissions',
+  'P2: Log every real conversation/follow-up in the CRM as it happens',
+  // P3 — Build the operating rhythm
+  'P3: Complete the first Weekly Business Review',
+  'P3: Two consecutive weeks of a completed Weekly Business Review',
+  'P3: Two consecutive weeks of Business Momentum habits actually done',
+  // P4 — Build authority & scale
+  'P4: First blog post live ("Cooper City vs Plantation")',
+  'P4: Second blog post live',
+  'P4: One local content collection session completed',
+  'P4: Revisit the Version 2 list and pull in 1-2 items',
+];
+
+export async function buildNewRoadmap() {
+  const existing = await listProjects();
+  const project = existing.find(p => p.title === 'Website Build');
+  if (!project) return { created: false, reason: 'No "Website Build" project found.' };
+
+  const currentMilestones = await listMilestones({ projectId: project.id });
+
+  // Retire the old, vague M5 catch-all items that are being replaced
+  // by more specific versions in the new phases \u2014 only the ones
+  // that were never actually completed, so nothing real gets lost.
+  let retired = 0;
+  for (const m of currentMilestones) {
+    if (OLD_M5_TITLES_TO_RETIRE.includes(m.title) && !m.completed) {
+      await deleteMilestone(m.id);
+      retired += 1;
+    }
+  }
+
+  const existingTitles = new Set(currentMilestones.map(m => m.title));
+  const toAdd = NEW_ROADMAP_ITEMS.filter(t => !existingTitles.has(t));
+  for (const title of toAdd) {
+    await addMilestone({ project_id: project.id, title });
+  }
+
+  return { retired, added: toAdd.length, skipped: NEW_ROADMAP_ITEMS.length - toAdd.length };
 }
 
 
