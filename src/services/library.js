@@ -249,17 +249,17 @@ const GAP_PHONE_BOUNDARIES = [
 ];
 
 const GAP_OUTREACH_PLAYBOOK = [
-  { section: 'Sphere Conversations', situation: 'Reconnection', script_text: "Hey! I realized it's been way too long since we caught up. I saw [something relevant] and thought of you. How have you been?" },
-  { section: 'Sphere Conversations', situation: 'Casual check-in', script_text: "Hey! Just checking in. How have you been? How's everything going with [job/family/life update]?" },
-  { section: 'Sphere Conversations', situation: 'Former coworker', script_text: "Hey! I was thinking about old work days and realized we haven't caught up in forever. How have you been?" },
-  { section: 'Sphere Conversations', situation: 'Old friend', script_text: "Randomly thought about you today and realized it's been way too long since we've talked. How are things going?" },
-  { section: 'Sphere Conversations', situation: 'When real estate comes up', script_text: "That's exciting. Have you started looking into what that might look like, or are you just exploring options right now?" },
-  { section: 'Community Conversations', situation: 'If they ask what you do', script_text: "I help people understand Southwest Broward when they're thinking about moving or buying. A lot of what I do is helping people figure out which areas actually fit their lifestyle before they make a decision." },
-  { section: 'Professional Partner Outreach', situation: 'Professional introduction', script_text: "Hi [Name], I came across your work with [organization] and wanted to introduce myself. I specialize in helping people understand Southwest Broward when they're relocating or preparing to buy. A challenge I see often is that people struggle to understand the area before making a move. I create resources that help simplify that process, and I thought they may be useful for the people you work with." },
-  { section: 'Referral Conversations', situation: 'Asking about referrals', script_text: "A lot of my business comes from helping people understand their options before they're ready. If you ever hear someone talking about moving to Southwest Broward, I'm always happy to be a resource for them." },
-  { section: 'Outreach Scripts', situation: 'Local business introduction', script_text: "Hi! I'm Rachelle. I'm a local real estate professional focused on helping people understand Southwest Broward. I'm trying to learn more about the businesses and places that make these communities special. I'd love to hear more about your story and what you do here." },
-  { section: 'Outreach Scripts', situation: 'Community member introduction', script_text: "I'm spending more time learning what residents actually love about these areas because I want to help people moving here understand what daily life is really like. What's something you think people should know about this community?" },
-  { section: 'Outreach Scripts', situation: 'Past contact reconnect', script_text: "Hey! I've been thinking about people I haven't caught up with in a while and realized it's been too long. How have you been?" },
+  { section: 'Sphere Conversations', situation: 'Reconnection', script_text: "Hey, sorry I've been MIA! Life's been lifeing lately lol. How have you been??" },
+  { section: 'Sphere Conversations', situation: 'Casual check-in', script_text: "Hey!! Randomly thinking about you, how's life been treating you?" },
+  { section: 'Sphere Conversations', situation: 'Former coworker', script_text: "Omg I was just thinking about [old job] the other day lol. How've you been??" },
+  { section: 'Sphere Conversations', situation: 'Old friend', script_text: "Randomly thought of you today lol. How's life been??" },
+  { section: 'Sphere Conversations', situation: 'When real estate comes up', script_text: "Ooh that's exciting!! Are you like actually looking or just thinking about it rn?" },
+  { section: 'Community Conversations', situation: 'If they ask what you do', script_text: "I help people figure out Southwest Broward when they're thinking about moving or buying — basically which areas actually fit their life before they commit to anything." },
+  { section: 'Professional Partner Outreach', situation: 'Professional introduction', script_text: "Hi [Name], I came across your work with [organization] and wanted to say hi! I help people navigate Southwest Broward when they're relocating or buying — a lot of people struggle to actually understand the area before making a move, so I put together resources that make that easier. Thought they might be useful for the people you work with." },
+  { section: 'Referral Conversations', situation: 'Asking about referrals', script_text: "Honestly a lot of my business comes from just helping people figure things out before they're ready to buy. If you ever hear someone talking about moving to Southwest Broward, send them my way — happy to just be a resource, no pressure." },
+  { section: 'Outreach Scripts', situation: 'Local business introduction', script_text: "Hi! I'm Rachelle — I help people navigate Southwest Broward real estate. I'm trying to get to know more of the local businesses and what makes these communities actually special. Would love to hear your story and what you do here." },
+  { section: 'Outreach Scripts', situation: 'Community member introduction', script_text: "I've been spending more time learning what people actually love about living here, since I want to help people moving in understand what daily life is really like. What's something you think people should know about this community?" },
+  { section: 'Outreach Scripts', situation: 'Past contact reconnect', script_text: "Hey, sorry I've been MIA! Life's been lifeing lately lol. How have you been??" },
   { section: 'Outreach Scripts', situation: 'Someone mentions a move', script_text: "That's exciting — have you started looking into what that might look like, or are you just exploring options right now?" },
 ];
 
@@ -300,4 +300,44 @@ export async function syncLibraryGaps() {
   if (inserts.length) await Promise.all(inserts);
 
   return { added: newCtas.length + newScripts.length + newPrompts.length };
+}
+
+// ============================================================
+// VOICE REFRESH — the reconnection/outreach scripts were originally
+// pulled verbatim from the business manual, which reads like generic
+// reconnection advice ("I realized it's been way too long since we
+// caught up") rather than how a specific person actually texts
+// someone. Rewritten to match a real voice sample. syncLibraryGaps()
+// only ever adds missing scripts, never updates existing ones — this
+// overwrites the specific ones that changed, matched by section +
+// situation, so a script you already synced actually gets replaced
+// instead of silently staying stale.
+// ============================================================
+
+const VOICE_REFRESHED_SCRIPTS = [
+  { section: 'Sphere Conversations', situation: 'Reconnection', script_text: "Hey, sorry I've been MIA! Life's been lifeing lately lol. How have you been??" },
+  { section: 'Sphere Conversations', situation: 'Casual check-in', script_text: "Hey!! Randomly thinking about you, how's life been treating you?" },
+  { section: 'Sphere Conversations', situation: 'Former coworker', script_text: "Omg I was just thinking about [old job] the other day lol. How've you been??" },
+  { section: 'Sphere Conversations', situation: 'Old friend', script_text: "Randomly thought of you today lol. How's life been??" },
+  { section: 'Sphere Conversations', situation: 'When real estate comes up', script_text: "Ooh that's exciting!! Are you like actually looking or just thinking about it rn?" },
+  { section: 'Community Conversations', situation: 'If they ask what you do', script_text: "I help people figure out Southwest Broward when they're thinking about moving or buying — basically which areas actually fit their life before they commit to anything." },
+  { section: 'Professional Partner Outreach', situation: 'Professional introduction', script_text: "Hi [Name], I came across your work with [organization] and wanted to say hi! I help people navigate Southwest Broward when they're relocating or buying — a lot of people struggle to actually understand the area before making a move, so I put together resources that make that easier. Thought they might be useful for the people you work with." },
+  { section: 'Referral Conversations', situation: 'Asking about referrals', script_text: "Honestly a lot of my business comes from just helping people figure things out before they're ready to buy. If you ever hear someone talking about moving to Southwest Broward, send them my way — happy to just be a resource, no pressure." },
+  { section: 'Outreach Scripts', situation: 'Local business introduction', script_text: "Hi! I'm Rachelle — I help people navigate Southwest Broward real estate. I'm trying to get to know more of the local businesses and what makes these communities actually special. Would love to hear your story and what you do here." },
+  { section: 'Outreach Scripts', situation: 'Community member introduction', script_text: "I've been spending more time learning what people actually love about living here, since I want to help people moving in understand what daily life is really like. What's something you think people should know about this community?" },
+  { section: 'Outreach Scripts', situation: 'Past contact reconnect', script_text: "Hey, sorry I've been MIA! Life's been lifeing lately lol. How have you been??" },
+];
+
+export async function refreshScriptVoice() {
+  const userId = await getUserId();
+  if (!userId) return { updated: 0 };
+
+  let updated = 0;
+  for (const s of VOICE_REFRESHED_SCRIPTS) {
+    const { error, count } = await supabase.from('scripts')
+      .update({ script_text: s.script_text }, { count: 'exact' })
+      .eq('user_id', userId).eq('section', s.section).eq('situation', s.situation);
+    if (!error && count) updated += count;
+  }
+  return { updated };
 }

@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import SubTabNav from '../../components/nav/SubTabNav.jsx';
-import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt, syncLibraryGaps } from '../../services/library.js';
+import { seedLibraryIfEmpty, listCtas, listScripts, listPrompts, addCta, addScript, addPrompt, syncLibraryGaps, refreshScriptVoice } from '../../services/library.js';
 import { FLOWS } from '../../services/flows.js';
 import { CITY_PROFILES, BUYER_INTELLIGENCE_TOPICS, LOCAL_EXPERTISE_CATEGORIES, DECISION_FRAMEWORK } from '../../services/localKnowledge.js';
 
@@ -33,6 +33,19 @@ function LibraryTab() {
     setSyncing(false);
   }
 
+  async function handleRefreshVoice() {
+    setSyncing(true);
+    setSyncStatus(null);
+    try {
+      const result = await refreshScriptVoice();
+      setSyncStatus(result.updated === 0 ? 'Nothing to update \u2014 those scripts may not be synced yet, or are already up to date.' : `Updated ${result.updated} script${result.updated === 1 ? '' : 's'} to the real voice version.`);
+      setSyncVersion(v => v + 1);
+    } catch (err) {
+      setSyncStatus(`Couldn't refresh: ${err.message || err}`);
+    }
+    setSyncing(false);
+  }
+
   return (
     <div>
       <div className="row-between" style={{ marginBottom: 'var(--space-3)', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
@@ -45,6 +58,9 @@ function LibraryTab() {
         </div>
         <Button size="sm" variant="ghost" onClick={handleSync} disabled={syncing}>
           {syncing ? 'Syncing…' : 'Sync latest from manual'}
+        </Button>
+        <Button size="sm" variant="text" onClick={handleRefreshVoice} disabled={syncing}>
+          Refresh script voice
         </Button>
       </div>
       {syncStatus && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginBottom: 'var(--space-3)' }}>{syncStatus}</div>}
