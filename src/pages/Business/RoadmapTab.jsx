@@ -4,7 +4,7 @@ import Button from '../../components/ui/Button.jsx';
 import Checkbox from '../../components/ui/Checkbox.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { listFutureIdeas, addFutureIdea, deleteFutureIdea, promoteToRoadmap, scoreOpportunityIdea } from '../../services/futureRoadmap.js';
-import { getWebsiteBuildProgress, markSiteBuildComplete } from '../../services/websiteBuildImport.js';
+import { getWebsiteBuildProgress, markSiteBuildComplete, buildNewRoadmap } from '../../services/websiteBuildImport.js';
 import { toggleMilestone } from '../../services/goals.js';
 
 // ============================================================
@@ -24,6 +24,8 @@ export default function RoadmapTab() {
   const [addingIdea, setAddingIdea] = useState(false);
   const [ideaForm, setIdeaForm] = useState({ idea: '', why_deferred: '', effort: '', value: '' });
   const [markingComplete, setMarkingComplete] = useState(false);
+  const [buildingRoadmap, setBuildingRoadmap] = useState(false);
+  const [roadmapStatus, setRoadmapStatus] = useState(null);
 
   useEffect(() => { load(); listFutureIdeas().then(setIdeas); }, []);
 
@@ -63,6 +65,20 @@ export default function RoadmapTab() {
     await markSiteBuildComplete();
     setMarkingComplete(false);
     load();
+  }
+
+  async function handleBuildNewRoadmap() {
+    const confirmed = window.confirm("This replaces the old, vague \"M5: Scale & Optimize\" items with 4 real phases: finish the last mile, get real leads moving, build the operating rhythm, and build authority & scale — 16 concrete items total. Nothing already completed gets touched. Build it?");
+    if (!confirmed) return;
+    setBuildingRoadmap(true);
+    try {
+      const result = await buildNewRoadmap();
+      setRoadmapStatus(result.created === false ? result.reason : `Retired ${result.retired} old item${result.retired === 1 ? '' : 's'}, added ${result.added} new one${result.added === 1 ? '' : 's'}.`);
+      load();
+    } catch (err) {
+      setRoadmapStatus(`Couldn't build: ${err.message || err}`);
+    }
+    setBuildingRoadmap(false);
   }
 
   const nextMilestone = progress?.phases.flatMap(ph => ph.items).find(m => !m.completed);
@@ -151,10 +167,16 @@ export default function RoadmapTab() {
           <Card>
             <div className="row-between">
               <div className="section-label">Website build status</div>
-              <Button size="sm" variant="text" onClick={handleMarkSiteComplete} disabled={markingComplete}>
-                {markingComplete ? 'Updating…' : 'Mark site build complete (M1-M4)'}
-              </Button>
+              <div className="row" style={{ gap: 'var(--space-2)' }}>
+                <Button size="sm" variant="text" onClick={handleMarkSiteComplete} disabled={markingComplete}>
+                  {markingComplete ? 'Updating…' : 'Mark site build complete (M1-M4)'}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleBuildNewRoadmap} disabled={buildingRoadmap}>
+                  {buildingRoadmap ? 'Building…' : 'Build the new roadmap'}
+                </Button>
+              </div>
             </div>
+            {roadmapStatus && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{roadmapStatus}</div>}
           </Card>
 
           {progress.phases.map(phase => (
