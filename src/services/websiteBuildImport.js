@@ -1,4 +1,4 @@
-import { addProject, addMilestone, listProjects, listMilestones } from './goals.js';
+import { addProject, addMilestone, listProjects, listMilestones, toggleMilestone } from './goals.js';
 import { supabase } from '../lib/supabaseClient.js';
 
 async function getUserId() {
@@ -125,3 +125,58 @@ export async function importPostBuildChecklist() {
 
   return { created: true, count: missing.length, skipped: POST_BUILD_ITEMS.length - missing.length };
 }
+
+// ============================================================
+// Marks M1-M4 complete \u2014 the actual site-build milestones \u2014
+// reflecting the confirmed fact that the website is done. M5 (Canva
+// batch, blog post, Resources page, Version 2 list) is left alone
+// since only the Canva batch was confirmed as current active work,
+// not the rest of M5.
+// ============================================================
+export async function markSiteBuildComplete() {
+  const existing = await listProjects();
+  const project = existing.find(p => p.title === 'Website Build');
+  if (!project) return { updated: 0, reason: 'No "Website Build" project found.' };
+
+  const milestones = await listMilestones({ projectId: project.id });
+  const toComplete = milestones.filter(m => /^M[1-4]:/.test(m.title) && !m.completed);
+  for (const m of toComplete) {
+    await toggleMilestone(m.id, true);
+  }
+  return { updated: toComplete.length };
+}
+
+/** Real business/website progress for the Business \u2192 Roadmap
+ *  redesign \u2014 grouped by phase (M1-M5 prefix), with completion
+ *  stats per phase. This replaces the old software-roadmap phase
+ *  cards, which tracked the app's own build (not something actionable
+ *  day-to-day for the person actually running the business). */
+export async function getWebsiteBuildProgress() {
+  const existing = await listProjects();
+  const project = existing.find(p => p.title === 'Website Build');
+  if (!project) return null;
+
+  const milestones = await listMilestones({ projectId: project.id });
+  const phases = {};
+  for (const m of milestones) {
+    const match = m.title.match(/^(M[1-5]):\s*(.+)/);
+    const phase = match ? match[1] : 'Other';
+    const label = match ? match[2] : m.title;
+    (phases[phase] ||= []).push({ ...m, label });
+  }
+
+  const PHASE_NAMES = {
+    M1: 'Launchable Website', M2: 'Relocation Funnel', M3: 'Neighborhood Guides',
+    M4: 'Buyer Education Funnel', M5: 'Scale & Optimize',
+  };
+
+  const phaseList = Object.keys(phases).sort().map(key => ({
+    key, name: PHASE_NAMES[key] || key, items: phases[key],
+    doneCount: phases[key].filter(m => m.completed).length,
+    total: phases[key].length,
+  }));
+
+  return { projectId: project.id, phases: phaseList };
+}
+
+
