@@ -77,12 +77,12 @@ export default function RoadmapTab() {
   }
 
   async function handleBuildNewRoadmap() {
-    const confirmed = window.confirm("This replaces the previous roadmap with the real Implementation Roadmap Update (Aug 3, 2026): 3 gate criteria, then 3 real windows \u2014 30 days (reactivate CRM + weekly review), 60 days (referral asset, community, intelligence content), and 90 days (gated \u2014 stays locked until the gate criteria are met). 17 items total. Nothing already completed gets touched. Build it?");
+    const confirmed = window.confirm("This builds a real, separate \"Phase 1 Foundation Reactivation\" project in Plan \u2192 Goals & Projects for the gate criteria and the 3 real windows (30/60/90 days) \u2014 17 items total, correctly separated from Website Build's own milestones. If any of these already exist in Website Build from an earlier run, they'll be moved over, not duplicated. Nothing already completed gets touched. Build it?");
     if (!confirmed) return;
     setBuildingRoadmap(true);
     try {
       const result = await buildNewRoadmap();
-      setRoadmapStatus(result.created === false ? result.reason : `Retired ${result.retired} old item${result.retired === 1 ? '' : 's'}, added ${result.added} new one${result.added === 1 ? '' : 's'}.`);
+      setRoadmapStatus(`Retired ${result.retired} old item${result.retired === 1 ? '' : 's'}, moved ${result.migrated} misplaced item${result.migrated === 1 ? '' : 's'} into Phase 1 Foundation Reactivation, added ${result.added} new one${result.added === 1 ? '' : 's'}.`);
       load();
     } catch (err) {
       setRoadmapStatus(`Couldn't build: ${err.message || err}`);

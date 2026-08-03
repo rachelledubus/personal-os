@@ -166,10 +166,16 @@ export const PHASE1_EXIT_CRITERIA = [
 
 export async function getWebsiteBuildProgress() {
   const existing = await listProjects();
-  const project = existing.find(p => p.title === 'Website Build');
-  if (!project) return null;
+  const websiteProject = existing.find(p => p.title === 'Website Build');
+  const phase1Project = existing.find(p => p.title === 'Phase 1 Foundation Reactivation');
+  if (!websiteProject && !phase1Project) return null;
 
-  const milestones = await listMilestones({ projectId: project.id });
+  const [websiteMilestones, phase1Milestones] = await Promise.all([
+    websiteProject ? listMilestones({ projectId: websiteProject.id }) : Promise.resolve([]),
+    phase1Project ? listMilestones({ projectId: phase1Project.id }) : Promise.resolve([]),
+  ]);
+  const milestones = [...websiteMilestones, ...phase1Milestones];
+
   const phases = {};
   for (const m of milestones) {
     const match = m.title.match(/^(M[1-5]|W[1-3]|GATE):\s*(.+)/);
@@ -196,7 +202,7 @@ export async function getWebsiteBuildProgress() {
     locked: key === 'W3' && !gateOpen,
   }));
 
-  return { projectId: project.id, phases: phaseList, gateOpen };
+  return { websiteProjectId: websiteProject?.id, phase1ProjectId: phase1Project?.id, phases: phaseList, gateOpen };
 }
 
 // ============================================================
@@ -286,29 +292,49 @@ const NEW_ROADMAP_ITEMS = [
 
 export async function buildNewRoadmap() {
   const existing = await listProjects();
-  const project = existing.find(p => p.title === 'Website Build');
-  if (!project) return { created: false, reason: 'No "Website Build" project found.' };
+  let phase1Project = existing.find(p => p.title === 'Phase 1 Foundation Reactivation');
+  const websiteProject = existing.find(p => p.title === 'Website Build');
 
-  const currentMilestones = await listMilestones({ projectId: project.id });
-
-  // Retire the old, vague M5 catch-all items that are being replaced
-  // by more specific versions in the new phases \u2014 only the ones
-  // that were never actually completed, so nothing real gets lost.
-  let retired = 0;
-  for (const m of currentMilestones) {
-    if (OLD_M5_TITLES_TO_RETIRE.includes(m.title) && !m.completed) {
-      await deleteMilestone(m.id);
-      retired += 1;
+  // Migrate any GATE/W1-W3 items that landed in "Website Build" from a
+  // previous run of this function \u2014 that project should only ever
+  // hold the actual site-build milestones (M1-M4), not business
+  // operating-habit work. Move, don't duplicate.
+  let migrated = 0;
+  if (websiteProject) {
+    const websiteMilestones = await listMilestones({ projectId: websiteProject.id });
+    const misplaced = websiteMilestones.filter(m => /^(GATE|W[1-3]):/.test(m.title));
+    if (misplaced.length > 0) {
+      if (!phase1Project) phase1Project = await addProject({ title: 'Phase 1 Foundation Reactivation', status: 'Active' });
+      for (const m of misplaced) {
+        await supabase.from('milestones').update({ project_id: phase1Project.id }).eq('id', m.id);
+        migrated += 1;
+      }
     }
   }
 
-  const existingTitles = new Set(currentMilestones.map(m => m.title));
-  const toAdd = NEW_ROADMAP_ITEMS.filter(t => !existingTitles.has(t));
-  for (const title of toAdd) {
-    await addMilestone({ project_id: project.id, title });
+  if (!phase1Project) phase1Project = await addProject({ title: 'Phase 1 Foundation Reactivation', status: 'Active' });
+
+  // Retire the old, vague M5 catch-all items \u2014 only from Website
+  // Build, and only ones never completed, so nothing real gets lost.
+  let retired = 0;
+  if (websiteProject) {
+    const websiteMilestones = await listMilestones({ projectId: websiteProject.id });
+    for (const m of websiteMilestones) {
+      if (OLD_M5_TITLES_TO_RETIRE.includes(m.title) && !m.completed) {
+        await deleteMilestone(m.id);
+        retired += 1;
+      }
+    }
   }
 
-  return { retired, added: toAdd.length, skipped: NEW_ROADMAP_ITEMS.length - toAdd.length };
+  const phase1Milestones = await listMilestones({ projectId: phase1Project.id });
+  const existingTitles = new Set(phase1Milestones.map(m => m.title));
+  const toAdd = NEW_ROADMAP_ITEMS.filter(t => !existingTitles.has(t));
+  for (const title of toAdd) {
+    await addMilestone({ project_id: phase1Project.id, title });
+  }
+
+  return { retired, migrated, added: toAdd.length, skipped: NEW_ROADMAP_ITEMS.length - toAdd.length };
 }
 
 
