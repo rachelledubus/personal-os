@@ -11,8 +11,15 @@ import {
 } from '../../services/contacts.js';
 import { getCategoryList } from '../../services/settings.js';
 import { getCadenceStandards, standardKeyForContact, FOLLOWUP_STANDARD_TYPES } from '../../services/followupStandards.js';
+import { logActivity } from '../../services/businessActivityLog.js';
 
 const TIERS = ['Tier 1 - Core', 'Tier 2 - Developing', 'Tier 3 - Strategic'];
+
+function plusDays(n) {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
 const TRANSACTION_CATEGORIES = ['Lead', 'Future Client', 'Active Client'];
 
 export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
@@ -24,6 +31,11 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
   const [cadence, setCadence] = useState({});
 
   const [editingName, setEditingName] = useState(false);
+  const [loggingTouch, setLoggingTouch] = useState(false);
+  const [touchLogged, setTouchLogged] = useState(false);
+  const [expandTouch, setExpandTouch] = useState(false);
+  const [touchChannel, setTouchChannel] = useState('unspecified');
+  const [touchNextFollowUp, setTouchNextFollowUp] = useState(plusDays(7));
   const [nameDraft, setNameDraft] = useState('');
 
   const [editingFollowUp, setEditingFollowUp] = useState(false);
@@ -69,6 +81,29 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
     await updateContact(contactId, fields);
     await refresh();
     onUpdated?.();
+  }
+
+  /** Default tap = done. No modal, no required fields — this is the
+   *  actual fix for the interaction cost that made CRM logging fall
+   *  off. The optional channel/next-follow-up expansion never blocks
+   *  the tap itself. */
+  async function handleLogTouch() {
+    setLoggingTouch(true);
+    try {
+      await logActivity('conversation', {
+        channel: touchChannel, relatedContactId: contactId,
+      });
+      if (expandTouch && touchNextFollowUp) {
+        await applyField({ next_follow_up_date: touchNextFollowUp, last_contact_date: new Date().toISOString().slice(0, 10) });
+      } else {
+        await applyField({ last_contact_date: new Date().toISOString().slice(0, 10) });
+      }
+      setTouchLogged(true);
+      setTimeout(() => setTouchLogged(false), 2000);
+      setExpandTouch(false);
+    } finally {
+      setLoggingTouch(false);
+    }
   }
 
   async function handleSaveName() {
@@ -143,6 +178,30 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <Badge tone={contactStatusTone(contact.status)}>{contact.status}</Badge>
+        </div>
+
+        {/* ---------- Quick Touch Logger — one tap, no modal ---------- */}
+        <div>
+          <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
+            <Button size="sm" variant={touchLogged ? 'sage' : 'primary'} onClick={handleLogTouch} disabled={loggingTouch}>
+              {touchLogged ? '✓ Logged' : loggingTouch ? 'Logging…' : 'Log Touch'}
+            </Button>
+            <Button size="sm" variant="text" onClick={() => setExpandTouch(!expandTouch)}>{expandTouch ? 'Hide options' : '+ options'}</Button>
+          </div>
+          {expandTouch && (
+            <div className="row" style={{ marginTop: 6, gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="row" style={{ gap: 4 }}>
+                {['call', 'text', 'email'].map(ch => (
+                  <button key={ch} className={`sub-tab ${touchChannel === ch ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => setTouchChannel(ch)}>
+                    {ch}
+                  </button>
+                ))}
+              </div>
+              <label style={{ fontSize: 'var(--text-micro)' }} className="muted">
+                Next follow-up: <input type="date" value={touchNextFollowUp} onChange={e => setTouchNextFollowUp(e.target.value)} style={{ width: 130 }} />
+              </label>
+            </div>
+          )}
         </div>
 
         {/* ---------- Contact info ---------- */}

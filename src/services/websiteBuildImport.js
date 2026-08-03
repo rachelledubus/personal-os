@@ -152,6 +152,18 @@ export async function markSiteBuildComplete() {
  *  phase cards, which tracked the app's own build (not something
  *  actionable day-to-day for the person actually running the
  *  business). */
+export const PHASE1_DIAGNOSIS = "Phase 1 operating habits (CRM, weekly review, partner outreach) are behind; asset production (website, lead magnets) is ahead. 5 of 7 Phase 1 exit criteria unmet. Building new assets won't resolve \u201cwhy zero transactions\u201d \u2014 reactivating measurement will.";
+
+export const PHASE1_EXIT_CRITERIA = [
+  { label: 'CRM active', status: 'Not active \u2014 fell off', met: false },
+  { label: 'Follow-up system running', status: 'Not running', met: false },
+  { label: 'Weekly reviews consistent', status: 'Not started', met: false },
+  { label: 'First lead magnet generating interest', status: 'Live, unmeasured', met: null },
+  { label: 'Intelligence content exists', status: 'Not built', met: false },
+  { label: 'First partner resource complete', status: 'Not built', met: false },
+  { label: 'Relationship-building routines established', status: 'Untouched', met: false },
+];
+
 export async function getWebsiteBuildProgress() {
   const existing = await listProjects();
   const project = existing.find(p => p.title === 'Website Build');
@@ -160,7 +172,7 @@ export async function getWebsiteBuildProgress() {
   const milestones = await listMilestones({ projectId: project.id });
   const phases = {};
   for (const m of milestones) {
-    const match = m.title.match(/^(M[1-5]|P[1-4]):\s*(.+)/);
+    const match = m.title.match(/^(M[1-5]|W[1-3]|GATE):\s*(.+)/);
     const phase = match ? match[1] : 'Other';
     const label = match ? match[2] : m.title;
     (phases[phase] ||= []).push({ ...m, label });
@@ -168,17 +180,23 @@ export async function getWebsiteBuildProgress() {
 
   const PHASE_NAMES = {
     M1: 'Launchable Website', M2: 'Relocation Funnel', M3: 'Neighborhood Guides', M4: 'Buyer Education Funnel',
-    P1: 'Finish the last mile', P2: 'Get real leads moving', P3: 'Build the operating rhythm', P4: 'Build authority & scale',
+    GATE: 'Phase 1 gate criteria (unlocks Window 3)',
+    W1: 'Next 30 days \u2014 Reactivate the Foundation', W2: 'Next 60 days \u2014 Close Remaining Phase 1 Items',
+    W3: 'Next 90 days \u2014 gated until Phase 1 criteria are met',
   };
 
-  const PHASE_ORDER = ['M1', 'M2', 'M3', 'M4', 'M5', 'P1', 'P2', 'P3', 'P4', 'Other'];
+  const PHASE_ORDER = ['M1', 'M2', 'M3', 'M4', 'M5', 'GATE', 'W1', 'W2', 'W3', 'Other'];
+  const gateItems = phases['GATE'] || [];
+  const gateOpen = gateItems.length > 0 && gateItems.every(m => m.completed);
+
   const phaseList = Object.keys(phases).sort((a, b) => PHASE_ORDER.indexOf(a) - PHASE_ORDER.indexOf(b)).map(key => ({
     key, name: PHASE_NAMES[key] || key, items: phases[key],
     doneCount: phases[key].filter(m => m.completed).length,
     total: phases[key].length,
+    locked: key === 'W3' && !gateOpen,
   }));
 
-  return { projectId: project.id, phases: phaseList };
+  return { projectId: project.id, phases: phaseList, gateOpen };
 }
 
 // ============================================================
@@ -199,29 +217,71 @@ const OLD_M5_TITLES_TO_RETIRE = [
   'M5: Canva batch \u2014 redesign all five lead magnets, swap Doc links for PDFs',
   'M5: First blog post \u2014 "Cooper City vs Plantation," links both guides',
   'M5: Work the Version 2 list in batches',
-];
-
-const NEW_ROADMAP_ITEMS = [
-  // P1 — Finish the last mile (migrates the still-real M5 work + the one thing that actually needs verifying)
+  // Retiring the previous P1-P5 pass \u2014 superseded by the real
+  // Implementation Roadmap Update (Aug 3, 2026). Some of these were
+  // already wrong (First-Time Homebuyer is confirmed paused, not
+  // active; Selling Strategy landing page is already live, not
+  // pending) and the whole structure gets replaced by the real
+  // 30/60/90 windows below.
   'P1: Confirm the automation system sent a real email end to end \u2014 not just "enrolled," an actual received email',
   'P1: Finish the Canva batch \u2014 all five lead magnets redesigned, real PDF links live',
   'P1: Build the Resources page (indexes everything)',
   'P1: First-Time Homebuyer Guide live as a Google Doc + Sequence C',
   'P1: Selling Strategy Guide live as a Google Doc + Sequence D',
   'P1: Verify the 8 loose-thread items from the post-build checklist are actually resolved',
-  // P2 — Get real leads moving
   'P2: First 10 real contacts enrolled in an automation',
   'P2: Confirm tags are applying correctly on real form submissions',
   'P2: Log every real conversation/follow-up in the CRM as it happens',
-  // P3 — Build the operating rhythm
   'P3: Complete the first Weekly Business Review',
   'P3: Two consecutive weeks of a completed Weekly Business Review',
   'P3: Two consecutive weeks of Business Momentum habits actually done',
-  // P4 — Build authority & scale
   'P4: First blog post live ("Cooper City vs Plantation")',
   'P4: Second blog post live',
   'P4: One local content collection session completed',
   'P4: Revisit the Version 2 list and pull in 1-2 items',
+  'P5: Identify 3 Tier 1 referral partner candidates (healthcare/relocation, HR & recruiting, military/government, or first responders)',
+  'P5: Send the first outreach message to one Tier 1 candidate, using the real template',
+  'P5: Add real Sphere contacts into Business \u2192 Relationships with tiers actually set',
+  'P5: Complete one full week of the Daily Conversation Routine (Standard version)',
+  'P5: Add 3 real community organizations to Business \u2192 Community',
+  'P5: Complete one Comfort Ladder engagement activity (even just Level 1 \u2014 observe)',
+];
+
+// ============================================================
+// THE REAL ROADMAP — from the actual Implementation Roadmap Update
+// (Aug 3, 2026). Diagnosis: asset production (website, lead magnets)
+// is ahead of System 11's Phase 1 operating habits (CRM, weekly
+// review, partner outreach) \u2014 that imbalance, not lead volume or
+// conversion, is the current constraint. Window 3 (90 days) is
+// explicitly gated \u2014 3 specific GATE items must be met before it
+// unlocks, not just listed as "later."
+// ============================================================
+
+const GATE_CRITERIA = [
+  'GATE: CRM actively used for 2+ consecutive weeks',
+  'GATE: 2 consecutive completed Weekly Business Reviews',
+  'GATE: At least one relationship/partner action completed',
+];
+
+const NEW_ROADMAP_ITEMS = [
+  ...GATE_CRITERIA,
+  // W1 (30 days) \u2014 Reactivate the Foundation. One priority. Nothing new gets built this window.
+  'W1: Reactivate the CRM \u2014 re-enter any contacts that came in while it was dormant',
+  'W1: Set a recurring weekly calendar block for CRM upkeep \u2014 a standing appointment, not a task on a list',
+  'W1: Start using the weekly scorecard every week (Business Dashboard \u2192 This week\u2019s activity)',
+  'W1: Run one monthly review at the end of this window, using 4 weeks of real scorecard data',
+  'W1: Log BOS app friction points as they come up \u2014 don\u2019t fix mid-stream, bring a concrete list to a dedicated session later',
+  // W2 (60 days) \u2014 Close Remaining Phase 1 Items
+  'W2: Choose one chamber or community organization \u2014 join or attend',
+  'W2: Build the first referral asset (healthcare, military, or employer relocation guide)',
+  'W2: Build the Southwest Broward Intelligence minimum version \u2014 one monthly market/cost/development update',
+  'W2: Set up the Google Reviews request process (check brokerage/local rules; prioritize as transactions close)',
+  'W2: Confirm Search Console indexing is complete; request indexing on any pages still pending',
+  // W3 (90 days) \u2014 GATED. Do not start until the 3 GATE criteria above are met.
+  'W3: Activate strategic partnerships \u2014 healthcare, military, first responders, employers',
+  'W3: Build the consultation questionnaire and standardize the consultation flow',
+  'W3: Canva batch \u2014 design the remaining 3 lead magnets (6-12 Month Roadmap, Future Home Plan, Selling Strategy Guide), swap Doc links for PDFs',
+  'W3: First blog post \u2014 "Cooper City vs. Plantation"',
 ];
 
 export async function buildNewRoadmap() {

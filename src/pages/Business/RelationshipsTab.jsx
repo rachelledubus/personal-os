@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import { listContacts, listByTier, autoTagUntieredContacts } from '../../services/contacts.js';
 import ContactProfilePanel from '../../components/business/ContactProfilePanel.jsx';
+import { RELATIONSHIP_ENERGY_SCALE, DAILY_CONVERSATION_ROUTINE } from '../../services/library.js';
 
 // ============================================================
 // RELATIONSHIPS — replaces what would have been three separate pages
@@ -22,6 +23,7 @@ function RelationshipsTab() {
   const [byTier, setByTier] = useState({});
   const [untiered, setUntiered] = useState([]);
   const [tagging, setTagging] = useState(false);
+  const [showRoutine, setShowRoutine] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
 
   async function refresh() {
@@ -42,6 +44,30 @@ function RelationshipsTab() {
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Daily conversation routine</div>
+          <Button size="sm" variant="text" onClick={() => setShowRoutine(!showRoutine)}>{showRoutine ? 'Hide' : 'Show'}</Button>
+        </div>
+        {showRoutine && (
+          <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 10 }}>
+            <div className="stack" style={{ gap: 4 }}>
+              {DAILY_CONVERSATION_ROUTINE.map(v => (
+                <div key={v.version} style={{ fontSize: 'var(--text-small)' }}>
+                  <strong>{v.version} ({v.time}):</strong> <span className="muted">{v.includes}</span>
+                </div>
+              ))}
+            </div>
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase', marginTop: 4 }}>Relationship energy scale</div>
+            {RELATIONSHIP_ENERGY_SCALE.map(l => (
+              <div key={l.level} style={{ fontSize: 'var(--text-small)' }}>
+                <strong>{l.level}:</strong> <span className="muted">{l.actions} — {l.goal}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
       {untiered.length > 0 && (
         <Card className="track-personal">
           <div className="row-between">

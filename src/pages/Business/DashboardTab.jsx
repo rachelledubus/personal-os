@@ -11,6 +11,7 @@ import { getTodayCheckin, toggleCheckinBox, getWeekCheckins, getWeeklyTargets, s
 import { seedMasterTimelineIfEmpty, getThisWeekBuild, syncRoadmapStatuses } from '../../services/timeline.js';
 import { getAutonomyLevel } from '../../services/aiOperator.js';
 import { getDailyBriefing } from '../../services/dailyBriefing.js';
+import WeeklyScorecardAndReview from './WeeklyScorecardAndReview.jsx';
 import Skeleton from '../../components/ui/Skeleton.jsx';
 
 // ============================================================
@@ -182,55 +183,8 @@ function DashboardTab() {
         )}
       </Card>
 
-      <Card>
-        <div className="row-between">
-          <div>
-            <div className="section-label">Weekly reflection</div>
-            <Link to="/review" className="muted" style={{ fontSize: 'var(--text-micro)', display: 'inline-flex', alignItems: 'center', gap: 3 }}><RotateCcw size={12} />All reviews →</Link>
-          </div>
-          <Button size="sm" variant="text" onClick={() => setEditingReview(!editingReview)}>
-            {editingReview ? 'Cancel' : (review ? 'Edit' : 'Add reflection')}
-          </Button>
-        </div>
-        {editingReview ? (
-          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            <label className="reset-field">
-              <span>One thing that went well</span>
-              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: -2, marginBottom: 2 }}>A specific conversation, follow-up, or activity — not a general feeling.</div>
-              <textarea placeholder="e.g. Called Sarah back within an hour of her question" value={reviewForm.what_worked}
-                onChange={e => setReviewForm({ ...reviewForm, what_worked: e.target.value })} style={{ minHeight: 44 }} />
-            </label>
-            <label className="reset-field">
-              <span>One thing that was a struggle</span>
-              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: -2, marginBottom: 2 }}>Name the specific thing, not just "I was busy."</div>
-              <textarea placeholder="e.g. Put off following up with 3 leads until Thursday" value={reviewForm.what_didnt}
-                onChange={e => setReviewForm({ ...reviewForm, what_didnt: e.target.value })} style={{ minHeight: 44 }} />
-            </label>
-            <label className="reset-field">
-              <span>Anyone or anything that needs attention now</span>
-              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: -2, marginBottom: 2 }}>A specific contact, deal, or task — not a category.</div>
-              <textarea placeholder="e.g. The Ramirez listing — haven't heard back in 5 days" value={reviewForm.needs_attention}
-                onChange={e => setReviewForm({ ...reviewForm, needs_attention: e.target.value })} style={{ minHeight: 44 }} />
-            </label>
-            <label className="reset-field">
-              <span>The ONE priority for next week</span>
-              <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: -2, marginBottom: 2 }}>Just one. Not a list.</div>
-              <textarea placeholder="e.g. Get the Real Payment Guide drafted" value={reviewForm.next_week_priorities}
-                onChange={e => setReviewForm({ ...reviewForm, next_week_priorities: e.target.value })} style={{ minHeight: 44 }} />
-            </label>
-            <div><Button size="sm" onClick={handleSaveReview}>Save reflection</Button></div>
-          </div>
-        ) : review ? (
-          <div className="stack" style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-small)' }}>
-            {review.what_worked && <div><strong>Went well:</strong> {review.what_worked}</div>}
-            {review.what_didnt && <div><strong>Struggle:</strong> {review.what_didnt}</div>}
-            {review.needs_attention && <div><strong>Needs attention:</strong> {review.needs_attention}</div>}
-            {review.next_week_priorities && <div><strong>Next week's one thing:</strong> {review.next_week_priorities}</div>}
-          </div>
-        ) : (
-          <div className="muted" style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-2)' }}>No reflection recorded for this week yet.</div>
-        )}
-      </Card>
+      <WeeklyScorecardAndReview />
+
 
       {overdue.length > 0 && (
         <Card>

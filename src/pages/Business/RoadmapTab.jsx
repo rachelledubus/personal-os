@@ -4,8 +4,8 @@ import Button from '../../components/ui/Button.jsx';
 import Checkbox from '../../components/ui/Checkbox.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { listFutureIdeas, addFutureIdea, deleteFutureIdea, promoteToRoadmap, scoreOpportunityIdea } from '../../services/futureRoadmap.js';
-import { getWebsiteBuildProgress, markSiteBuildComplete, buildNewRoadmap } from '../../services/websiteBuildImport.js';
-import { toggleMilestone } from '../../services/goals.js';
+import { getWebsiteBuildProgress, markSiteBuildComplete, buildNewRoadmap, PHASE1_DIAGNOSIS, PHASE1_EXIT_CRITERIA } from '../../services/websiteBuildImport.js';
+import { toggleMilestone, deleteMilestone } from '../../services/goals.js';
 
 // ============================================================
 // ROADMAP — rebuilt. This used to show the Realtor OS software's own
@@ -26,6 +26,8 @@ export default function RoadmapTab() {
   const [markingComplete, setMarkingComplete] = useState(false);
   const [buildingRoadmap, setBuildingRoadmap] = useState(false);
   const [roadmapStatus, setRoadmapStatus] = useState(null);
+  const [hideCompleted, setHideCompleted] = useState(false);
+  const [showCriteria, setShowCriteria] = useState(false);
 
   useEffect(() => { load(); listFutureIdeas().then(setIdeas); }, []);
 
@@ -58,6 +60,13 @@ export default function RoadmapTab() {
     load();
   }
 
+  async function handleDeleteMilestone(id, label) {
+    const confirmed = window.confirm(`Delete "${label}"? This can't be undone.`);
+    if (!confirmed) return;
+    await deleteMilestone(id);
+    load();
+  }
+
   async function handleMarkSiteComplete() {
     const confirmed = window.confirm("This marks every M1-M4 milestone (the actual site-build work) as complete, since you've confirmed the website itself is done. M5 (Canva batch, blog post, etc.) is left as-is. Continue?");
     if (!confirmed) return;
@@ -68,7 +77,7 @@ export default function RoadmapTab() {
   }
 
   async function handleBuildNewRoadmap() {
-    const confirmed = window.confirm("This replaces the old, vague \"M5: Scale & Optimize\" items with 4 real phases: finish the last mile, get real leads moving, build the operating rhythm, and build authority & scale — 16 concrete items total. Nothing already completed gets touched. Build it?");
+    const confirmed = window.confirm("This replaces the previous roadmap with the real Implementation Roadmap Update (Aug 3, 2026): 3 gate criteria, then 3 real windows \u2014 30 days (reactivate CRM + weekly review), 60 days (referral asset, community, intelligence content), and 90 days (gated \u2014 stays locked until the gate criteria are met). 17 items total. Nothing already completed gets touched. Build it?");
     if (!confirmed) return;
     setBuildingRoadmap(true);
     try {
@@ -86,6 +95,24 @@ export default function RoadmapTab() {
 
   return (
     <div className="stack">
+      <Card style={{ borderLeft: '4px solid var(--clay)' }}>
+        <div className="section-label">Current diagnosis</div>
+        <p style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>{PHASE1_DIAGNOSIS}</p>
+        <div className="row" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
+          <Button size="sm" variant="text" onClick={() => setShowCriteria(!showCriteria)}>{showCriteria ? 'Hide' : 'Show'} Phase 1 exit criteria</Button>
+        </div>
+        {showCriteria && (
+          <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
+            {PHASE1_EXIT_CRITERIA.map(c => (
+              <div key={c.label} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
+                <span>{c.label}</span>
+                <span className="muted" style={{ color: c.met === false ? 'var(--danger)' : c.met === null ? 'var(--clay)' : 'var(--sage)' }}>{c.status}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
       {(nextMilestone || topOpportunity) && (
         <Card style={{ border: '1px solid var(--gold)' }}>
           <div className="section-label">Build this next</div>
@@ -174,25 +201,35 @@ export default function RoadmapTab() {
                 <Button size="sm" variant="ghost" onClick={handleBuildNewRoadmap} disabled={buildingRoadmap}>
                   {buildingRoadmap ? 'Building…' : 'Build the new roadmap'}
                 </Button>
+                <Button size="sm" variant="text" onClick={() => setHideCompleted(!hideCompleted)}>{hideCompleted ? 'Show' : 'Hide'} completed</Button>
               </div>
             </div>
             {roadmapStatus && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{roadmapStatus}</div>}
           </Card>
 
-          {progress.phases.map(phase => (
-            <Card key={phase.key}>
+          {progress.phases.filter(phase => !hideCompleted || phase.doneCount < phase.total).map(phase => (
+            <Card key={phase.key} style={phase.locked ? { opacity: 0.5, background: 'var(--sand)' } : undefined}>
               <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setExpandedPhase(expandedPhase === phase.key ? null : phase.key)}>
                 <div>
-                  <div className="section-label">{phase.key}: {phase.name}</div>
+                  <div className="section-label">{phase.key}: {phase.name}{phase.locked && ' \ud83d\udd12'}</div>
                   <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{phase.doneCount}/{phase.total} done</div>
                 </div>
               </div>
+              {phase.locked && (
+                <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>Locked until the 3 gate criteria above are all met.</div>
+              )}
               <ProgressBar value={phase.doneCount} max={phase.total} tone={phase.doneCount === phase.total ? 'sage' : 'sand'} />
               {expandedPhase === phase.key && (
                 <div className="stack" style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
-                  {phase.items.map(m => (
-                    <Checkbox key={m.id} checked={m.completed} onChange={v => handleToggleMilestone(m.id, v)} label={m.label} />
+                  {phase.items.filter(m => !hideCompleted || !m.completed).map(m => (
+                    <div key={m.id} className="row-between">
+                      <Checkbox checked={m.completed} onChange={v => handleToggleMilestone(m.id, v)} label={m.label} disabled={phase.locked} />
+                      <button className="row-remove-btn" aria-label="Remove" onClick={() => handleDeleteMilestone(m.id, m.label)}>×</button>
+                    </div>
                   ))}
+                  {hideCompleted && phase.items.every(m => m.completed) && (
+                    <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Everything here is done — hidden.</div>
+                  )}
                 </div>
               )}
             </Card>
