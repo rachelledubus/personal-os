@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../ui/Card.jsx';
-import { toggleMilestoneStep } from '../../services/goals.js';
-import { getTodayBusinessAction, toggleMilestone } from '../../services/websiteBuildImport.js';
+import { toggleMilestoneStep, toggleMilestone } from '../../services/goals.js';
+import { getTodayBusinessAction } from '../../services/websiteBuildImport.js';
 
 const NATURE_LABEL = {
   recurring: 'ongoing habit',
