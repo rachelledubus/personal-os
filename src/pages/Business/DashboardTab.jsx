@@ -33,6 +33,7 @@ function DashboardTab() {
   const [briefingLoading, setBriefingLoading] = useState(true);
   const [health, setHealth] = useState(null);
   const [editingTargets, setEditingTargets] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [targetForm, setTargetForm] = useState({ conversations_target: 10, knowledge_items_target: 10, consultations_target: 0, pipeline_moves_target: 0 });
   const [draftsByContact, setDraftsByContact] = useState({});
   const [drafting, setDrafting] = useState(null);
@@ -154,15 +155,6 @@ function DashboardTab() {
 
       <Card>
         <div className="row-between">
-          <div className="section-label">This week's one build task</div>
-          {thisWeekBuild?.date_range && <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>{thisWeekBuild.date_range}</span>}
-        </div>
-        {thisWeekBuild ? <div style={{ marginTop: 'var(--space-2)' }}>{thisWeekBuild.title}</div> : <div className="muted" style={{ fontSize: 'var(--text-small)' }}>No build currently in progress — check Roadmap.</div>}
-        <Link to="/business/roadmap"><Button size="sm" variant="text">Open Roadmap →</Button></Link>
-      </Card>
-
-      <Card>
-        <div className="row-between">
           <div className="section-label">This week's targets</div>
           <Button size="sm" variant="text" onClick={() => setEditingTargets(!editingTargets)}>{editingTargets ? 'Cancel' : 'Set targets'}</Button>
         </div>
@@ -219,54 +211,65 @@ function DashboardTab() {
         </Card>
       )}
 
-      {health && (
+      {(health || pipelineHealth || relationshipHealth) && (
         <Card>
-          <div className="section-label">Database health</div>
-          <div className="row-between" style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-2)' }}>
-            <span>{health.total} contacts</span>
-            <span className="muted">{health.completeness}% have a next action</span>
+          <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setShowStats(!showStats)}>
+            <div className="section-label">Business stats</div>
+            <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{showStats ? 'Hide' : 'Show'}</span>
           </div>
-        </Card>
-      )}
-
-      {pipelineHealth && (
-        <Card>
-          <div className="section-label">Pipeline health</div>
-          <div className="row-between" style={{ fontSize: 'var(--text-small)', marginTop: 'var(--space-2)' }}>
-            <span>{pipelineHealth.total} active (Lead / Future Client / Active Client)</span>
-            <span className="muted">{pipelineHealth.stalled} stalled</span>
-          </div>
-          <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
-            {Object.entries(pipelineHealth.byCategory).map(([cat, n]) => (
-              <span key={cat} className="muted" style={{ fontSize: 'var(--text-micro)', background: 'var(--sand)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>{cat}: {n}</span>
-            ))}
-          </div>
-          {Object.keys(pipelineHealth.byStage).length > 0 && (
-            <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
-              {Object.entries(pipelineHealth.byStage).map(([stage, n]) => (
-                <span key={stage} className="muted" style={{ fontSize: 'var(--text-micro)' }}>{stage}: {n} · </span>
-              ))}
+          {showStats && (
+            <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-4)' }}>
+              {health && (
+                <div>
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase' }}>Database</div>
+                  <div className="row-between" style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>
+                    <span>{health.total} contacts</span>
+                    <span className="muted">{health.completeness}% have a next action</span>
+                  </div>
+                </div>
+              )}
+              {pipelineHealth && (
+                <div>
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase' }}>Pipeline</div>
+                  <div className="row-between" style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>
+                    <span>{pipelineHealth.total} active (Lead / Future Client / Active Client)</span>
+                    <span className="muted">{pipelineHealth.stalled} stalled</span>
+                  </div>
+                  <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
+                    {Object.entries(pipelineHealth.byCategory).map(([cat, n]) => (
+                      <span key={cat} className="muted" style={{ fontSize: 'var(--text-micro)', background: 'var(--sand)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>{cat}: {n}</span>
+                    ))}
+                  </div>
+                  {Object.keys(pipelineHealth.byStage).length > 0 && (
+                    <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
+                      {Object.entries(pipelineHealth.byStage).map(([stage, n]) => (
+                        <span key={stage} className="muted" style={{ fontSize: 'var(--text-micro)' }}>{stage}: {n} · </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {relationshipHealth && (
+                <div>
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase' }}>Relationships</div>
+                  <div className="stack" style={{ marginTop: 4, gap: 4 }}>
+                    {Object.entries(relationshipHealth).map(([tier, h]) => (
+                      <div key={tier} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
+                        <span>{tier.replace(' - ', ' \u2014 ')}</span>
+                        <span className="muted">
+                          {h.total} total{h.overdue > 0 && ` \u00b7 ${h.overdue} overdue`}
+                          {h.avgDaysSinceContact != null && ` \u00b7 avg ${h.avgDaysSinceContact}d since contact`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </Card>
       )}
 
-      {relationshipHealth && (
-        <Card>
-          <div className="section-label">Relationship health</div>
-          <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 4 }}>
-            {Object.entries(relationshipHealth).map(([tier, h]) => (
-              <div key={tier} className="row-between" style={{ fontSize: 'var(--text-small)' }}>
-                <span>{tier.replace(' - ', ' — ')}</span>
-                <span className="muted">
-                  {h.total} total{h.overdue > 0 && ` · ${h.overdue} overdue`}
-                  {h.avgDaysSinceContact != null && ` · avg ${h.avgDaysSinceContact}d since contact`}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
 
       <Card>
         <div className="row-between">
