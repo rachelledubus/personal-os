@@ -1,5 +1,5 @@
 import { listOverdueContacts, getPipelineHealth, getRelationshipHealth } from './contacts.js';
-import { getThisWeekBuild } from './timeline.js';
+import { getTodayBusinessAction } from './websiteBuildImport.js';
 import { getPreference, setPreference } from './settings.js';
 import { todayStr } from '../utils/date.js';
 
@@ -29,16 +29,20 @@ export async function getDailyBriefing(forceRefresh = false) {
     if (cached) return cached;
   }
 
-  const [overdue, pipelineHealth, relationshipHealth, thisWeekBuild] = await Promise.all([
-    listOverdueContacts(), getPipelineHealth(), getRelationshipHealth(), getThisWeekBuild(),
+  const [overdue, pipelineHealth, relationshipHealth, todayAction] = await Promise.all([
+    listOverdueContacts(), getPipelineHealth(), getRelationshipHealth(), getTodayBusinessAction(),
   ]);
+
+  let thisWeekBuild = null;
+  if (todayAction?.kind === 'step') thisWeekBuild = `${todayAction.milestoneTitle} \u2014 ${todayAction.stepTitle}`;
+  else if (todayAction?.kind === 'milestone') thisWeekBuild = todayAction.milestoneTitle;
 
   const data = {
     overdueContactCount: overdue.length,
     overdueContactNames: overdue.slice(0, 5).map(c => c.name),
     pipelineHealth,
     relationshipHealth,
-    thisWeekBuild: thisWeekBuild?.title || null,
+    thisWeekBuild,
   };
 
   const briefing = await requestBriefing(data);

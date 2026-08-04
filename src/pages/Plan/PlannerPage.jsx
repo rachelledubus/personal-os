@@ -14,7 +14,6 @@ import JournalTab from './JournalTab.jsx';
 import DreamLifeTab from './DreamLifeTab.jsx';
 import ScheduleTemplateTab from './ScheduleTemplateTab.jsx';
 import BeliefTrackerTab from './BeliefTrackerTab.jsx';
-import FutureMeTab from './FutureMeTab.jsx';
 
 // Grouped per the Shell spec Section 4 — Now covers the concrete,
 // day-to-day schedule; Reflect & Envision covers the slower,
@@ -32,7 +31,6 @@ const TAB_GROUPS = [
       { key: 'dream-life', label: 'Dream Life' },
       { key: 'journal', label: 'Journal' },
       { key: 'beliefs', label: 'Belief Tracker' },
-      { key: 'future-me', label: 'Future Me' },
     ]
   },
 ];
@@ -53,7 +51,6 @@ export default function PlannerPage() {
       {tab === 'journal' && <JournalTab />}
       {tab === 'schedule-template' && <ScheduleTemplateTab />}
       {tab === 'beliefs' && <BeliefTrackerTab />}
-      {tab === 'future-me' && <FutureMeTab />}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
 import { getCategoryList } from '../../services/settings.js';
 import { getCadenceStandards, standardKeyForContact, FOLLOWUP_STANDARD_TYPES } from '../../services/followupStandards.js';
 import { logActivity } from '../../services/businessActivityLog.js';
+import { addInteraction } from '../../services/interactions.js';
 import { listScripts } from '../../services/library.js';
 
 const TIERS = ['Tier 1 - Core', 'Tier 2 - Developing', 'Tier 3 - Strategic'];
@@ -39,6 +40,7 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
   const [touchNextFollowUp, setTouchNextFollowUp] = useState(plusDays(7));
   const [relationshipTriggers, setRelationshipTriggers] = useState([]);
   const [showTriggers, setShowTriggers] = useState(false);
+  const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
   const [nameDraft, setNameDraft] = useState('');
 
   const [editingFollowUp, setEditingFollowUp] = useState(false);
@@ -96,17 +98,23 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
   async function handleLogTouch() {
     setLoggingTouch(true);
     try {
-      await logActivity('conversation', {
-        channel: touchChannel, relatedContactId: contactId,
-      });
+      // Two things happen on a touch: it's the real relationship
+      // record (interactions.js — updates last_contact_date and
+      // relationship_notes automatically, shows up in the Interaction
+      // Timeline right below this), and it's a business activity count
+      // (feeds the weekly Scorecard). Previously this set
+      // last_contact_date manually and never touched the interactions
+      // table at all, so a logged touch never appeared in the Timeline
+      // sitting right here in the same panel.
+      await addInteraction(contactId, { type: touchChannel === 'unspecified' ? 'note' : touchChannel, notes: '' });
+      await logActivity('conversation', { channel: touchChannel, relatedContactId: contactId });
       if (expandTouch && touchNextFollowUp) {
-        await applyField({ next_follow_up_date: touchNextFollowUp, last_contact_date: new Date().toISOString().slice(0, 10) });
-      } else {
-        await applyField({ last_contact_date: new Date().toISOString().slice(0, 10) });
+        await applyField({ next_follow_up_date: touchNextFollowUp });
       }
       setTouchLogged(true);
       setTimeout(() => setTouchLogged(false), 2000);
       setExpandTouch(false);
+      setTimelineRefreshKey(k => k + 1);
     } finally {
       setLoggingTouch(false);
     }
@@ -429,7 +437,7 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
           </AiSuggestionBox>
         )}
 
-        <InteractionTimeline contact={contact} />
+        <InteractionTimeline key={timelineRefreshKey} contact={contact} />
 
         <div className="muted" style={{ fontSize: 'var(--text-micro)', borderTop: '1px solid var(--sand)', paddingTop: 'var(--space-2)' }}>
           Added {contact.date_added || contact.created_at?.slice(0, 10)}

@@ -160,6 +160,41 @@ export function getTotalDebt(debts) {
   return debts.reduce((sum, d) => sum + Number(d.current_balance || 0), 0);
 }
 
+// ============================================================
+// Migrates category_budgets targets into real envelopes before the
+// old "Spending by category" system is retired \u2014 it was doing
+// exactly what envelopes already do (spend computed live from
+// finance_entries, matched by name/category), just via a second,
+// separate table. This preserves the target $ numbers rather than
+// silently dropping them. Only touches categories that don't already
+// have a matching envelope, so nothing gets double-counted.
+// ============================================================
+export async function migrateCategoryBudgetsToEnvelopes() {
+  const userId = await getUserId();
+  const [budgets, envelopes] = await Promise.all([
+    supabase.from('category_budgets').select('*').eq('user_id', userId).then(r => r.data || []),
+    supabase.from('budget_envelopes').select('name').eq('user_id', userId).then(r => r.data || []),
+  ]);
+  const envelopeNames = new Set(envelopes.map(e => e.name));
+  const toMigrate = budgets.filter(b => !envelopeNames.has(b.category));
+
+  for (let i = 0; i < toMigrate.length; i++) {
+    const b = toMigrate[i];
+    await supabase.from('budget_envelopes').insert({
+      user_id: userId, name: b.category, assigned_amount: b.monthly_target, sort_order: envelopes.length + i,
+    });
+  }
+  // Also remove every category_budgets row, migrated or not — once
+  // this runs, the old system is retired entirely, not left half-
+  // populated. Anything that already had a matching envelope (so
+  // wasn't in toMigrate) is redundant with that envelope already.
+  const allIds = budgets.map(b => b.id);
+  if (allIds.length > 0) {
+    await supabase.from('category_budgets').delete().in('id', allIds);
+  }
+  return { migrated: toMigrate.length, removed: allIds.length };
+}
+
 /** Debt Snowball — smallest balance first (not smallest term, not
  *  highest interest — that's the Avalanche method, a different
  *  thing). Every debt's minimum payment gets paid every month; any

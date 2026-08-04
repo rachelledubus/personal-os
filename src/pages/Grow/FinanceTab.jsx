@@ -7,7 +7,7 @@ import Skeleton from '../../components/ui/Skeleton.jsx';
 import {
   addEntry, deleteEntry, listThisMonthEntries, listLegacyBills, getMonthSummary,
   listBudgets, listSavingsGoals, addToSavingsGoal, addSavingsGoal,
-  listDebts, addDebt, updateDebt, deleteDebt, logDebtPayment, getTotalDebt, simulateSnowball,
+  listDebts, addDebt, updateDebt, deleteDebt, logDebtPayment, getTotalDebt, simulateSnowball, migrateCategoryBudgetsToEnvelopes,
 } from '../../services/finance.js';
 import { getCategoryList } from '../../services/settings.js';
 import {
@@ -41,6 +41,9 @@ export default function FinanceTab() {
   const [extraMonthly, setExtraMonthly] = useState('');
   const [showSnowball, setShowSnowball] = useState(false);
   const [paymentAmounts, setPaymentAmounts] = useState({});
+  const [showHistory, setShowHistory] = useState(false);
+  const [migrating, setMigrating] = useState(false);
+  const [migrateStatus, setMigrateStatus] = useState(null);
 
   async function refresh() {
     setSummary(await getMonthSummary());
@@ -54,6 +57,19 @@ export default function FinanceTab() {
     setDebts(await listDebts());
   }
   useEffect(() => { refresh(); }, []);
+
+  async function handleMigrateBudgets() {
+    setMigrating(true);
+    setMigrateStatus(null);
+    try {
+      const result = await migrateCategoryBudgetsToEnvelopes();
+      setMigrateStatus(`Moved ${result.migrated} categor${result.migrated === 1 ? 'y' : 'ies'} into envelopes.`);
+      refresh();
+    } catch (err) {
+      setMigrateStatus(`Couldn't merge: ${err.message || err}`);
+    }
+    setMigrating(false);
+  }
 
   async function handleAddDebt() {
     if (!newDebt.name.trim()) return;
@@ -168,6 +184,11 @@ export default function FinanceTab() {
             </Button>
           )}
         </div>
+        <div className="row" style={{ gap: 'var(--space-4)', marginTop: 4 }}>
+          <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>This month: <strong style={{ color: 'var(--navy)' }}>${summary.income.toFixed(0)}</strong> in</span>
+          <span className="muted" style={{ fontSize: 'var(--text-caption)' }}><strong style={{ color: 'var(--navy)' }}>${summary.spend.toFixed(0)}</strong> spent</span>
+          <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>net <strong style={{ color: summary.net >= 0 ? 'var(--success)' : 'var(--danger)' }}>${summary.net.toFixed(0)}</strong></span>
+        </div>
 
         {editingStarting ? (
           <div className="row" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-2)' }}>
@@ -227,14 +248,6 @@ export default function FinanceTab() {
         </div>
       </Card>
 
-      <Card>
-        <div className="section-label">This month</div>
-        <div className="macro-grid" style={{ marginTop: 'var(--space-3)' }}>
-          <div className="macro-cell"><span className="muted">Income</span><div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>${summary.income.toFixed(0)}</div></div>
-          <div className="macro-cell"><span className="muted">Spent</span><div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>${summary.spend.toFixed(0)}</div></div>
-          <div className="macro-cell"><span className="muted">Net</span><div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: summary.net >= 0 ? 'var(--success)' : 'var(--danger)' }}>${summary.net.toFixed(0)}</div></div>
-        </div>
-      </Card>
 
       <Card>
         <div className="section-label">Quick add</div>
@@ -259,24 +272,18 @@ export default function FinanceTab() {
         </div>
       </Card>
 
-      <Card>
-        <div className="section-label">Spending by category</div>
-        <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
-          {Object.keys(summary.byCategory).length === 0 ? <EmptyState icon="leaf" title="Nothing logged yet this month" /> : (
-            Object.entries(summary.byCategory).map(([cat, amount]) => {
-              const budget = budgets.find(b => b.category === cat);
-              return (
-                <div key={cat}>
-                  <div className="row-between" style={{ fontSize: 'var(--text-small)' }}>
-                    <span>{cat}</span>
-                    <span className="muted">${amount.toFixed(0)}{budget ? ` / ${budget.monthly_target}` : ''}</span>
-                  </div>
-                  {budget && <ProgressBar value={amount} max={budget.monthly_target} tone={amount > budget.monthly_target ? 'danger' : 'sage'} />}
-                </div>
-              );
-            })
-          )}
-        </div>
+      {budgets.length > 0 && (
+        <Card>
+          <div className="section-label">Spending by category (old system)</div>
+          <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
+            This was tracking the same thing envelopes already do — spend computed from the same entries, just in a separate table. One click folds your existing category targets into real envelopes above, then this card goes away for good.
+          </p>
+          {migrateStatus && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{migrateStatus}</div>}
+          <div style={{ marginTop: 'var(--space-2)' }}>
+            <Button size="sm" onClick={handleMigrateBudgets} disabled={migrating}>{migrating ? 'Merging\u2026' : 'Merge into envelopes'}</Button>
+          </div>
+        </Card>
+      )}
       </Card>
 
       <Card>
@@ -395,33 +402,46 @@ export default function FinanceTab() {
         </Card>
       )}
 
-      {legacyBills.length > 0 && (
+      {(legacyBills.length > 0 || entries.length > 0) && (
         <Card>
-          <div className="section-label">Older bills</div>
-          <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-            {legacyBills.map(b => (
-              <div key={b.id} className="row-between" style={{ padding: '4px 0' }}>
-                <span>{b.name}</span><span className="muted">${b.amount}</span>
-              </div>
-            ))}
+          <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setShowHistory(!showHistory)}>
+            <div className="section-label">History</div>
+            <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{showHistory ? 'Hide' : 'Show'}</span>
           </div>
+          {showHistory && (
+            <div className="stack" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-4)' }}>
+              {legacyBills.length > 0 && (
+                <div>
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase' }}>Older bills</div>
+                  <div className="stack" style={{ marginTop: 4 }}>
+                    {legacyBills.map(b => (
+                      <div key={b.id} className="row-between" style={{ padding: '4px 0' }}>
+                        <span>{b.name}</span><span className="muted">${b.amount}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {entries.length > 0 && (
+                <div>
+                  <div className="muted" style={{ fontSize: 'var(--text-micro)', textTransform: 'uppercase' }}>Recent entries</div>
+                  <div className="stack" style={{ marginTop: 4 }}>
+                    {entries.slice(0, 15).map(e => (
+                      <div key={e.id} className="row-between" style={{ fontSize: 'var(--text-small)', padding: '4px 0' }}>
+                        <span>{e.category}{e.notes ? ` \u2014 ${e.notes}` : ''}</span>
+                        <div className="row" style={{ gap: 'var(--space-2)' }}>
+                          <span className={e.entry_type === 'income' ? '' : 'muted'}>{e.entry_type === 'income' ? '+' : '-'}${Number(e.amount).toFixed(0)}</span>
+                          <button className="row-remove-btn" aria-label="Remove" onClick={() => deleteEntry(e.id).then(refresh)}>×</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </Card>
       )}
-
-      <Card>
-        <div className="section-label">Recent entries</div>
-        <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-          {entries.slice(0, 15).map(e => (
-            <div key={e.id} className="row-between" style={{ fontSize: 'var(--text-small)', padding: '4px 0' }}>
-              <span>{e.category}{e.notes ? ` — ${e.notes}` : ''}</span>
-              <div className="row" style={{ gap: 'var(--space-2)' }}>
-                <span className={e.entry_type === 'income' ? '' : 'muted'}>{e.entry_type === 'income' ? '+' : '-'}${Number(e.amount).toFixed(0)}</span>
-                <button className="row-remove-btn" aria-label="Remove" onClick={() => deleteEntry(e.id).then(refresh)}>×</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
     </div>
   );
 }
