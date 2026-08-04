@@ -284,7 +284,6 @@ export default function FinanceTab() {
           </div>
         </Card>
       )}
-      </Card>
 
       <Card>
         <div className="section-label">Savings goals</div>
