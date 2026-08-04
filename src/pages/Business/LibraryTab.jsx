@@ -38,7 +38,10 @@ function LibraryTab() {
     setSyncStatus(null);
     try {
       const result = await refreshScriptVoice();
-      setSyncStatus(result.updated === 0 ? 'Nothing to update \u2014 those scripts may not be synced yet, or are already up to date.' : `Updated ${result.updated} script${result.updated === 1 ? '' : 's'} to the real voice version.`);
+      const parts = [];
+      if (result.updated > 0) parts.push(`updated ${result.updated} to the real voice`);
+      if (result.added > 0) parts.push(`added ${result.added} that were missing`);
+      setSyncStatus(parts.length === 0 ? 'Nothing to change \u2014 everything is already up to date.' : `Refreshed \u2014 ${parts.join(', ')}.`);
       setSyncVersion(v => v + 1);
     } catch (err) {
       setSyncStatus(`Couldn't refresh: ${err.message || err}`);
@@ -60,7 +63,7 @@ function LibraryTab() {
           {syncing ? 'Syncing…' : 'Sync latest from manual'}
         </Button>
         <Button size="sm" variant="text" onClick={handleRefreshVoice} disabled={syncing}>
-          Refresh script voice
+          Refresh all script voice
         </Button>
       </div>
       {syncStatus && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginBottom: 'var(--space-3)' }}>{syncStatus}</div>}

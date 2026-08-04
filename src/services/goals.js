@@ -185,6 +185,32 @@ export async function deleteMilestone(id) {
   if (error) throw error;
 }
 
+export async function listMilestoneSteps(milestoneId) {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('milestone_steps').select('*')
+    .eq('user_id', userId).eq('milestone_id', milestoneId).order('sort_order');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addMilestoneStep(milestoneId, title, sortOrder = 0) {
+  const userId = await getUserId();
+  const { error } = await supabase.from('milestone_steps').insert({
+    user_id: userId, milestone_id: milestoneId, title, sort_order: sortOrder,
+  });
+  if (error) throw error;
+}
+
+export async function toggleMilestoneStep(id, completed) {
+  const { error } = await supabase.from('milestone_steps').update({ completed }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function deleteMilestoneStep(id) {
+  const { error } = await supabase.from('milestone_steps').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ---------- Roadmap items (link_to only — status/phase already
 // managed inline where roadmap items are listed) ----------
 export async function updateRoadmapLink(id, linkTo) {

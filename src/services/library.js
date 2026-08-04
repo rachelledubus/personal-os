@@ -30,18 +30,18 @@ const SEED_CTAS = [
 ];
 
 const SEED_SCRIPTS = [
-  { section: 'Lead Follow-Up', situation: 'New website lead', script_text: "Hey [Name]! I saw you grabbed my [guide/resource]. I wanted to make sure you got it and see what sparked your interest in [moving/buying/relocating]? No pressure at all — a lot of people start researching months before they're actually ready." },
-  { section: 'Lead Follow-Up', situation: 'No response, 3-5 days', script_text: "Hey [Name]! Just wanted to make sure the guide came through okay. If you have questions while researching, I'm always happy to help." },
-  { section: 'Lead Follow-Up', situation: 'No response, 2 weeks', script_text: "Hey [Name]! I was updating some local resources and thought about you. Are you still thinking about [moving/buying], or has your timeline changed? Either way is totally fine." },
-  { section: 'Lead Magnet Specific', situation: 'Relocation Guide', script_text: "Thanks for grabbing my Southwest Broward Relocation Guide. I'm curious — what has you looking into the area? Already planning a move, researching, or just trying to understand the areas?" },
-  { section: 'Lead Magnet Specific', situation: 'Real Payment Guide', script_text: "That's actually one of the biggest things I help people figure out because the purchase price is only one piece of the puzzle in Florida. Were you mainly curious about your budget, or starting to seriously plan a move?" },
-  { section: 'Sphere', situation: 'Reconnecting', script_text: "Hey [Name]! It's been forever — I was thinking about you and realized we haven't caught up in a while. How have you been?" },
-  { section: 'Referral', situation: 'Asking for referrals', script_text: "One thing I'm trying to do is become the person people think of when someone they know is overwhelmed by a move. If someone in your circle starts talking about moving, buying, or relocating here, I'd love to be a resource for them." },
-  { section: 'Buyer Consultation', situation: 'Opening', script_text: "Before we talk houses, I want to understand what you're actually trying to accomplish. A lot of people start with 'we need a house,' but usually there's a bigger reason — schools, commute, lifestyle, family, finances." },
-  { section: 'Common Objections', situation: '"We can find homes online ourselves"', script_text: "Where I usually help is everything around the house: is this neighborhood actually a good fit, are there costs you're not seeing, are there things about the property you should know before getting attached?" },
-  { section: 'Common Objections', situation: '"We want to wait for rates"', script_text: "The hard part is nobody knows exactly what rates will do, and waiting can solve one problem while creating another. I help people look at the bigger picture: payment, inventory, opportunities right now." },
-  { section: 'Partner Outreach', situation: 'Recruiter/HR introduction', script_text: "I specialize in helping people relocating to Southwest Broward understand their housing options before they move. I created resources focused on the questions that create relocation stress. I'd love to learn what housing questions come up most often for your employees." },
-  { section: 'Client Experience', situation: 'Weekly buyer update', script_text: "Quick update for this week: What happened: [update]. What's next: [next step]. What I need from you: [action]. As always, if anything comes up, just let me know." },
+  { section: 'Lead Follow-Up', situation: 'New website lead', script_text: "Hey [Name]! Just wanted to make sure the [guide/resource] actually made it to your inbox — did it? Also curious what's got you looking into [moving/buying/relocating]? No pressure at all, tons of people start researching way before they're actually ready lol" },
+  { section: 'Lead Follow-Up', situation: 'No response, 3-5 days', script_text: "Hey [Name]! Just checking the guide actually landed okay lol. Let me know if any questions pop up while you're looking around!" },
+  { section: 'Lead Follow-Up', situation: 'No response, 2 weeks', script_text: "Hey [Name]! Was updating some stuff and thought of you lol. Still thinking about [moving/buying], or has the timeline shifted? Either way is totally fine!" },
+  { section: 'Lead Magnet Specific', situation: 'Relocation Guide', script_text: "Hey! Thanks for grabbing the Relocation Guide — curious what's got you looking into the area? Already planning the move, still researching, or just trying to wrap your head around it all?" },
+  { section: 'Lead Magnet Specific', situation: 'Real Payment Guide', script_text: "Honestly that's one of the biggest things people get tripped up on — the purchase price is only part of the puzzle down here lol. Were you more just curious about the numbers, or are you actually starting to plan a move?" },
+  { section: 'Sphere', situation: 'Reconnecting', script_text: "Hey [Name]! Sorry I've been MIA, life's been lifeing lately lol. How have you been??" },
+  { section: 'Referral', situation: 'Asking for referrals', script_text: "Honestly one thing I'm working on is just being the person people think of when someone they know is stressed about a move lol. So if anyone in your circle starts talking about moving or buying here, send them my way!" },
+  { section: 'Buyer Consultation', situation: 'Opening', script_text: "Before we get into houses, I really want to understand what you're actually trying to accomplish. Most people start with \"we just need a house,\" but there's usually a bigger reason underneath that — schools, commute, family, money, all of it." },
+  { section: 'Common Objections', situation: '"We can find homes online ourselves"', script_text: "Totally fair! Where I usually come in is everything AROUND the house — is this neighborhood actually a good fit, are there costs you're not seeing, stuff about the property you'd want to know before you fall in love with it." },
+  { section: 'Common Objections', situation: '"We want to wait for rates"', script_text: "Totally get that, but honestly nobody actually knows what rates are gonna do lol — and waiting can fix one thing while creating a different problem. I try to help people look at the whole picture: payment, what's out there right now, all of it." },
+  { section: 'Partner Outreach', situation: 'Recruiter/HR introduction', script_text: "I help people relocating to Southwest Broward figure out their housing options before they even move down here. I've put together resources around the stuff that actually stresses people out about relocating — would love to hear what housing questions come up most for your employees!" },
+  { section: 'Client Experience', situation: 'Weekly buyer update', script_text: "Quick update for the week: here's what happened — [update]. Here's what's next — [next step]. And here's what I need from you — [action]. As always, just let me know if anything comes up!" },
 ];
 
 const SEED_PROMPTS = [
@@ -159,19 +159,19 @@ const GAP_CTAS = [
 ];
 
 const GAP_SCRIPTS = [
-  { section: 'Lead Magnet Specific', situation: 'Future Home Plan', script_text: "I created that for people who know they want to buy eventually but don't want to feel rushed or unprepared. Where are you currently at?" },
-  { section: 'Sphere', situation: 'Quarterly referral reminder', script_text: "Hey [Name]! I was putting together my monthly market update and thought you'd find this interesting. [Share insight] Also, if you ever hear someone talking about moving to South Florida, I'm always happy to be a resource for them." },
-  { section: 'Referral', situation: 'After closing', script_text: "My favorite part of this job is helping people feel confident through a process that can be really stressful. If someone you know starts talking about moving, I'd really appreciate an introduction — even if they're months away." },
-  { section: 'Buyer Consultation', situation: '"We don\'t know where we want to live"', script_text: "Honestly, that's extremely common. Most people don't need someone to send them listings first — they need help narrowing down what fits their life." },
-  { section: 'Relocation', situation: "Doesn't know the areas", script_text: "Two cities can look close on a map but feel completely different day-to-day. My job isn't just showing you houses — it's helping you understand what each area actually feels like." },
-  { section: 'Relocation', situation: 'Concerned about Florida', script_text: "I completely understand why people hesitate — Florida's had a lot of headlines around insurance, storms, affordability. My goal isn't to pretend those don't exist, it's to help you understand what actually applies to the home and area you're considering." },
-  { section: 'Future Buyers / Renters', situation: '"We\'re not ready yet"', script_text: "That's exactly why I created resources for people planning ahead. The people who feel most confident buying are the ones who started learning before they felt pressured." },
-  { section: 'Future Buyers / Renters', situation: 'Renter planning to buy later', script_text: "Renting while preparing to buy can be a really smart strategy. The biggest thing is making sure your rent, savings, credit, and timeline are moving you toward the goal — that's what I help people map out." },
-  { section: 'Partner Outreach', situation: 'Partner follow-up', script_text: "I wanted to send this over because I thought it might help your team. No expectation everyone uses my services — I mainly want people moving here to have accurate information before they arrive." },
-  { section: 'Social Media', situation: 'Comment reply', script_text: "Great question — this is something a lot of people relocating here wonder about. The short answer is [answer]. The biggest thing is it depends on [factor]. Happy to help you compare areas." },
-  { section: 'Social Media', situation: 'DM from social media', script_text: "Hey! Thanks for reaching out. What got you looking into [topic]?" },
-  { section: 'Client Experience', situation: 'Under contract reassurance', script_text: "This part can feel like a lot because there are so many moving pieces. My job is to make sure you know what's happening, what decisions are coming up, and what questions we should ask before they become problems." },
-  { section: 'Seller (minimal system)', situation: 'Homeowner inquiry', script_text: "Thanks for reaching out. Before talking about listing, I like to understand what's driving the move: are you thinking about selling soon, or mainly trying to understand your options?" },
+  { section: 'Lead Magnet Specific', situation: 'Future Home Plan', script_text: "I made that for people who know they'll buy eventually but don't want to feel rushed or blindsided when the time comes. Where are you at right now?" },
+  { section: 'Sphere', situation: 'Quarterly referral reminder', script_text: "Hey [Name]! Was putting together my market update and thought you'd actually find this interesting. [Share insight] Also if you ever hear anyone talking about moving to South Florida, send them my way — happy to help!" },
+  { section: 'Referral', situation: 'After closing', script_text: "Honestly my favorite part of this job is helping people feel confident through something that can be really stressful. If you know anyone even thinking about moving, I'd love an intro — doesn't matter if they're months out!" },
+  { section: 'Buyer Consultation', situation: '"We don\'t know where we want to live"', script_text: "Honestly that's super common, don't worry lol. Most people don't actually need listings first — they need help figuring out what actually fits their life." },
+  { section: 'Relocation', situation: "Doesn't know the areas", script_text: "Two cities can look close on a map but feel completely different once you're actually living there. My job isn't just showing you houses — it's helping you understand what each area actually FEELS like day to day." },
+  { section: 'Relocation', situation: 'Concerned about Florida', script_text: "I totally get the hesitation — Florida's had a lot of headlines around insurance, storms, cost of living. I'm not gonna pretend those things aren't real, but I can help you understand what actually applies to the specific home and area you're looking at." },
+  { section: 'Future Buyers / Renters', situation: '"We\'re not ready yet"', script_text: "That's literally why I made resources for people planning ahead! Honestly the people who feel most confident buying are the ones who started learning before they felt any pressure to." },
+  { section: 'Future Buyers / Renters', situation: 'Renter planning to buy later', script_text: "Renting while you prep to buy can honestly be a smart move! The big thing is making sure your rent, savings, credit, and timeline are all actually moving you toward the goal — that's the part I help people map out." },
+  { section: 'Partner Outreach', situation: 'Partner follow-up', script_text: "Wanted to send this over because I thought it could genuinely help your team! No pressure for anyone to use me — I just want people moving here to have accurate info before they show up." },
+  { section: 'Social Media', situation: 'Comment reply', script_text: "Ah great question! Honestly a lot of people relocating here wonder the same thing. Short answer: [answer]. Really depends on [factor] though. Happy to help you compare areas if you want!" },
+  { section: 'Social Media', situation: 'DM from social media', script_text: "Hey! Thanks for reaching out :) what got you looking into [topic]?" },
+  { section: 'Client Experience', situation: 'Under contract reassurance', script_text: "I know this part can feel like a LOT because there's so many moving pieces lol. My job is making sure you always know what's happening, what's coming up, and what to ask before something becomes an actual problem." },
+  { section: 'Seller (minimal system)', situation: 'Homeowner inquiry', script_text: "Hey, thanks for reaching out! Before we get into listing stuff, I like to understand what's actually driving the move — are you thinking about selling soon, or mostly just trying to understand your options right now?" },
 ];
 
 const GAP_DECISION_RULES = [
@@ -244,8 +244,8 @@ const GAP_AI_WORKFLOW_LIBRARY = [
 ].map(p => ({ ...p, prompt_text: p.prompt_text || p.use_for }));
 
 const GAP_PHONE_BOUNDARIES = [
-  { section: 'Phone & Communication Boundaries', situation: 'Voicemail greeting', script_text: "Hi, you've reached Rachelle with [Brokerage]. I can't get to the phone right now — for the fastest response, text this number and I'll get right back to you. You can also grab a time on my calendar at [booking link]. Thanks!" },
-  { section: 'Phone & Communication Boundaries', situation: 'Texting back a missed call', script_text: "Hi, this is Rachelle — sorry I missed your call! Feel free to text me what you need here, or if you'd rather talk, here's my booking link so we can find a time: [booking link]" },
+  { section: 'Phone & Communication Boundaries', situation: 'Voicemail greeting', script_text: "Hi, you've reached Rachelle with [Brokerage]! I can't get to the phone right now, but text this number and I'll get right back to you — or grab a time on my calendar at [booking link]. Thanks so much!" },
+  { section: 'Phone & Communication Boundaries', situation: 'Texting back a missed call', script_text: "Hey, this is Rachelle — sorry I missed you! Feel free to just text me what you need, or if you'd rather actually talk, here's my booking link: [booking link]" },
 ];
 
 const GAP_OUTREACH_PLAYBOOK = [
@@ -260,7 +260,7 @@ const GAP_OUTREACH_PLAYBOOK = [
   { section: 'Outreach Scripts', situation: 'Local business introduction', script_text: "Hi! I'm Rachelle — I help people navigate Southwest Broward real estate. I'm trying to get to know more of the local businesses and what makes these communities actually special. Would love to hear your story and what you do here." },
   { section: 'Outreach Scripts', situation: 'Community member introduction', script_text: "I've been spending more time learning what people actually love about living here, since I want to help people moving in understand what daily life is really like. What's something you think people should know about this community?" },
   { section: 'Outreach Scripts', situation: 'Past contact reconnect', script_text: "Hey, sorry I've been MIA! Life's been lifeing lately lol. How have you been??" },
-  { section: 'Outreach Scripts', situation: 'Someone mentions a move', script_text: "That's exciting — have you started looking into what that might look like, or are you just exploring options right now?" },
+  { section: 'Outreach Scripts', situation: 'Someone mentions a move', script_text: "Ooh that's exciting!! Are you like actually looking or just thinking about it rn?" },
 ];
 
 export const RELATIONSHIP_ENERGY_SCALE = [
@@ -303,41 +303,43 @@ export async function syncLibraryGaps() {
 }
 
 // ============================================================
-// VOICE REFRESH — the reconnection/outreach scripts were originally
-// pulled verbatim from the business manual, which reads like generic
-// reconnection advice ("I realized it's been way too long since we
-// caught up") rather than how a specific person actually texts
-// someone. Rewritten to match a real voice sample. syncLibraryGaps()
-// only ever adds missing scripts, never updates existing ones — this
-// overwrites the specific ones that changed, matched by section +
-// situation, so a script you already synced actually gets replaced
-// instead of silently staying stale.
+// VOICE REFRESH — every genuinely conversational script (not the
+// internal reference content: Decision Rules, Troubleshooting,
+// Triggers, which are diagnostic notes to yourself, not things you'd
+// actually say to a person) rewritten to match a real voice sample
+// rather than the business manual's generic reconnection-advice
+// phrasing. syncLibraryGaps() only ever adds missing scripts, so a
+// script you'd already synced would stay stale forever without this
+// — this does a real update by (section, situation), then adds
+// anything genuinely missing too, so it doubles as a full sync.
 // ============================================================
-
-const VOICE_REFRESHED_SCRIPTS = [
-  { section: 'Sphere Conversations', situation: 'Reconnection', script_text: "Hey, sorry I've been MIA! Life's been lifeing lately lol. How have you been??" },
-  { section: 'Sphere Conversations', situation: 'Casual check-in', script_text: "Hey!! Randomly thinking about you, how's life been treating you?" },
-  { section: 'Sphere Conversations', situation: 'Former coworker', script_text: "Omg I was just thinking about [old job] the other day lol. How've you been??" },
-  { section: 'Sphere Conversations', situation: 'Old friend', script_text: "Randomly thought of you today lol. How's life been??" },
-  { section: 'Sphere Conversations', situation: 'When real estate comes up', script_text: "Ooh that's exciting!! Are you like actually looking or just thinking about it rn?" },
-  { section: 'Community Conversations', situation: 'If they ask what you do', script_text: "I help people figure out Southwest Broward when they're thinking about moving or buying — basically which areas actually fit their life before they commit to anything." },
-  { section: 'Professional Partner Outreach', situation: 'Professional introduction', script_text: "Hi [Name], I came across your work with [organization] and wanted to say hi! I help people navigate Southwest Broward when they're relocating or buying — a lot of people struggle to actually understand the area before making a move, so I put together resources that make that easier. Thought they might be useful for the people you work with." },
-  { section: 'Referral Conversations', situation: 'Asking about referrals', script_text: "Honestly a lot of my business comes from just helping people figure things out before they're ready to buy. If you ever hear someone talking about moving to Southwest Broward, send them my way — happy to just be a resource, no pressure." },
-  { section: 'Outreach Scripts', situation: 'Local business introduction', script_text: "Hi! I'm Rachelle — I help people navigate Southwest Broward real estate. I'm trying to get to know more of the local businesses and what makes these communities actually special. Would love to hear your story and what you do here." },
-  { section: 'Outreach Scripts', situation: 'Community member introduction', script_text: "I've been spending more time learning what people actually love about living here, since I want to help people moving in understand what daily life is really like. What's something you think people should know about this community?" },
-  { section: 'Outreach Scripts', situation: 'Past contact reconnect', script_text: "Hey, sorry I've been MIA! Life's been lifeing lately lol. How have you been??" },
-];
 
 export async function refreshScriptVoice() {
   const userId = await getUserId();
-  if (!userId) return { updated: 0 };
+  if (!userId) return { updated: 0, added: 0 };
 
-  let updated = 0;
-  for (const s of VOICE_REFRESHED_SCRIPTS) {
-    const { error, count } = await supabase.from('scripts')
-      .update({ script_text: s.script_text }, { count: 'exact' })
-      .eq('user_id', userId).eq('section', s.section).eq('situation', s.situation);
-    if (!error && count) updated += count;
+  const allConversational = [...SEED_SCRIPTS, ...GAP_SCRIPTS, ...GAP_PHONE_BOUNDARIES, ...GAP_OUTREACH_PLAYBOOK];
+
+  const { data: existing } = await supabase.from('scripts').select('id, section, situation').eq('user_id', userId);
+  const existingByKey = new Map((existing || []).map(s => [`${s.section}||${s.situation}`, s.id]));
+
+  let updated = 0, added = 0;
+  const toInsert = [];
+  for (const s of allConversational) {
+    const key = `${s.section}||${s.situation}`;
+    const existingId = existingByKey.get(key);
+    if (existingId) {
+      const { error } = await supabase.from('scripts').update({ script_text: s.script_text }).eq('id', existingId);
+      if (!error) updated += 1;
+    } else {
+      toInsert.push(s);
+    }
   }
-  return { updated };
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from('scripts').insert(toInsert.map(s => ({ ...s, user_id: userId })));
+    if (!error) added = toInsert.length;
+  }
+
+  return { updated, added };
 }
+

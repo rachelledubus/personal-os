@@ -14,11 +14,21 @@ import './Overlay.css';
 export default function Overlay({ open, onClose, variant = 'sheet', title, subtitle, dismissible = true, showScrim = true, children }) {
   const panelRef = useRef(null);
 
+  // Focus-on-open only — deliberately depends on nothing but `open`.
+  // Previously this lived in the same effect as the keydown listener,
+  // which also depended on `onClose` — and since callers pass
+  // `onClose={() => setOpen(false)}` as a fresh inline function every
+  // render, ANY re-render (e.g. typing a character, which calls
+  // setState in the caller) re-ran this effect and re-focused the
+  // panel, stealing focus straight out of whatever input was being
+  // typed into. Splitting this out means it only fires on the actual
+  // open transition, which is the only time it should.
+  useEffect(() => {
+    if (open) panelRef.current?.focus();
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
-    // Focus the panel on open so keyboard/screen-reader users land
-    // inside the overlay immediately, not wherever focus was before.
-    panelRef.current?.focus();
     function handleKeyDown(e) {
       if (e.key === 'Escape' && dismissible) onClose?.();
     }

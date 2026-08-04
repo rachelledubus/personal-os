@@ -338,3 +338,128 @@ export async function buildNewRoadmap() {
 }
 
 
+// ============================================================
+// MILESTONE SUB-STEPS — turns each roadmap milestone into a real,
+// workable checklist. Keyed by the exact milestone title so import
+// is safe to run any time after the milestones themselves exist.
+// GATE items don't get steps — they're ongoing behavioral criteria
+// ("used consistently for 2 weeks"), not one-time tasks, so breaking
+// them into sub-steps wouldn't actually mean anything.
+// ============================================================
+
+const MILESTONE_STEPS = {
+  'W1: Reactivate the CRM \u2014 re-enter any contacts that came in while it was dormant': [
+    'Check email/texts for any leads or contacts you haven\u2019t added yet',
+    'Add each one to Contacts with the right category',
+    'Set relationship tier for anyone who\u2019s Sphere or a Referral Partner',
+    'Log one Touch for each if you\u2019ve already talked to them since',
+  ],
+  'W1: Set a recurring weekly calendar block for CRM upkeep \u2014 a standing appointment, not a task on a list': [
+    'Pick a day/time that\u2019s actually realistic, same time every week',
+    'Add it to your real calendar as a recurring appointment',
+    'Name it something concrete: "CRM \u2014 log touches + check pipeline," not just "CRM"',
+  ],
+  'W1: Start using the weekly scorecard every week (Business Dashboard \u2192 This week\u2019s activity)': [
+    'Log at least 1 activity right now to get started',
+    'Check the scorecard strip once a day this week',
+    'At the end of the week, note the 4 numbers before they reset',
+  ],
+  'W1: Run one monthly review at the end of this window, using 4 weeks of real scorecard data': [
+    'Wait until you have 4 full weeks of real scorecard numbers',
+    'Look at the trend: are conversations/touches/content/follow-ups going up, flat, or down week to week',
+    'Compare against your pipeline: are leads actually moving through stages',
+    'Write down your honest answer: is the constraint leads, conversion, or something else',
+  ],
+  'W1: Log BOS app friction points as they come up \u2014 don\u2019t fix mid-stream, bring a concrete list to a dedicated session later': [
+    'Whenever something in the app annoys you or doesn\u2019t fit, jot it down immediately',
+    'Note which screen and which specific action',
+    'Don\u2019t try to fix it yet \u2014 just capture it',
+    'Bring the full list to a dedicated session at the end of the 30 days',
+  ],
+  'W2: Choose one chamber or community organization \u2014 join or attend': [
+    'Look up 2-3 chambers or orgs relevant to Cooper City, Pembroke Pines, or Plantation',
+    'Pick one based on what actually fits \u2014 cost, time, real overlap with your business',
+    'Sign up or find their next event',
+    'Attend or join, then log it in Business \u2192 Community',
+  ],
+  'W2: Build the first referral asset (healthcare, military, or employer relocation guide)': [
+    'Decide which audience first: healthcare, military, or employer',
+    'Outline the 3-5 things that audience actually needs to know about relocating here',
+    'Draft the content \u2014 reuse what already exists in the Relocation Guide where it overlaps',
+    'Design it in Canva',
+    'Save it somewhere you can actually send it',
+  ],
+  'W2: Build the Southwest Broward Intelligence minimum version \u2014 one monthly market/cost/development update': [
+    'Pick this month\u2019s topic: market update, cost update, or a development update',
+    'Pull 3-5 real data points or observations',
+    'Write one short, plain-language summary',
+    'Save it in Business \u2192 Library \u2192 Research Log so it\u2019s reusable across email, content, and consultations',
+  ],
+  'W2: Set up the Google Reviews request process (check brokerage/local rules; prioritize as transactions close)': [
+    'Check your brokerage\u2019s rules on requesting reviews',
+    'Check local/state rules if any apply',
+    'Decide when you\u2019ll ask \u2014 right after closing is the standard move',
+    'Write the actual ask, a short text or email template',
+    'Save the template somewhere you\u2019ll actually use it',
+  ],
+  'W2: Confirm Search Console indexing is complete; request indexing on any pages still pending': [
+    'Log into Google Search Console',
+    'Check indexing status for every real page',
+    'Request indexing on anything still pending',
+    'Note the date so you know when to check back',
+  ],
+  'W3: Activate strategic partnerships \u2014 healthcare, military, first responders, employers': [
+    'Review your Tier 1 partner candidates from earlier outreach',
+    'Follow up with anyone who didn\u2019t respond the first time',
+    'Have one real conversation with at least one partner about how you can help each other',
+    'Log the relationship in Business \u2192 Relationships',
+  ],
+  'W3: Build the consultation questionnaire and standardize the consultation flow': [
+    'List the questions you actually ask, or should ask, every consultation',
+    'Put them in a consistent order',
+    'Save it somewhere you can pull up during a real consultation',
+    'Use it on the next 2-3 real consultations and adjust as needed',
+  ],
+  'W3: Canva batch \u2014 design the remaining 3 lead magnets (6-12 Month Roadmap, Future Home Plan, Selling Strategy Guide), swap Doc links for PDFs': [
+    'Design the 6-12 Month Buyer Roadmap',
+    'Design the Future Home Plan',
+    'Design the Selling Strategy Guide',
+    'Swap each Doc link for the real, hosted PDF on the website',
+  ],
+  'W3: First blog post \u2014 "Cooper City vs. Plantation"': [
+    'Outline the 3-4 real comparison points: schools, commute, price, feel',
+    'Write a draft \u2014 Business \u2192 Content can help with this',
+    'Add real local specifics, not generic filler',
+    'Publish it and link both neighborhood guides',
+  ],
+};
+
+export async function importMilestoneSteps() {
+  const existing = await listProjects();
+  const phase1Project = existing.find(p => p.title === 'Phase 1 Foundation Reactivation');
+  if (!phase1Project) return { added: 0, reason: 'No "Phase 1 Foundation Reactivation" project found \u2014 build the roadmap first.' };
+
+  const milestones = await listMilestones({ projectId: phase1Project.id });
+  let totalAdded = 0, milestonesCovered = 0;
+
+  for (const milestone of milestones) {
+    const steps = MILESTONE_STEPS[milestone.title];
+    if (!steps) continue;
+
+    const { data: existingSteps } = await supabase.from('milestone_steps').select('title').eq('milestone_id', milestone.id);
+    const existingTitles = new Set((existingSteps || []).map(s => s.title));
+    const toAdd = steps.filter(t => !existingTitles.has(t));
+    if (toAdd.length === 0) continue;
+
+    milestonesCovered += 1;
+    for (let i = 0; i < toAdd.length; i++) {
+      const userId = await getUserId();
+      await supabase.from('milestone_steps').insert({
+        user_id: userId, milestone_id: milestone.id, title: toAdd[i], sort_order: i,
+      });
+      totalAdded += 1;
+    }
+  }
+
+  return { added: totalAdded, milestonesCovered };
+}

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
-import Checkbox from '../../components/ui/Checkbox.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import { listFutureIdeas, addFutureIdea, deleteFutureIdea, promoteToRoadmap, scoreOpportunityIdea } from '../../services/futureRoadmap.js';
-import { getWebsiteBuildProgress, markSiteBuildComplete, buildNewRoadmap, PHASE1_DIAGNOSIS, PHASE1_EXIT_CRITERIA } from '../../services/websiteBuildImport.js';
+import { getWebsiteBuildProgress, markSiteBuildComplete, buildNewRoadmap, importMilestoneSteps, PHASE1_DIAGNOSIS, PHASE1_EXIT_CRITERIA } from '../../services/websiteBuildImport.js';
+import MilestoneWithSteps from './MilestoneWithSteps.jsx';
 import { toggleMilestone, deleteMilestone } from '../../services/goals.js';
+import { getPreference, setPreference } from '../../services/settings.js';
 
 // ============================================================
 // ROADMAP — rebuilt. This used to show the Realtor OS software's own
@@ -29,7 +30,11 @@ export default function RoadmapTab() {
   const [hideCompleted, setHideCompleted] = useState(false);
   const [showCriteria, setShowCriteria] = useState(false);
 
-  useEffect(() => { load(); listFutureIdeas().then(setIdeas); }, []);
+  useEffect(() => {
+    load();
+    listFutureIdeas().then(setIdeas);
+    getPreference('roadmap', 'hide_completed', false).then(setHideCompleted);
+  }, []);
 
   async function load() {
     const p = await getWebsiteBuildProgress();
@@ -86,6 +91,18 @@ export default function RoadmapTab() {
       load();
     } catch (err) {
       setRoadmapStatus(`Couldn't build: ${err.message || err}`);
+    }
+    setBuildingRoadmap(false);
+  }
+
+  async function handleImportMilestoneSteps() {
+    setBuildingRoadmap(true);
+    try {
+      const result = await importMilestoneSteps();
+      setRoadmapStatus(result.added === 0 ? (result.reason || 'Nothing new to add \u2014 steps already exist for everything covered.') : `Added ${result.added} sub-steps across ${result.milestonesCovered} milestone${result.milestonesCovered === 1 ? '' : 's'}.`);
+      load();
+    } catch (err) {
+      setRoadmapStatus(`Couldn't import: ${err.message || err}`);
     }
     setBuildingRoadmap(false);
   }
@@ -201,7 +218,10 @@ export default function RoadmapTab() {
                 <Button size="sm" variant="ghost" onClick={handleBuildNewRoadmap} disabled={buildingRoadmap}>
                   {buildingRoadmap ? 'Building…' : 'Build the new roadmap'}
                 </Button>
-                <Button size="sm" variant="text" onClick={() => setHideCompleted(!hideCompleted)}>{hideCompleted ? 'Show' : 'Hide'} completed</Button>
+                <Button size="sm" variant="ghost" onClick={handleImportMilestoneSteps} disabled={buildingRoadmap}>
+                  Add sub-steps
+                </Button>
+                <Button size="sm" variant="text" onClick={() => { const next = !hideCompleted; setHideCompleted(next); setPreference('roadmap', 'hide_completed', next); }}>{hideCompleted ? 'Show' : 'Hide'} completed</Button>
               </div>
             </div>
             {roadmapStatus && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{roadmapStatus}</div>}
@@ -222,10 +242,7 @@ export default function RoadmapTab() {
               {expandedPhase === phase.key && (
                 <div className="stack" style={{ marginTop: 'var(--space-3)' }} onClick={e => e.stopPropagation()}>
                   {phase.items.filter(m => !hideCompleted || !m.completed).map(m => (
-                    <div key={m.id} className="row-between">
-                      <Checkbox checked={m.completed} onChange={v => handleToggleMilestone(m.id, v)} label={m.label} disabled={phase.locked} />
-                      <button className="row-remove-btn" aria-label="Remove" onClick={() => handleDeleteMilestone(m.id, m.label)}>×</button>
-                    </div>
+                    <MilestoneWithSteps key={m.id} milestone={m} onToggleMilestone={handleToggleMilestone} onDeleteMilestone={handleDeleteMilestone} locked={phase.locked} />
                   ))}
                   {hideCompleted && phase.items.every(m => m.completed) && (
                     <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Everything here is done — hidden.</div>
