@@ -9,6 +9,7 @@ import WorkoutsTab from './WorkoutsTab.jsx';
 import ChoresTab from './ChoresTab.jsx';
 import MaintenanceTab from './MaintenanceTab.jsx';
 import FinanceTab from './FinanceTab.jsx';
+import PracticeTab from './PracticeTab.jsx';
 import MealPlannerPage from '../Plan/MealPlannerPage.jsx';
 
 // Batch 7 — full split, same pattern as Batch 6. 882 lines down to
@@ -32,6 +33,7 @@ const TAB_GROUPS = [
     ]
   },
   { key: 'finance', label: 'Finance', tabs: [{ key: 'finance', label: 'Finance' }] },
+  { key: 'mind', label: 'Mind', tabs: [{ key: 'practice', label: 'Practice' }] },
 ];
 
 export default function GrowPage() {
@@ -50,6 +52,7 @@ export default function GrowPage() {
       {tab === 'maintenance' && <MaintenanceTab />}
       {tab === 'finance' && <FinanceTab />}
       {tab === 'nutrition' && <MealPlannerPage embedded />}
+      {tab === 'practice' && <PracticeTab />}
     </div>
   );
 }
