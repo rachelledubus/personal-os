@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button.jsx';
 import { useCapacityMode } from '../../components/layout/CapacityModeContext.jsx';
 import { ACTIVITY_TYPES, logActivity, getWeeklyScorecard } from '../../services/businessActivityLog.js';
 import { getWeeklyReview, setWeeklyReview } from '../../services/dailyCheckin.js';
+import { checkBusinessHealth } from '../../services/businessHealthCheck.js';
 
 // ============================================================
 // WEEKLY SCORECARD + BOUNDED REVIEW — the load-bearing fix. CRM
@@ -37,6 +38,7 @@ function ChipRow({ options, selected, onToggle }) {
 export default function WeeklyScorecardAndReview() {
   const { mode } = useCapacityMode();
   const [counts, setCounts] = useState({ conversation: 0, partner_touch: 0, content_published: 0, follow_up: 0 });
+  const [healthAlerts, setHealthAlerts] = useState([]);
   const [logging, setLogging] = useState(null);
   const [review, setReview] = useState(null);
   const [editingReview, setEditingReview] = useState(false);
@@ -47,6 +49,7 @@ export default function WeeklyScorecardAndReview() {
 
   async function refresh() {
     setCounts(await getWeeklyScorecard());
+    setHealthAlerts(await checkBusinessHealth());
     const rv = await getWeeklyReview();
     setReview(rv);
     if (rv) {
@@ -82,6 +85,22 @@ export default function WeeklyScorecardAndReview() {
 
   return (
     <>
+      {healthAlerts.length > 0 && (
+        <Card style={{ borderLeft: '4px solid var(--clay)' }}>
+          <div className="section-label">What needs attention</div>
+          <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 'var(--space-3)' }}>
+            {healthAlerts.map((a, i) => (
+              <div key={i}>
+                <div style={{ fontWeight: 700, fontSize: 'var(--text-small)' }}>{a.title}</div>
+                <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 2 }}>{a.detail}</div>
+                <div style={{ fontSize: 'var(--text-small)', marginTop: 4 }}>{a.guidance}</div>
+                <Link to={a.link} className="muted" style={{ fontSize: 'var(--text-micro)', display: 'inline-block', marginTop: 4 }}>Go there →</Link>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       <Card style={mode === 'low' ? { opacity: 0.75 } : undefined}>
         <div className="section-label">This week's activity</div>
         <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>

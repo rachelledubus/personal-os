@@ -12,6 +12,7 @@ import {
 import { getCategoryList } from '../../services/settings.js';
 import { getCadenceStandards, standardKeyForContact, FOLLOWUP_STANDARD_TYPES } from '../../services/followupStandards.js';
 import { logActivity } from '../../services/businessActivityLog.js';
+import { listScripts } from '../../services/library.js';
 
 const TIERS = ['Tier 1 - Core', 'Tier 2 - Developing', 'Tier 3 - Strategic'];
 
@@ -36,6 +37,8 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
   const [expandTouch, setExpandTouch] = useState(false);
   const [touchChannel, setTouchChannel] = useState('unspecified');
   const [touchNextFollowUp, setTouchNextFollowUp] = useState(plusDays(7));
+  const [relationshipTriggers, setRelationshipTriggers] = useState([]);
+  const [showTriggers, setShowTriggers] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
 
   const [editingFollowUp, setEditingFollowUp] = useState(false);
@@ -76,6 +79,9 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
     });
   }
   useEffect(() => { refresh(); }, [contactId]);
+  useEffect(() => {
+    listScripts().then(scripts => setRelationshipTriggers(scripts.filter(s => s.section === 'Trigger \u2014 Relationship')));
+  }, []);
 
   async function applyField(fields) {
     await updateContact(contactId, fields);
@@ -200,6 +206,22 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               <label style={{ fontSize: 'var(--text-micro)' }} className="muted">
                 Next follow-up: <input type="date" value={touchNextFollowUp} onChange={e => setTouchNextFollowUp(e.target.value)} style={{ width: 130 }} />
               </label>
+            </div>
+          )}
+          {relationshipTriggers.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              <button className="row-remove-btn" aria-label="Toggle triggers" onClick={() => setShowTriggers(!showTriggers)} style={{ fontSize: 'var(--text-micro)', textDecoration: 'underline' }}>
+                {showTriggers ? 'Hide' : 'Worth noting?'}
+              </button>
+              {showTriggers && (
+                <div className="stack" style={{ marginTop: 4, gap: 4 }}>
+                  {relationshipTriggers.map(t => (
+                    <div key={t.id} style={{ fontSize: 'var(--text-micro)' }}>
+                      <strong>{t.situation}:</strong> <span className="muted">{t.script_text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

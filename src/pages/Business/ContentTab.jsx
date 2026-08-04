@@ -4,6 +4,7 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import { listContentPieces, addContentPiece } from '../../services/contentEngine.js';
+import { listScripts } from '../../services/library.js';
 import { getCategoryList } from '../../services/settings.js';
 import { getAutonomyLevel } from '../../services/aiOperator.js';
 
@@ -20,6 +21,8 @@ function ContentTab() {
   const [pillars, setPillars] = useState([]);
   const [audiences, setAudiences] = useState([]);
   const [contentTypes, setContentTypes] = useState([]);
+  const [contentGuidance, setContentGuidance] = useState([]);
+  const [showGuidance, setShowGuidance] = useState(false);
 
   async function refresh() { setPieces(await listContentPieces()); }
   useEffect(() => {
@@ -28,6 +31,7 @@ function ContentTab() {
     getCategoryList('content_pillars').then(setPillars);
     getCategoryList('content_audiences').then(setAudiences);
     getCategoryList('content_types').then(setContentTypes);
+    listScripts().then(scripts => setContentGuidance(scripts.filter(s => s.section === 'Trigger \u2014 Content' || s.section === 'Troubleshooting \u2014 Content & Visibility')));
   }, []);
 
   async function handleAdd() {
@@ -46,6 +50,24 @@ function ContentTab() {
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      {contentGuidance.length > 0 && (
+        <Card>
+          <div className="row-between">
+            <div className="section-label">When to capture content</div>
+            <Button size="sm" variant="text" onClick={() => setShowGuidance(!showGuidance)}>{showGuidance ? 'Hide' : 'Show'}</Button>
+          </div>
+          {showGuidance && (
+            <div className="stack" style={{ marginTop: 'var(--space-2)', gap: 8 }}>
+              {contentGuidance.map(g => (
+                <div key={g.id} style={{ fontSize: 'var(--text-small)' }}>
+                  <strong>{g.situation}:</strong> <span className="muted">{g.script_text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
       <Card>
         <div className="row-between">
           <div className="section-label">Content pipeline</div>

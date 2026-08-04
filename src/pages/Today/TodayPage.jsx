@@ -6,6 +6,7 @@ import ScheduleView, { getOverrunningBlock } from '../../components/schedule/Sch
 import Banner from '../../components/ui/Banner.jsx';
 import EnergyCheckIn from '../../components/intelligence/EnergyCheckIn.jsx';
 import MorningAlignmentCard from '../../components/intelligence/MorningAlignmentCard.jsx';
+import TodayBusinessAction from '../../components/business/TodayBusinessAction.jsx';
 import AnchorTimeAdjuster from '../../components/intelligence/AnchorTimeAdjuster.jsx';
 import { getFeatureFlag } from '../../services/settings.js';
 import AskAIPanel from '../../components/intelligence/AskAIPanel.jsx';
@@ -221,6 +222,7 @@ export default function TodayPage() {
       ) : (
         <Stack gap={3}>
           <MorningAlignmentCard />
+          <TodayBusinessAction />
           <Card className="today-summary-card">
             <div className="row-between">
               <div>

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Check } from 'lucide-react';
 import Checkbox from '../../components/ui/Checkbox.jsx';
 import { listMilestoneSteps, toggleMilestoneStep, addMilestoneStep, deleteMilestoneStep } from '../../services/goals.js';
+import { natureOf } from '../../services/websiteBuildImport.js';
 
 // ============================================================
 // A milestone row that can expand into its real sub-step checklist —
@@ -42,16 +44,33 @@ export default function MilestoneWithSteps({ milestone, onToggleMilestone, onDel
 
   return (
     <div>
-      <div className="row-between">
-        <Checkbox checked={milestone.completed} onChange={v => onToggleMilestone(milestone.id, v)} label={milestone.label} disabled={locked} />
-        <div className="row" style={{ gap: 4 }}>
+      <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setExpanded(!expanded)}>
+        <div className="row" style={{ gap: 'var(--space-2)', alignItems: 'center' }}>
+          <button
+            type="button"
+            className={`checkbox-box ${milestone.completed ? 'checked' : ''}`}
+            onClick={e => { e.stopPropagation(); if (!locked) onToggleMilestone(milestone.id, !milestone.completed); }}
+            aria-pressed={milestone.completed}
+            aria-label={milestone.completed ? 'Mark not done' : 'Mark done'}
+            disabled={locked}
+          >
+            {milestone.completed && <Check size={14} strokeWidth={3} />}
+          </button>
+          <span className={milestone.completed ? 'checkbox-label done' : 'checkbox-label'}>{milestone.label}</span>
+          {natureOf(milestone.title) !== 'one-time' && (
+            <span className="muted" style={{ fontSize: 'var(--text-micro)', fontStyle: 'italic' }}>
+              ({natureOf(milestone.title) === 'recurring' ? 'ongoing habit' : natureOf(milestone.title) === 'scheduled-later' ? 'not due yet' : 'as it comes up'})
+            </span>
+          )}
+        </div>
+        <div className="row" style={{ gap: 4 }} onClick={e => e.stopPropagation()}>
           {steps && steps.length > 0 && <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{doneSteps}/{steps.length} steps</span>}
-          <button className="row-remove-btn" aria-label="Toggle steps" onClick={() => setExpanded(!expanded)} style={{ fontSize: 'var(--text-small)' }}>{expanded ? '−' : '+'}</button>
+          <span className="muted" style={{ fontSize: 'var(--text-small)' }}>{expanded ? '−' : '+'}</span>
           <button className="row-remove-btn" aria-label="Remove" onClick={() => onDeleteMilestone(milestone.id, milestone.label)}>×</button>
         </div>
       </div>
       {expanded && (
-        <div className="stack" style={{ marginLeft: 28, marginTop: 6, gap: 4, paddingLeft: 'var(--space-3)', borderLeft: '2px solid var(--sand)' }}>
+        <div className="stack" style={{ marginLeft: 28, marginTop: 6, gap: 4, paddingLeft: 'var(--space-3)', borderLeft: '2px solid var(--sand)' }} onClick={e => e.stopPropagation()}>
           {steps === null ? (
             <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>Loading steps...</div>
           ) : steps.length === 0 ? (

@@ -1,4 +1,4 @@
-import { addProject, addMilestone, listProjects, listMilestones, toggleMilestone, deleteMilestone } from './goals.js';
+import { addProject, addMilestone, listProjects, listMilestones, toggleMilestone, deleteMilestone, listMilestoneSteps } from './goals.js';
 import { supabase } from '../lib/supabaseClient.js';
 
 async function getUserId() {
@@ -462,4 +462,65 @@ export async function importMilestoneSteps() {
   }
 
   return { added: totalAdded, milestonesCovered };
+}
+
+// ============================================================
+// MILESTONE NATURE — a checklist model assumes "do this once, check
+// it off." Three of W1's five items don't fit that: a recurring
+// habit (the scorecard), something with nothing to do until a later
+// date (the monthly review), and something reactive with no fixed
+// schedule (logging app friction). Flattening all of them into the
+// same checkbox shape is exactly why the roadmap didn't answer "what
+// do I do today" \u2014 this tags each one so the daily-action picker
+// can tell the difference.
+// ============================================================
+
+const MILESTONE_NATURE = {
+  'W1: Start using the weekly scorecard every week (Business Dashboard \u2192 This week\u2019s activity)': 'recurring',
+  'W1: Run one monthly review at the end of this window, using 4 weeks of real scorecard data': 'scheduled-later',
+  'W1: Log BOS app friction points as they come up \u2014 don\u2019t fix mid-stream, bring a concrete list to a dedicated session later': 'reactive',
+};
+
+function natureOf(title) {
+  return MILESTONE_NATURE[title] || 'one-time';
+}
+
+export { natureOf };
+
+/** The actual "what do I do today" answer \u2014 walks the unlocked
+ *  phases in roadmap order, skips anything that isn't a genuine
+ *  one-time action, and returns the first incomplete sub-step of the
+ *  first incomplete one-time milestone. If every one-time item is
+ *  done, says so plainly instead of surfacing a recurring/reactive
+ *  item that was never going to have a single "next step." */
+export async function getTodayBusinessAction() {
+  const progress = await getWebsiteBuildProgress();
+  if (!progress) return null;
+
+  const relevantPhases = progress.phases.filter(p => ['W1', 'W2', 'W3'].includes(p.key) && !p.locked);
+
+  for (const phase of relevantPhases) {
+    for (const milestone of phase.items) {
+      if (milestone.completed) continue;
+      if (natureOf(milestone.title) !== 'one-time') continue;
+
+      const steps = await listMilestoneSteps(milestone.id);
+      const nextStep = steps.find(s => !s.completed);
+      if (nextStep) {
+        return { kind: 'step', phaseKey: phase.key, milestoneTitle: milestone.label, stepTitle: nextStep.title, stepId: nextStep.id };
+      }
+      // Has no sub-steps (or all steps done but milestone itself
+      // isn't checked yet) — the milestone itself is the action.
+      return { kind: 'milestone', phaseKey: phase.key, milestoneTitle: milestone.label, milestoneId: milestone.id };
+    }
+  }
+
+  // Nothing one-time left — check whether the recurring/reactive ones
+  // are the only thing standing between here and the next phase.
+  const recurringOrReactive = relevantPhases.flatMap(p => p.items).filter(m => !m.completed && natureOf(m.title) !== 'one-time');
+  if (recurringOrReactive.length > 0) {
+    return { kind: 'ongoing', items: recurringOrReactive.map(m => ({ title: m.label, nature: natureOf(m.title) })) };
+  }
+
+  return { kind: 'clear' };
 }
