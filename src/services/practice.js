@@ -275,3 +275,76 @@ export async function generateMoreProblems(topicId, topicName, difficulty = 'med
   if (error) throw error;
   return rows.length;
 }
+
+// ============================================================
+// GEOMETRY FOUNDATIONS — added after realizing the original roadmap
+// assumed algebra-solid meant trig-ready, which doesn't hold for
+// someone who "barely passed geometry." These three topics are what
+// SOH-CAH-TOA and the unit circle are actually built from. Inserted
+// between Functions and Trigonometry, renumbering what's already
+// there to make room \u2014 seedPracticeIfEmpty() only runs once, so
+// an account that's already seeded needs this as a real sync, not
+// just an addition to the seed arrays nobody's account will see.
+// ============================================================
+
+const GEOMETRY_TOPICS = [
+  { name: 'Angles & triangle basics', phase: 'Geometry Foundations' },
+  { name: 'Similar triangles & ratios', phase: 'Geometry Foundations' },
+  { name: 'Pythagorean theorem & coordinate geometry', phase: 'Geometry Foundations' },
+];
+
+const GEOMETRY_PROBLEMS = {
+  'Angles & triangle basics': [
+    { prompt: 'Two angles are complementary. One measures 35 degrees. What does the other measure?', answer: '55 degrees (complementary angles sum to 90: 90 - 35 = 55)', difficulty: 'easy' },
+    { prompt: 'A triangle has angles measuring 40 degrees and 65 degrees. Find the third angle.', answer: '75 degrees (triangle angles sum to 180: 180 - 40 - 65 = 75)', difficulty: 'easy' },
+    { prompt: 'Two angles are supplementary. One is three times the other. Find both angles.', answer: '45 and 135 degrees (supplementary angles sum to 180; x + 3x = 180 means x = 45, so the angles are 45 and 135)', difficulty: 'medium' },
+  ],
+  'Similar triangles & ratios': [
+    { prompt: 'Triangle A has sides 3, 4, 5. Triangle B is similar to Triangle A and its shortest side is 6. Find Triangle B\u2019s other two sides.', answer: '8 and 10 (the scale factor is 6/3 = 2, so 4x2=8 and 5x2=10)', difficulty: 'medium' },
+    { prompt: 'Two right triangles both have a 30-degree angle. Triangle 1 has legs 1 and sqrt(3). Triangle 2 has a leg of 5, opposite the 30-degree angle. Find Triangle 2\u2019s other leg.', answer: '5*sqrt(3) (same angle means the same ratio between the legs, so if the leg opposite 30 degrees is 5, the other leg is 5*sqrt(3))', difficulty: 'hard' },
+    { prompt: 'Explain why two right triangles with the same non-right angle must have the same side ratios, even if their sizes are different.', answer: 'Similar triangles have equal corresponding angles, and equal angles force equal ratios between corresponding sides \u2014 this is the definition of similarity, and it\u2019s the reason a ratio like sin(30 degrees) can be a single number regardless of which specific triangle it comes from', difficulty: 'hard' },
+  ],
+  'Pythagorean theorem & coordinate geometry': [
+    { prompt: 'A right triangle has legs 6 and 8. Find the hypotenuse.', answer: '10 (6^2 + 8^2 = 36 + 64 = 100, sqrt(100) = 10)', difficulty: 'easy' },
+    { prompt: 'A right triangle has a hypotenuse of 13 and one leg of 5. Find the other leg.', answer: '12 (13^2 - 5^2 = 169 - 25 = 144, sqrt(144) = 12)', difficulty: 'medium' },
+    { prompt: 'Find the distance between the points (1, 2) and (4, 6) using the distance formula.', answer: '5 (distance = sqrt((4-1)^2 + (6-2)^2) = sqrt(9+16) = sqrt(25) = 5 \u2014 this is the Pythagorean theorem with the legs being the horizontal and vertical differences)', difficulty: 'medium' },
+  ],
+};
+
+export async function addGeometryFoundations() {
+  const userId = await getUserId();
+  const { data: existingTopics } = await supabase.from('practice_topics').select('id, name, sort_order').eq('user_id', userId);
+  const existingNames = new Set((existingTopics || []).map(t => t.name));
+  const missing = GEOMETRY_TOPICS.filter(t => !existingNames.has(t.name));
+  if (missing.length === 0) return { added: 0, reason: 'Already added.' };
+
+  // Make room: everything at sort_order >= 6 (where Trigonometry
+  // originally started) shifts up by the number of new topics, so
+  // Geometry Foundations lands between Functions and Trigonometry
+  // instead of at the end of the list.
+  const toShift = (existingTopics || []).filter(t => t.sort_order >= 6);
+  for (const t of toShift) {
+    await supabase.from('practice_topics').update({ sort_order: t.sort_order + missing.length }).eq('id', t.id);
+  }
+
+  let problemCount = 0;
+  for (let i = 0; i < missing.length; i++) {
+    const topic = missing[i];
+    const { data: created, error } = await supabase.from('practice_topics').insert({
+      user_id: userId, name: topic.name, phase: topic.phase, sort_order: 6 + i, status: 'not_started',
+    }).select().single();
+    if (error) throw error;
+
+    const problems = GEOMETRY_PROBLEMS[topic.name] || [];
+    const rows = problems.map(p => ({
+      user_id: userId, topic_id: created.id, prompt: p.prompt, answer: p.answer, difficulty: p.difficulty, source: 'seed',
+    }));
+    if (rows.length > 0) {
+      const { error: probErr } = await supabase.from('practice_problems').insert(rows);
+      if (probErr) throw probErr;
+      problemCount += rows.length;
+    }
+  }
+
+  return { added: missing.length, problems: problemCount };
+}

@@ -5,7 +5,7 @@ import EmptyState from '../../components/ui/EmptyState.jsx';
 import ProgressBar from '../../components/ui/ProgressBar.jsx';
 import {
   getDailyQueue, recordAnswer, logSession, listTopics, setTopicStatus,
-  getTopicMastery, listSessions, seedPracticeIfEmpty, generateMoreProblems,
+  getTopicMastery, listSessions, seedPracticeIfEmpty, generateMoreProblems, addGeometryFoundations,
 } from '../../services/practice.js';
 
 const MISS_REASONS = [
@@ -33,6 +33,7 @@ export default function PracticeTab() {
   const [mastery, setMastery] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [seedStatus, setSeedStatus] = useState(null);
+  const [loadError, setLoadError] = useState(null);
   const [generating, setGenerating] = useState(null);
 
   async function loadQueue() {
@@ -42,11 +43,17 @@ export default function PracticeTab() {
   }
 
   async function loadAll() {
-    await seedPracticeIfEmpty();
-    await loadQueue();
-    setTopics(await listTopics());
-    setMastery(await getTopicMastery());
-    setSessions(await listSessions());
+    setLoadError(null);
+    try {
+      await seedPracticeIfEmpty();
+      await addGeometryFoundations();
+      await loadQueue();
+      setTopics(await listTopics());
+      setMastery(await getTopicMastery());
+      setSessions(await listSessions());
+    } catch (err) {
+      setLoadError(err.message || String(err));
+    }
   }
   useEffect(() => { loadAll(); }, []);
 
@@ -122,7 +129,12 @@ export default function PracticeTab() {
             <div className="section-label">Today's practice</div>
             {streakDays > 0 && <span className="muted" style={{ fontSize: 'var(--text-caption)' }}>{streakDays} day streak</span>}
           </div>
-          {queue === null ? (
+          {loadError ? (
+            <div style={{ marginTop: 'var(--space-3)' }}>
+              <div className="muted" style={{ fontSize: 'var(--text-small)', color: 'var(--danger)' }}>Couldn't load: {loadError}</div>
+              <Button size="sm" variant="text" onClick={loadAll} style={{ marginTop: 8 }}>Try again</Button>
+            </div>
+          ) : queue === null ? (
             <div className="muted" style={{ marginTop: 'var(--space-3)' }}>Loading…</div>
           ) : queue.length === 0 ? (
             <EmptyState icon="sparkles" title="Nothing due today" />
