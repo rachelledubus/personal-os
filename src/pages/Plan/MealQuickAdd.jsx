@@ -5,8 +5,8 @@ export default
 function MealQuickAdd({ mealType, foods, recipes, onAddFood, onAddRecipe }) {
   const [query, setQuery] = useState('');
 
-  const regularFoods = foods.filter(f => f.is_regular && (!f.meal_types || f.meal_types.includes(mealType)));
-  const regularRecipes = recipes.filter(r => r.is_regular && (!r.meal_types || r.meal_types.includes(mealType)));
+  const regularFoods = foods.filter(f => f.is_regular && (!f.meal_types || f.meal_types.length === 0 || f.meal_types.includes(mealType)));
+  const regularRecipes = recipes.filter(r => r.is_regular && (!r.meal_types || r.meal_types.length === 0 || r.meal_types.includes(mealType)));
 
   const q = query.trim().toLowerCase();
   const searchResults = q

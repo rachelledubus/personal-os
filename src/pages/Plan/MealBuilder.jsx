@@ -86,12 +86,22 @@ function MealBuilder({ foods, onFoodsChanged }) {
   async function handleMealTag(food, mealType) {
     const current = food.meal_types || [];
     const next = current.includes(mealType) ? current.filter(m => m !== mealType) : [...current, mealType];
-    await tagFoodMealTypes(food.id, next, food.is_regular);
+    try {
+      await tagFoodMealTypes(food.id, next, food.is_regular);
+    } catch (err) {
+      console.error('Failed to update meal type tag:', err);
+      return;
+    }
     onFoodsChanged?.();
   }
 
   async function handleToggleRegular(food) {
-    await tagFoodMealTypes(food.id, food.meal_types || [], !food.is_regular);
+    try {
+      await tagFoodMealTypes(food.id, food.meal_types || [], !food.is_regular);
+    } catch (err) {
+      console.error('Failed to toggle regular:', err);
+      return;
+    }
     onFoodsChanged?.();
   }
 

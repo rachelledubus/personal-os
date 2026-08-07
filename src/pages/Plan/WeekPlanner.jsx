@@ -4,7 +4,7 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import {
   nextMonday, listWeekPlan, generateWeekGroceryList, listMealTemplates, applyTemplateToSlot,
-  addFoodToDayPlan, addRecipeToDayPlan, removePlanItem,
+  addFoodToDayPlan, addRecipeToDayPlan, removePlanItem, generateWeekFromRegulars,
 } from '../../services/mealWeek.js';
 
 export default
@@ -14,6 +14,8 @@ function WeekPlanner({ foods, recipes }) {
   const [templates, setTemplates] = useState([]);
   const [groceryStatus, setGroceryStatus] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [autoFilling, setAutoFilling] = useState(false);
+  const [autoFillStatus, setAutoFillStatus] = useState(null);
 
   useEffect(() => { refresh(); }, [weekStart]);
 
@@ -52,6 +54,21 @@ function WeekPlanner({ foods, recipes }) {
     setTimeout(() => setGroceryStatus(null), 4000);
   }
 
+  async function handleAutoFillWeek() {
+    setAutoFilling(true);
+    setAutoFillStatus(null);
+    try {
+      const result = await generateWeekFromRegulars(weekStart, byDate, foods, recipes || []);
+      let msg = result.filled === 0 ? 'Nothing to fill \u2014 every slot already has something planned, or you don\u2019t have regulars tagged yet.' : `Filled ${result.filled} slot${result.filled === 1 ? '' : 's'} from your regulars.`;
+      if (result.slotsWithNoRegular.length > 0) msg += ` No regulars tagged for ${result.slotsWithNoRegular.join(', ')} \u2014 those stayed empty.`;
+      setAutoFillStatus(msg);
+      refresh();
+    } catch (err) {
+      setAutoFillStatus(`Couldn't auto-fill: ${err.message || err}`);
+    }
+    setAutoFilling(false);
+  }
+
   function shiftWeek(days) {
     const d = new Date(weekStart);
     d.setDate(d.getDate() + days);
@@ -70,10 +87,16 @@ function WeekPlanner({ foods, recipes }) {
             <div style={{ fontWeight: 700, alignSelf: 'center' }}>Week of {formatFullDate(weekStart)}</div>
             <Button size="sm" variant="ghost" onClick={() => shiftWeek(7)}>Next week →</Button>
           </div>
-          <Button size="sm" variant="primary" onClick={handleGenerateWeekGrocery} disabled={generating}>
-            {generating ? 'Adding…' : 'Generate grocery list for this week'}
-          </Button>
+          <div className="row" style={{ gap: 'var(--space-2)' }}>
+            <Button size="sm" variant="ghost" onClick={handleAutoFillWeek} disabled={autoFilling}>
+              {autoFilling ? 'Filling…' : 'Generate my week'}
+            </Button>
+            <Button size="sm" variant="primary" onClick={handleGenerateWeekGrocery} disabled={generating}>
+              {generating ? 'Adding…' : 'Generate grocery list for this week'}
+            </Button>
+          </div>
         </div>
+        {autoFillStatus && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>{autoFillStatus}</div>}
         {groceryStatus && <div className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 'var(--space-2)' }}>{groceryStatus}</div>}
       </Card>
 
@@ -124,10 +147,10 @@ function DayCard({ date, dayPlan, foods, recipes, templates, onAdd, onAddRecipe,
                 ))}
               </div>
               <div className="row" style={{ marginTop: 4, flexWrap: 'wrap', gap: 4 }}>
-                {foods.filter(f => f.is_regular && (!f.meal_types || f.meal_types.includes(mt))).map(f => (
+                {foods.filter(f => f.is_regular && (!f.meal_types || f.meal_types.length === 0 || f.meal_types.includes(mt))).map(f => (
                   <button key={f.id} className="food-quick-add" onClick={() => onAdd(date, mt, f)}>+ {f.name}</button>
                 ))}
-                {(recipes || []).filter(r => r.is_regular && (!r.meal_types || r.meal_types.includes(mt))).map(r => (
+                {(recipes || []).filter(r => r.is_regular && (!r.meal_types || r.meal_types.length === 0 || r.meal_types.includes(mt))).map(r => (
                   <button key={r.id} className="food-quick-add" onClick={() => onAddRecipe(date, mt, r)}><BookOpen size={12} style={{ verticalAlign: 'middle', marginRight: 2 }} />+ {r.name}</button>
                 ))}
                 {templates.length > 0 && (

@@ -48,6 +48,47 @@ export async function setInventoryItem(ingredientName, quantity, unit) {
   if (error) throw error;
 }
 
+// ============================================================
+// AUTO-POPULATE FROM INGREDIENTS — pulls every unique ingredient
+// name from recipe_ingredients and standalone foods, adds anything
+// not already in inventory with quantity left null (genuinely
+// "not counted yet," not zero) so the UI can tell the difference.
+// Never touches a row that already exists — a real count you've
+// already entered is never overwritten by re-running this.
+// ============================================================
+export async function syncInventoryFromIngredients() {
+  const userId = await getUserId();
+
+  const [{ data: recipeIngredients }, { data: foods }, { data: existing }] = await Promise.all([
+    supabase.from('recipe_ingredients').select('name, unit').eq('user_id', userId),
+    supabase.from('foods').select('name').eq('user_id', userId),
+    supabase.from('kitchen_inventory').select('ingredient_name').eq('user_id', userId),
+  ]);
+
+  const existingNames = new Set((existing || []).map(i => i.ingredient_name.toLowerCase()));
+  const seen = new Map(); // lowercase name -> { name, unit }
+
+  for (const ing of recipeIngredients || []) {
+    const key = ing.name.trim().toLowerCase();
+    if (!key || existingNames.has(key) || seen.has(key)) continue;
+    seen.set(key, { name: ing.name.trim(), unit: ing.unit || null });
+  }
+  for (const f of foods || []) {
+    const key = f.name.trim().toLowerCase();
+    if (!key || existingNames.has(key) || seen.has(key)) continue;
+    seen.set(key, { name: f.name.trim(), unit: null });
+  }
+
+  const toAdd = Array.from(seen.values());
+  if (toAdd.length === 0) return { added: 0 };
+
+  const { error } = await supabase.from('kitchen_inventory').insert(
+    toAdd.map(item => ({ user_id: userId, ingredient_name: item.name, quantity: null, unit: item.unit }))
+  );
+  if (error) throw error;
+  return { added: toAdd.length };
+}
+
 export async function deleteInventoryItem(id) {
   const { error } = await supabase.from('kitchen_inventory').delete().eq('id', id);
   if (error) throw error;

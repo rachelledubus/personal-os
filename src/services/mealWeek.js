@@ -161,6 +161,59 @@ export async function addRecipeToDayPlan(planDate, mealType, recipeId, servings 
   if (error) throw error;
 }
 
+// ============================================================
+// AUTO-GENERATE THE WEEK — the actual fix for "less brain power."
+// Manually filling up to 28 slots by hand isn't a working version of
+// low-effort meal planning, it's just a functioning high-effort one.
+// This picks ONE regular per meal type and repeats it consistently
+// across the week (not a rotation — simpler, more predictable,
+// and any single day is still just as easy to swap by hand
+// afterward as it always was). Never touches a slot that already has
+// something planned, so this is safe to run more than once.
+//
+// planWeekFromRegulars is a pure function — no DB calls — so
+// the actual "what goes where" decision is testable on its own,
+// separate from the code that writes it.
+// ============================================================
+
+const MEAL_TYPES_FOR_PLANNING = ['breakfast', 'lunch', 'dinner', 'snacks'];
+
+export function planWeekFromRegulars(dates, existingByDate, foods, recipes) {
+  const plan = []; // { date, mealType, kind: 'food'|'recipe', id }
+
+  for (const mealType of MEAL_TYPES_FOR_PLANNING) {
+    const regularFood = foods.find(f => f.is_regular && (!f.meal_types || f.meal_types.length === 0 || f.meal_types.includes(mealType)));
+    const regularRecipe = !regularFood ? recipes.find(r => r.is_regular && (!r.meal_types || r.meal_types.length === 0 || r.meal_types.includes(mealType))) : null;
+    if (!regularFood && !regularRecipe) continue; // nothing tagged for this meal type — nothing to fill in with
+
+    for (const date of dates) {
+      const already = (existingByDate[date]?.[mealType] || []).length > 0;
+      if (already) continue; // never overwrite something already planned
+      if (regularFood) plan.push({ date, mealType, kind: 'food', id: regularFood.id });
+      else plan.push({ date, mealType, kind: 'recipe', id: regularRecipe.id });
+    }
+  }
+
+  return plan;
+}
+
+export async function generateWeekFromRegulars(weekStart, existingByDate, foods, recipes) {
+  const dates = weekDates(weekStart);
+  const plan = planWeekFromRegulars(dates, existingByDate, foods, recipes);
+
+  for (const item of plan) {
+    if (item.kind === 'food') await addFoodToDayPlan(item.date, item.mealType, item.id);
+    else await addRecipeToDayPlan(item.date, item.mealType, item.id, 1);
+  }
+
+  const slotsWithNoRegular = MEAL_TYPES_FOR_PLANNING.filter(mt =>
+    !foods.some(f => f.is_regular && (!f.meal_types || f.meal_types.length === 0 || f.meal_types.includes(mt))) &&
+    !recipes.some(r => r.is_regular && (!r.meal_types || r.meal_types.length === 0 || r.meal_types.includes(mt)))
+  );
+
+  return { filled: plan.length, slotsWithNoRegular };
+}
+
 export async function removePlanItem(planId) {
   const { error } = await supabase.from('meal_plan_items').delete().eq('id', planId);
   if (error) throw error;
