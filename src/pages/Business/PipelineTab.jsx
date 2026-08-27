@@ -3,8 +3,8 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Badge, { contactStatusTone } from '../../components/ui/Badge.jsx';
-import { listContacts, addContact, inferDefaultTier } from '../../services/contacts.js';
-import { getCategoryList } from '../../services/settings.js';
+import { listContacts, addContact, inferDefaultTier, importExpiredWithdrawnLeads } from '../../services/contacts.js';
+import { getCategoryList, setCategoryList } from '../../services/settings.js';
 import ContactProfilePanel from '../../components/business/ContactProfilePanel.jsx';
 
 // ============================================================
@@ -22,6 +22,8 @@ function PipelineTab() {
   const [sources, setSources] = useState([]);
   const [timelines, setTimelines] = useState([]);
   const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState(null);
   const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '', timeline: '' });
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('All');
@@ -35,6 +37,28 @@ function PipelineTab() {
     setTimelines(await getCategoryList('contact_timelines'));
   }
   useEffect(() => { refresh(); }, []);
+
+  async function handleImportExpiredWithdrawn() {
+    setImporting(true);
+    setImportStatus(null);
+    try {
+      // The new "Expired/Withdrawn Listing" source option is stored
+      // per-user once the list's been saved before, so the code-level
+      // default alone won't reach an already-initialized account.
+      const currentSources = await getCategoryList('lead_sources');
+      if (!currentSources.includes('Expired/Withdrawn Listing')) {
+        await setCategoryList('lead_sources', [...currentSources, 'Expired/Withdrawn Listing']);
+      }
+      const result = await importExpiredWithdrawnLeads();
+      setImportStatus(result.imported === 0
+        ? `Nothing new \u2014 all ${result.total} were already imported.`
+        : `Imported ${result.imported} new lead${result.imported === 1 ? '' : 's'}${result.skipped > 0 ? ` (${result.skipped} already imported, skipped)` : ''}.`);
+      refresh();
+    } catch (err) {
+      setImportStatus(`Couldn't import: ${err.message || err}`);
+    }
+    setImporting(false);
+  }
 
   async function handleAdd() {
     if (!form.name.trim()) return;
@@ -56,6 +80,19 @@ function PipelineTab() {
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
+      <Card>
+        <div className="row-between">
+          <div className="section-label">Import expired/withdrawn listing leads</div>
+          <Button size="sm" variant="ghost" onClick={handleImportExpiredWithdrawn} disabled={importing}>
+            {importing ? 'Importing…' : 'Import 50 leads'}
+          </Button>
+        </div>
+        <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
+          From your SW Broward handwritten notes (8/25/2026). None have owner contact info yet — each lands as a Lead with property details in notes, ready to fill in as you research owners via bcpa.net or MLS records.
+        </p>
+        {importStatus && <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 4 }}>{importStatus}</div>}
+      </Card>
+
       <Card>
         <div className="row-between">
           <div className="section-label">Pipeline</div>

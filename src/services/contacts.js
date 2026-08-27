@@ -265,3 +265,95 @@ export async function getDatabaseHealth() {
     overdue,
   };
 }
+// ============================================================
+// EXPIRED/WITHDRAWN LISTING IMPORT — from SW_Broward_Expired_
+// Withdrawn_Leads.xlsx, source: handwritten notes 8/25/2026. Every
+// row lacks owner contact info (that's the next research step, not
+// a gap in the import), so each lands as a Lead with a clear
+// placeholder name and full property details in notes, ready to
+// fill in as owner info gets researched. Idempotent — checks by
+// address in notes, safe to run again without duplicating.
+// ============================================================
+
+const EXPIRED_WITHDRAWN_LEADS = [
+  { address: '10386 SW 57th Ct', city: 'Cooper City', beds: 4, baths: 3.5, sqft: 4000, listPrice: 1785000, status: 'Withdrawn', statusDetail: null },
+  { address: '7161 Farragut St', city: 'Hollywood', beds: 3, baths: 2, sqft: 1467, listPrice: 559900, status: 'Expired then Withdrawn', statusDetail: 'Expired July 2026 at $559.9K; relisted, withdrawn Aug 2026 at $529.9K' },
+  { address: '5310 SW 109th Ave', city: 'Davie', beds: 7, baths: 3.5, sqft: 4414, listPrice: 1950000, status: 'Withdrawn', statusDetail: null },
+  { address: '12301 Paseo Way', city: 'Cooper City', beds: 3, baths: 2, sqft: 1629, listPrice: 659900, status: 'Cancelled', statusDetail: null },
+  { address: '5191 SW 109th Ave', city: 'Davie', beds: 7, baths: 4.5, sqft: 4436, listPrice: 1675000, status: 'Expired', statusDetail: null },
+  { address: '1150 N Douglas Rd', city: 'Pembroke', beds: 4, baths: 2, sqft: 1411, listPrice: 755000, status: 'Cancelled', statusDetail: 'Cancelled after 2 weeks (8/14)' },
+  { address: '7631 Cavalla Dr', city: 'Davie', beds: 5, baths: 4.5, sqft: 4122, listPrice: 1399000, status: 'Cancelled', statusDetail: null },
+  { address: '2560 Bass Way', city: 'Cooper City', beds: 5, baths: 3, sqft: 2586, listPrice: 850000, status: 'Withdrawn', statusDetail: '150 DOM; original price $975K' },
+  { address: '5511 SW 114th Ave', city: 'Cooper City', beds: 3, baths: 2, sqft: 1847, listPrice: 659000, status: 'Withdrawn', statusDetail: null },
+  { address: '2010 Meadows Dr', city: 'Davie', beds: 5, baths: 5.5, sqft: 3647, listPrice: 2000000, status: 'Expired', statusDetail: '60 DOM' },
+  { address: '2638 Oak Park Cir', city: null, beds: null, baths: null, sqft: null, listPrice: null, status: 'Active - watch', statusDetail: 'Changed brokerages once already; keep an eye on' },
+  { address: '2905 Begonia Way', city: null, beds: null, baths: null, sqft: null, listPrice: null, status: 'Active - watch', statusDetail: 'On market 150 days; keep an eye on' },
+  { address: '10755 SW 17th Pl', city: 'Davie', beds: 4, baths: 2.5, sqft: 2216, listPrice: 689000, status: 'Expired', statusDetail: '164 DOM; price cut from $699,000' },
+  { address: '6461 Evans St', city: 'Hollywood', beds: 3, baths: 2, sqft: 1410, listPrice: 545000, status: 'Cancelled', statusDetail: '31 DOM' },
+  { address: '8880 NW 7th St', city: 'Pembroke', beds: 5, baths: 3, sqft: 2528, listPrice: 750000, status: 'Withdrawn', statusDetail: '20 DOM' },
+  { address: '6629 Sheridan St', city: 'Hollywood', beds: 2, baths: 1, sqft: 744, listPrice: 399900, status: 'Expired', statusDetail: '105 DOM' },
+  { address: '1636 SW 108th Ter', city: 'Davie', beds: 4, baths: 2, sqft: 1948, listPrice: 850000, status: 'Cancelled', statusDetail: '263 DOM' },
+  { address: '13350 Luray Rd', city: 'SW Ranches', beds: 6, baths: 5, sqft: 4296, listPrice: 2700000, status: 'Expired', statusDetail: '364 DOM' },
+  { address: '3711 SW 58th Ave', city: 'Davie', beds: 2, baths: 1, sqft: 854, listPrice: 399000, status: 'Cancelled', statusDetail: '359 DOM; price cut from $439,000' },
+  { address: '7511 Taylor St', city: 'Hollywood', beds: 3, baths: 1, sqft: 1360, listPrice: 515900, status: 'Expired', statusDetail: '272 DOM' },
+  { address: '6941 Sheridan St', city: 'Hollywood', beds: 4, baths: 3, sqft: 1290, listPrice: 599000, status: 'Expired then Cancelled', statusDetail: 'Price cut from $615,000; expired after 181 DOM, then cancelled after 113 DOM' },
+  { address: '10241 Key Plum St', city: 'Plantation', beds: 6, baths: 6, sqft: 4735, listPrice: 2698000, status: 'Expired', statusDetail: '41 DOM' },
+  { address: '10627 NW 7th St', city: 'Pembroke Pines', beds: 3, baths: 2, sqft: 1520, listPrice: 597500, status: 'Cancelled', statusDetail: '79 DOM; price cut from $625,000' },
+  { address: '6551 Scott St', city: 'Hollywood', beds: 3, baths: 2, sqft: 1043, listPrice: 540000, status: 'Expired', statusDetail: '6 months on market' },
+  { address: '2301 N 69th Way E', city: 'Hollywood', beds: 3, baths: 2, sqft: 1917, listPrice: 559000, status: 'Expired', statusDetail: '6 months' },
+  { address: '750 SW 98th Ave', city: 'Pembroke', beds: 4, baths: 3.5, sqft: 2301, listPrice: 799999, status: 'Cancelled', statusDetail: '4 DOM (8/15)' },
+  { address: '6451 SW 136th Ln', city: 'SW Ranches', beds: 6, baths: 5.5, sqft: 4786, listPrice: 3549000, status: 'Cancelled', statusDetail: '149 DOM' },
+  { address: '940 SW 96th Ave', city: 'Pembroke', beds: 4, baths: 2.5, sqft: 2011, listPrice: 699000, status: 'Cancelled', statusDetail: '262 DOM' },
+  { address: '5860 SW 13th St', city: 'Plantation', beds: 3, baths: 2, sqft: 1292, listPrice: 729900, status: 'Withdrawn', statusDetail: '110 DOM; price cut from $749,000' },
+  { address: '980 SW 70th Ave', city: 'Plantation', beds: 4, baths: 3, sqft: 2927, listPrice: 798000, status: 'Withdrawn', statusDetail: '261 DOM' },
+  { address: '1131 SW 110th Ave', city: 'Pembroke', beds: 3, baths: 2, sqft: 1300, listPrice: 525000, status: 'Withdrawn', statusDetail: '46 DOM' },
+  { address: '6400 Coolidge St', city: 'Hollywood', beds: 4, baths: 3, sqft: 1300, listPrice: 499999, status: 'Expired', statusDetail: '5 months' },
+  { address: '620 N 65th Ave', city: 'Hollywood', beds: 5, baths: 3, sqft: 1308, listPrice: 780999, status: 'Cancelled', statusDetail: '3 DOM (unusually short, per note)' },
+  { address: '965 SW 102nd Ave', city: 'Pembroke', beds: 4, baths: 3, sqft: 2608, listPrice: 825000, status: 'Cancelled', statusDetail: '60 DOM' },
+  { address: '1311 SW 56th Ave', city: 'Plantation', beds: 3, baths: 2, sqft: 1435, listPrice: 775000, status: 'Expired', statusDetail: '151 DOM' },
+  { address: '13930 SW 36th Ct', city: 'Davie', beds: 5, baths: 4, sqft: 3140, listPrice: 1256000, status: 'Cancelled', statusDetail: '111 days on market' },
+  { address: '2651 SW 141st Ter', city: 'Davie', beds: 5, baths: 4, sqft: 4124, listPrice: 3200000, status: 'Expired', statusDetail: '180 DOM' },
+  { address: '10151 SW 3rd St', city: 'Plantation', beds: 5, baths: 4, sqft: 4142, listPrice: 4500000, status: 'Cancelled', statusDetail: '298 DOM' },
+  { address: '13085 Addilyn Ct', city: 'Davie', beds: 4, baths: 3.5, sqft: 3908, listPrice: 1600000, status: 'Cancelled then Expired', statusDetail: 'Cancelled 7/31; expired 1/2026' },
+  { address: '4740 SW 43rd Ave', city: 'Dania Beach', beds: 3, baths: 2, sqft: 1161, listPrice: 629000, status: 'Expired then Cancelled', statusDetail: 'Expired at $629K after 203 DOM; relisted, cancelled at $599,999 after 202 DOM' },
+  { address: '11460 SW 1st Ct', city: 'Plantation', beds: 3, baths: 2, sqft: 1834, listPrice: 1290000, status: 'Expired then Withdrawn', statusDetail: 'Expired 7/2026 at 138 DOM; relisted at $1.199M, withdrawn after 43 DOM' },
+  { address: '6400 W Garfield St', city: 'Hollywood', beds: 3, baths: 2, sqft: 1368, listPrice: 499990, status: 'Expired', statusDetail: '6 months' },
+  { address: '9812 NW 2nd Ct', city: 'Plantation', beds: 3, baths: 2, sqft: 1583, listPrice: 530000, status: 'Cancelled', statusDetail: '56 DOM; price cut from $540,000' },
+  { address: '5821 Taft St', city: 'Hollywood', beds: 2, baths: 1, sqft: 848, listPrice: 425000, status: 'Cancelled', statusDetail: '169 DOM' },
+  { address: '2111 N 57th Ter', city: 'Hollywood', beds: 3, baths: 2, sqft: 1185, listPrice: 915500, status: 'Cancelled', statusDetail: '28 DOM; price moved from $499,500 down to $489,500 then up to current' },
+  { address: '7324 NW 1st Pl', city: 'Plantation', beds: 3, baths: 2, sqft: 1752, listPrice: 540000, status: 'Cancelled', statusDetail: '477 DOM; price cut from $580,000' },
+  { address: '5260 SW 9th St', city: 'Plantation', beds: 4, baths: 3.5, sqft: 2896, listPrice: 749000, status: 'Cancelled', statusDetail: '98 DOM' },
+  { address: '2200 SW 42nd Way', city: 'Fort Lauderdale', beds: 5, baths: 4, sqft: 1744, listPrice: 499999, status: 'Expired', statusDetail: '181 DOM' },
+  { address: '301 NW 78th Ter', city: 'Plantation', beds: 5, baths: 3, sqft: 2392, listPrice: 859999, status: 'Expired', statusDetail: '66 DOM' },
+  { address: '2320 NW 84th Ter', city: 'Pembroke', beds: null, baths: null, sqft: null, listPrice: null, status: 'To research', statusDetail: 'No further details recorded yet' },];
+
+export async function importExpiredWithdrawnLeads() {
+  const userId = await getUserId();
+  const { data: existing } = await supabase.from('contacts').select('notes').eq('user_id', userId);
+  const existingNotes = (existing || []).map(c => c.notes || '');
+
+  let imported = 0, skipped = 0;
+  for (const lead of EXPIRED_WITHDRAWN_LEADS) {
+    const alreadyImported = existingNotes.some(n => n.includes(lead.address));
+    if (alreadyImported) { skipped += 1; continue; }
+
+    const notesLines = [
+      `Property: ${lead.address}, ${lead.city}`,
+      `${lead.beds} bed / ${lead.baths} bath, ${lead.sqft ? lead.sqft.toLocaleString() : '?'} sqft`,
+      `List price: $${lead.listPrice ? lead.listPrice.toLocaleString() : '?'}`,
+      `Status: ${lead.status}${lead.statusDetail ? ' \u2014 ' + lead.statusDetail : ''}`,
+      `Owner contact info not yet researched \u2014 check Broward County Property Appraiser (bcpa.net) or MLS tax records.`,
+    ];
+
+    await addContact({
+      name: `Owner of ${lead.address}`,
+      category: 'Lead',
+      lead_stage: 'New Lead',
+      source: 'Expired/Withdrawn Listing',
+      notes: notesLines.join('\n'),
+    });
+    imported += 1;
+  }
+
+  return { imported, skipped, total: EXPIRED_WITHDRAWN_LEADS.length };
+}
