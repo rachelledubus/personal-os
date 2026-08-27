@@ -329,8 +329,8 @@ const EXPIRED_WITHDRAWN_LEADS = [
 
 export async function importExpiredWithdrawnLeads() {
   const userId = await getUserId();
-  const { data: existing } = await supabase.from('contacts').select('notes').eq('user_id', userId);
-  const existingNotes = (existing || []).map(c => c.notes || '');
+  const { data: existing } = await supabase.from('contacts').select('relationship_notes').eq('user_id', userId);
+  const existingNotes = (existing || []).map(c => c.relationship_notes || '');
 
   let imported = 0, skipped = 0;
   for (const lead of EXPIRED_WITHDRAWN_LEADS) {
@@ -350,7 +350,7 @@ export async function importExpiredWithdrawnLeads() {
       category: 'Lead',
       lead_stage: 'New Lead',
       source: 'Expired/Withdrawn Listing',
-      notes: notesLines.join('\n'),
+      relationship_notes: notesLines.join('\n'),
     });
     imported += 1;
   }
