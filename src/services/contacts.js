@@ -358,3 +358,53 @@ export async function importExpiredWithdrawnLeads() {
 
   return { imported, skipped, total: EXPIRED_WITHDRAWN_LEADS.length };
 }
+
+// ============================================================
+// REPAIR — fixes duplicates created by a real bug: dedup used to
+// check the `address` column, but leads imported before that column
+// existed had address only inside relationship_notes text, so they
+// looked "not yet imported" and got re-created. This matches every
+// contact back to its real lead using the trusted canonical data
+// (not fragile regex-parsing of notes text), keeps one contact per
+// property, and backfills address/listing_status on the survivor.
+// Never touches relationship_notes — too risky to rewrite text
+// that might include notes added since import.
+// ============================================================
+
+export async function repairExpiredWithdrawnLeadImport() {
+  const userId = await getUserId();
+  const { data: allContacts, error } = await supabase.from('contacts').select('*').eq('user_id', userId)
+    .in('source', ['Expired/Withdrawn/Cancelled Listing', 'Expired/Withdrawn Listing']);
+  if (error) throw error;
+
+  let duplicatesRemoved = 0, backfilled = 0;
+
+  for (const lead of EXPIRED_WITHDRAWN_LEADS) {
+    const fullAddress = `${lead.address}, ${lead.city}`;
+    const matches = (allContacts || []).filter(c =>
+      c.address === fullAddress || (c.relationship_notes || '').includes(lead.address)
+    );
+    if (matches.length === 0) continue;
+
+    // Prefer a match that already has address+listing_status correctly
+    // set as the survivor; otherwise keep the earliest created.
+    const alreadyGood = matches.find(c => c.address === fullAddress && c.listing_status === lead.status);
+    const sorted = [...matches].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const survivor = alreadyGood || sorted[0];
+
+    for (const c of matches) {
+      if (c.id === survivor.id) continue;
+      await deleteContact(c.id);
+      duplicatesRemoved += 1;
+    }
+
+    if (survivor.address !== fullAddress || survivor.listing_status !== lead.status) {
+      const { error: updErr } = await supabase.from('contacts')
+        .update({ address: fullAddress, listing_status: lead.status }).eq('id', survivor.id);
+      if (updErr) throw updErr;
+      backfilled += 1;
+    }
+  }
+
+  return { duplicatesRemoved, backfilled };
+}

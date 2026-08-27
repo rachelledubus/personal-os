@@ -3,7 +3,7 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Badge, { contactStatusTone } from '../../components/ui/Badge.jsx';
-import { listContacts, addContact, inferDefaultTier, importExpiredWithdrawnLeads } from '../../services/contacts.js';
+import { listContacts, addContact, inferDefaultTier, importExpiredWithdrawnLeads, repairExpiredWithdrawnLeadImport } from '../../services/contacts.js';
 import { getCategoryList, setCategoryList } from '../../services/settings.js';
 import ContactProfilePanel from '../../components/business/ContactProfilePanel.jsx';
 
@@ -61,6 +61,19 @@ function PipelineTab() {
     setImporting(false);
   }
 
+  async function handleRepairImport() {
+    setImporting(true);
+    setImportStatus(null);
+    try {
+      const result = await repairExpiredWithdrawnLeadImport();
+      setImportStatus(`Removed ${result.duplicatesRemoved} duplicate${result.duplicatesRemoved === 1 ? '' : 's'}, filled in address/status on ${result.backfilled} lead${result.backfilled === 1 ? '' : 's'}.`);
+      refresh();
+    } catch (err) {
+      setImportStatus(`Couldn't repair: ${err.message || err}`);
+    }
+    setImporting(false);
+  }
+
   async function handleAdd() {
     if (!form.name.trim()) return;
     setSaveError(null);
@@ -84,9 +97,12 @@ function PipelineTab() {
       <Card>
         <div className="row-between">
           <div className="section-label">Import expired/withdrawn listing leads</div>
-          <Button size="sm" variant="ghost" onClick={handleImportExpiredWithdrawn} disabled={importing}>
-            {importing ? 'Importing…' : 'Import 50 leads'}
-          </Button>
+          <div className="row" style={{ gap: 4 }}>
+            <Button size="sm" variant="text" onClick={handleRepairImport} disabled={importing}>Fix duplicates / fill in fields</Button>
+            <Button size="sm" variant="ghost" onClick={handleImportExpiredWithdrawn} disabled={importing}>
+              {importing ? 'Importing…' : 'Import 50 leads'}
+            </Button>
+          </div>
         </div>
         <p className="muted" style={{ fontSize: 'var(--text-caption)', marginTop: 4 }}>
           From your SW Broward handwritten notes (8/25/2026). None have owner contact info yet — each lands as a Lead with property details in notes, ready to fill in as you research owners via bcpa.net or MLS records.
