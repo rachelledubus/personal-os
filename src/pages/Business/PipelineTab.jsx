@@ -42,12 +42,13 @@ function PipelineTab() {
     setImporting(true);
     setImportStatus(null);
     try {
-      // The new "Expired/Withdrawn Listing" source option is stored
-      // per-user once the list's been saved before, so the code-level
-      // default alone won't reach an already-initialized account.
+      // The "Expired/Withdrawn/Cancelled Listing" source option is
+      // stored per-user once the list's been saved before, so the
+      // code-level default alone won't reach an already-initialized
+      // account.
       const currentSources = await getCategoryList('lead_sources');
-      if (!currentSources.includes('Expired/Withdrawn Listing')) {
-        await setCategoryList('lead_sources', [...currentSources, 'Expired/Withdrawn Listing']);
+      if (!currentSources.includes('Expired/Withdrawn/Cancelled Listing')) {
+        await setCategoryList('lead_sources', [...currentSources, 'Expired/Withdrawn/Cancelled Listing']);
       }
       const result = await importExpiredWithdrawnLeads();
       setImportStatus(result.imported === 0
@@ -153,6 +154,7 @@ function PipelineTab() {
                       {c.name}{c.organization && <span className="muted" style={{ fontWeight: 400 }}> · {c.organization}</span>}
                       {c.lead_stage && <span className="muted" style={{ fontWeight: 400 }}> · {c.lead_stage}</span>}
                     </div>
+                    {c.listing_status && <div className="muted" style={{ fontSize: 'var(--text-micro)', fontWeight: 700 }}>{c.listing_status}</div>}
                     <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.next_action || 'No next action set'}</div>
                   </div>
                   <Badge tone={contactStatusTone(c.status)}>{c.status}</Badge>

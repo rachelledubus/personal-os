@@ -329,27 +329,28 @@ const EXPIRED_WITHDRAWN_LEADS = [
 
 export async function importExpiredWithdrawnLeads() {
   const userId = await getUserId();
-  const { data: existing } = await supabase.from('contacts').select('relationship_notes').eq('user_id', userId);
-  const existingNotes = (existing || []).map(c => c.relationship_notes || '');
+  const { data: existing } = await supabase.from('contacts').select('address').eq('user_id', userId);
+  const existingAddresses = new Set((existing || []).map(c => c.address).filter(Boolean));
 
   let imported = 0, skipped = 0;
   for (const lead of EXPIRED_WITHDRAWN_LEADS) {
-    const alreadyImported = existingNotes.some(n => n.includes(lead.address));
-    if (alreadyImported) { skipped += 1; continue; }
+    const fullAddress = `${lead.address}, ${lead.city}`;
+    if (existingAddresses.has(fullAddress)) { skipped += 1; continue; }
 
     const notesLines = [
-      `Property: ${lead.address}, ${lead.city}`,
       `${lead.beds} bed / ${lead.baths} bath, ${lead.sqft ? lead.sqft.toLocaleString() : '?'} sqft`,
       `List price: $${lead.listPrice ? lead.listPrice.toLocaleString() : '?'}`,
-      `Status: ${lead.status}${lead.statusDetail ? ' \u2014 ' + lead.statusDetail : ''}`,
+      lead.statusDetail || null,
       `Owner contact info not yet researched \u2014 check Broward County Property Appraiser (bcpa.net) or MLS tax records.`,
-    ];
+    ].filter(Boolean);
 
     await addContact({
       name: `Owner of ${lead.address}`,
+      address: fullAddress,
+      listing_status: lead.status,
       category: 'Lead',
       lead_stage: 'New Lead',
-      source: 'Expired/Withdrawn Listing',
+      source: 'Expired/Withdrawn/Cancelled Listing',
       relationship_notes: notesLines.join('\n'),
     });
     imported += 1;

@@ -59,7 +59,7 @@ export const CATEGORY_LISTS = {
   },
   lead_sources: {
     label: 'Pipeline — lead sources',
-    default: ['Relocation Guide', 'Real Payment Guide', 'Website SEO', 'Facebook group', 'Sphere referral', 'Partner referral', 'Expired/Withdrawn Listing'],
+    default: ['Relocation Guide', 'Real Payment Guide', 'Website SEO', 'Facebook group', 'Sphere referral', 'Partner referral', 'Expired/Withdrawn/Cancelled Listing'],
   },
   contact_timelines: {
     label: 'Pipeline — timeline / urgency',
