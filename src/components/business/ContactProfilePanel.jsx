@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import SidePanel from '../ui/SidePanel.jsx';
 import { Sparkles } from 'lucide-react';
 import Button from '../ui/Button.jsx';
-import Checkbox from '../ui/Checkbox.jsx';
 import Badge, { contactStatusTone } from '../ui/Badge.jsx';
 import AiSuggestionBox from '../ui/AiSuggestionBox.jsx';
 import InteractionTimeline from './InteractionTimeline.jsx';
@@ -269,7 +268,29 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               edit form, so it shouldn't disappear just because the
               rest of Contact info is mid-edit. */}
           <div style={{ marginTop: 8 }}>
-            <Checkbox checked={!!contact.dnc_checked} onChange={v => applyField({ dnc_checked: v })} label="Checked against DNC list" />
+            <div>
+              <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>DNC status</div>
+              <div className="row" style={{ gap: 4, marginTop: 2 }}>
+                {[
+                  { key: 'not_checked', label: 'Not checked' },
+                  { key: 'clear', label: 'Clear to call' },
+                  { key: 'on_dnc_list', label: 'On DNC list — don’t call' },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    className={`sub-tab ${(contact.dnc_status || 'not_checked') === opt.key ? 'active' : ''}`}
+                    style={{
+                      fontSize: 'var(--text-micro)',
+                      ...(opt.key === 'on_dnc_list' && (contact.dnc_status === 'on_dnc_list')
+                        ? { background: 'var(--danger)', color: 'white', borderColor: 'var(--danger)' } : {}),
+                    }}
+                    onClick={() => applyField({ dnc_status: opt.key })}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 

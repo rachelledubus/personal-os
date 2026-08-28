@@ -90,7 +90,7 @@ function PipelineTab() {
   }
 
   const filtered = (filter === 'All' ? contacts : contacts.filter(c => c.category === filter))
-    .filter(c => dncFilter === 'All' || (dncFilter === 'Checked' ? !!c.dnc_checked : !c.dnc_checked));
+    .filter(c => dncFilter === 'All' || (c.dnc_status || 'not_checked') === dncFilter);
   const byCategory = {};
   filtered.forEach(c => { (byCategory[c.category] ||= []).push(c); });
 
@@ -162,8 +162,13 @@ function PipelineTab() {
         {filter === 'Lead' && (
           <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
             <span className="muted" style={{ fontSize: 'var(--text-micro)', alignSelf: 'center' }}>DNC:</span>
-            {['All', 'Checked', 'Not checked'].map(d => (
-              <button key={d} className={`sub-tab ${dncFilter === d ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => setDncFilter(d)}>{d}</button>
+            {[
+              { key: 'All', label: 'All' },
+              { key: 'not_checked', label: 'Not checked' },
+              { key: 'clear', label: 'Clear to call' },
+              { key: 'on_dnc_list', label: 'On DNC list' },
+            ].map(d => (
+              <button key={d.key} className={`sub-tab ${dncFilter === d.key ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => setDncFilter(d.key)}>{d.label}</button>
             ))}
           </div>
         )}
@@ -182,6 +187,9 @@ function PipelineTab() {
                       {c.lead_stage && <span className="muted" style={{ fontWeight: 400 }}> · {c.lead_stage}</span>}
                     </div>
                     {c.listing_status && <div className="muted" style={{ fontSize: 'var(--text-micro)', fontWeight: 700 }}>{c.listing_status}</div>}
+                    {c.dnc_status === 'on_dnc_list' && (
+                      <div style={{ fontSize: 'var(--text-micro)', fontWeight: 700, color: 'var(--danger)' }}>On DNC list — don’t call</div>
+                    )}
                     <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.next_action || 'No next action set'}</div>
                   </div>
                   <Badge tone={contactStatusTone(c.status)}>{c.status}</Badge>
