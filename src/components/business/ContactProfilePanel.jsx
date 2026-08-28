@@ -263,34 +263,24 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               )}
             </div>
           )}
-          {/* Always visible regardless of edit/display mode — this is
-              an immediate one-click toggle, not part of the buffered
-              edit form, so it shouldn't disappear just because the
+          {/* Always visible regardless of edit/display mode — these are
+              immediate one-click toggles, not part of the buffered
+              edit form, so they shouldn't disappear just because the
               rest of Contact info is mid-edit. */}
-          <div style={{ marginTop: 8 }}>
-            <div>
-              <div className="muted" style={{ fontSize: 'var(--text-micro)' }}>DNC status</div>
-              <div className="row" style={{ gap: 4, marginTop: 2 }}>
-                {[
-                  { key: 'not_checked', label: 'Not checked' },
-                  { key: 'clear', label: 'Clear to call' },
-                  { key: 'on_dnc_list', label: 'On DNC list — don’t call' },
-                ].map(opt => (
-                  <button
-                    key={opt.key}
-                    className={`sub-tab ${(contact.dnc_status || 'not_checked') === opt.key ? 'active' : ''}`}
-                    style={{
-                      fontSize: 'var(--text-micro)',
-                      ...(opt.key === 'on_dnc_list' && (contact.dnc_status === 'on_dnc_list')
-                        ? { background: 'var(--danger)', color: 'white', borderColor: 'var(--danger)' } : {}),
-                    }}
-                    onClick={() => applyField({ dnc_status: opt.key })}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap', marginTop: 8, alignItems: 'center' }}>
+            <select
+              value={contact.dnc_status || 'not_checked'}
+              onChange={e => applyField({ dnc_status: e.target.value })}
+              style={contact.dnc_status === 'on_dnc_list' ? { color: 'var(--danger)', fontWeight: 700 } : undefined}
+            >
+              <option value="not_checked">DNC: Not checked</option>
+              <option value="clear">DNC: Clear to call</option>
+              <option value="on_dnc_list">DNC: On list — don’t call</option>
+            </select>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-caption)', cursor: 'pointer' }}>
+              <input type="checkbox" checked={!!contact.opted_out_of_emails} onChange={e => applyField({ opted_out_of_emails: e.target.checked })} />
+              Opted out of emails
+            </label>
           </div>
         </div>
 
