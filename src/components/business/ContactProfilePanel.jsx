@@ -47,14 +47,18 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
   const [followUpForm, setFollowUpForm] = useState({});
 
   const [editingContactInfo, setEditingContactInfo] = useState(false);
+  const [fieldError, setFieldError] = useState(null);
   const [contactInfoForm, setContactInfoForm] = useState({});
 
   const [editingProfile, setEditingProfile] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({});
 
   const [editingNotes, setEditingNotes] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
   const [notesForm, setNotesForm] = useState({});
   const [editingDiscovery, setEditingDiscovery] = useState(false);
+  const [showDiscovery, setShowDiscovery] = useState(false);
   const [discoveryForm, setDiscoveryForm] = useState({});
 
   const [draft, setDraft] = useState(null);
@@ -86,7 +90,14 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
   }, []);
 
   async function applyField(fields) {
-    await updateContact(contactId, fields);
+    try {
+      await updateContact(contactId, fields);
+    } catch (err) {
+      console.error('Failed to update contact field:', err);
+      setFieldError(err.message || String(err));
+      return;
+    }
+    setFieldError(null);
     await refresh();
     onUpdated?.();
   }
@@ -282,6 +293,12 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               Opted out of emails
             </label>
           </div>
+          {fieldError && (
+            <div className="muted" style={{ fontSize: 'var(--text-micro)', color: 'var(--danger)', marginTop: 4 }}>
+              Couldn't save: {fieldError}
+              {fieldError.toLowerCase().includes('column') && ' — the migration for this field may not have been run yet.'}
+            </div>
+          )}
         </div>
 
         {isPipelineCategory && (
@@ -307,6 +324,16 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
             <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Follow-up</div>
             <Button size="sm" variant="text" onClick={() => setEditingFollowUp(!editingFollowUp)}>{editingFollowUp ? 'Cancel' : 'Edit'}</Button>
           </div>
+          <select
+            value={contact.next_contact_method || ''}
+            onChange={e => applyField({ next_contact_method: e.target.value || null })}
+            style={{ marginTop: 4, fontWeight: contact.next_contact_method ? 700 : 400 }}
+          >
+            <option value="">Reach out by: not set</option>
+            <option value="email">Reach out by: Email</option>
+            <option value="call">Reach out by: Call</option>
+            <option value="mail">Reach out by: Mail</option>
+          </select>
           {standard && (
             <div className="muted" style={{ fontSize: 'var(--text-micro)', marginTop: 2 }}>
               Standard: {standard.label} · every {cadence[standardKey] ?? '—'} days
@@ -356,95 +383,134 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
         {/* ---------- Buyer/seller profile ---------- */}
         {isTransactionCategory && (
           <div>
-            <div className="row-between">
-              <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Buyer/seller profile</div>
-              <Button size="sm" variant="text" onClick={() => setEditingProfile(!editingProfile)}>{editingProfile ? 'Cancel' : 'Edit'}</Button>
-            </div>
-            {editingProfile ? (
-              <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-                <select value={profileForm.buyer_seller} onChange={e => setProfileForm({ ...profileForm, buyer_seller: e.target.value })}>
-                  <option value="">Not set</option>
-                  <option value="Buyer">Buyer</option>
-                  <option value="Seller">Seller</option>
-                  <option value="Both">Both</option>
-                </select>
-                <input placeholder="Persona" value={profileForm.persona} onChange={e => setProfileForm({ ...profileForm, persona: e.target.value })} />
-                <input placeholder="Location interest" value={profileForm.location_interest} onChange={e => setProfileForm({ ...profileForm, location_interest: e.target.value })} />
-                <div><Button size="sm" onClick={handleSaveProfile}>Save</Button></div>
-              </div>
-            ) : (
-              <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
-                {contact.buyer_seller && <div>{contact.buyer_seller}</div>}
-                {contact.persona && <div><strong>Persona:</strong> {contact.persona}</div>}
-                {contact.location_interest && <div><strong>Looking in:</strong> {contact.location_interest}</div>}
-                {!contact.buyer_seller && !contact.persona && !contact.location_interest && (
-                  <span className="muted">Nothing recorded yet — fill in here or via Consultation.</span>
+            <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setShowProfile(!showProfile)}>
+              <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>
+                Buyer/seller profile
+                {!showProfile && (contact.buyer_seller || contact.persona || contact.location_interest) && (
+                  <span className="muted" style={{ fontWeight: 400 }}> · has content</span>
                 )}
               </div>
+              <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{showProfile ? 'Hide' : 'Show'}</span>
+            </div>
+            {showProfile && (
+              <>
+                <div className="row-between">
+                  <span />
+                  <Button size="sm" variant="text" onClick={() => setEditingProfile(!editingProfile)}>{editingProfile ? 'Cancel' : 'Edit'}</Button>
+                </div>
+                {editingProfile ? (
+                  <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+                    <select value={profileForm.buyer_seller} onChange={e => setProfileForm({ ...profileForm, buyer_seller: e.target.value })}>
+                      <option value="">Not set</option>
+                      <option value="Buyer">Buyer</option>
+                      <option value="Seller">Seller</option>
+                      <option value="Both">Both</option>
+                    </select>
+                    <input placeholder="Persona" value={profileForm.persona} onChange={e => setProfileForm({ ...profileForm, persona: e.target.value })} />
+                    <input placeholder="Location interest" value={profileForm.location_interest} onChange={e => setProfileForm({ ...profileForm, location_interest: e.target.value })} />
+                    <div><Button size="sm" onClick={handleSaveProfile}>Save</Button></div>
+                  </div>
+                ) : (
+                  <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
+                    {contact.buyer_seller && <div>{contact.buyer_seller}</div>}
+                    {contact.persona && <div><strong>Persona:</strong> {contact.persona}</div>}
+                    {contact.location_interest && <div><strong>Looking in:</strong> {contact.location_interest}</div>}
+                    {!contact.buyer_seller && !contact.persona && !contact.location_interest && (
+                      <span className="muted">Nothing recorded yet — fill in here or via Consultation.</span>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
 
         {/* ---------- Notes ---------- */}
         <div>
-          <div className="row-between">
-            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Notes</div>
-            <Button size="sm" variant="text" onClick={() => setEditingNotes(!editingNotes)}>{editingNotes ? 'Cancel' : 'Edit'}</Button>
-          </div>
-          {editingNotes ? (
-            <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-              <textarea placeholder="Goals" value={notesForm.goals} onChange={e => setNotesForm({ ...notesForm, goals: e.target.value })} style={{ minHeight: 44 }} />
-              <textarea placeholder="Concerns" value={notesForm.concerns} onChange={e => setNotesForm({ ...notesForm, concerns: e.target.value })} style={{ minHeight: 44 }} />
-              <textarea placeholder="Other important details" value={notesForm.important_personal_details}
-                onChange={e => setNotesForm({ ...notesForm, important_personal_details: e.target.value })} style={{ minHeight: 44 }} />
-              <textarea placeholder="Relationship notes" value={notesForm.relationship_notes}
-                onChange={e => setNotesForm({ ...notesForm, relationship_notes: e.target.value })} style={{ minHeight: 44 }} />
-              <textarea placeholder="Last conversation" value={notesForm.last_conversation}
-                onChange={e => setNotesForm({ ...notesForm, last_conversation: e.target.value })} style={{ minHeight: 44 }} />
-              <div><Button size="sm" onClick={handleSaveNotes}>Save</Button></div>
-            </div>
-          ) : (
-            <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
-              {contact.goals && <div><strong>Goals:</strong> {contact.goals}</div>}
-              {contact.concerns && <div><strong>Concerns:</strong> {contact.concerns}</div>}
-              {contact.important_personal_details && <div>{contact.important_personal_details}</div>}
-              {contact.relationship_notes && <div><strong>Relationship notes:</strong> {contact.relationship_notes}</div>}
-              {contact.last_conversation && <div><strong>Last conversation:</strong> {contact.last_conversation}</div>}
-              {!contact.goals && !contact.concerns && !contact.important_personal_details && !contact.relationship_notes && !contact.last_conversation && (
-                <span className="muted">Nothing recorded yet.</span>
+          <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setShowNotes(!showNotes)}>
+            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>
+              Notes
+              {!showNotes && (contact.goals || contact.concerns || contact.important_personal_details || contact.relationship_notes || contact.last_conversation) && (
+                <span className="muted" style={{ fontWeight: 400 }}> · has content</span>
               )}
             </div>
+            <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{showNotes ? 'Hide' : 'Show'}</span>
+          </div>
+          {showNotes && (
+            <>
+              <div className="row-between">
+                <span />
+                <Button size="sm" variant="text" onClick={() => setEditingNotes(!editingNotes)}>{editingNotes ? 'Cancel' : 'Edit'}</Button>
+              </div>
+              {editingNotes ? (
+                <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+                  <textarea placeholder="Goals" value={notesForm.goals} onChange={e => setNotesForm({ ...notesForm, goals: e.target.value })} style={{ minHeight: 44 }} />
+                  <textarea placeholder="Concerns" value={notesForm.concerns} onChange={e => setNotesForm({ ...notesForm, concerns: e.target.value })} style={{ minHeight: 44 }} />
+                  <textarea placeholder="Other important details" value={notesForm.important_personal_details}
+                    onChange={e => setNotesForm({ ...notesForm, important_personal_details: e.target.value })} style={{ minHeight: 44 }} />
+                  <textarea placeholder="Relationship notes" value={notesForm.relationship_notes}
+                    onChange={e => setNotesForm({ ...notesForm, relationship_notes: e.target.value })} style={{ minHeight: 44 }} />
+                  <textarea placeholder="Last conversation" value={notesForm.last_conversation}
+                    onChange={e => setNotesForm({ ...notesForm, last_conversation: e.target.value })} style={{ minHeight: 44 }} />
+                  <div><Button size="sm" onClick={handleSaveNotes}>Save</Button></div>
+                </div>
+              ) : (
+                <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
+                  {contact.goals && <div><strong>Goals:</strong> {contact.goals}</div>}
+                  {contact.concerns && <div><strong>Concerns:</strong> {contact.concerns}</div>}
+                  {contact.important_personal_details && <div>{contact.important_personal_details}</div>}
+                  {contact.relationship_notes && <div><strong>Relationship notes:</strong> {contact.relationship_notes}</div>}
+                  {contact.last_conversation && <div><strong>Last conversation:</strong> {contact.last_conversation}</div>}
+                  {!contact.goals && !contact.concerns && !contact.important_personal_details && !contact.relationship_notes && !contact.last_conversation && (
+                    <span className="muted">Nothing recorded yet.</span>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* ---------- Client Discovery Framework (System 08, Phase 1) ---------- */}
         <div>
-          <div className="row-between">
-            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>Discovery</div>
-            <Button size="sm" variant="text" onClick={() => setEditingDiscovery(!editingDiscovery)}>{editingDiscovery ? 'Cancel' : 'Edit'}</Button>
-          </div>
-          {editingDiscovery ? (
-            <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-              <textarea placeholder="Situation — where are they now, moving from, why, timeline?" value={discoveryForm.discovery_situation}
-                onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_situation: e.target.value })} style={{ minHeight: 44 }} />
-              <textarea placeholder="Lifestyle priorities — work location, schools, family, commute" value={discoveryForm.discovery_lifestyle_priorities}
-                onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_lifestyle_priorities: e.target.value })} style={{ minHeight: 44 }} />
-              <textarea placeholder="Financial reality — comfortable monthly payment, not just price range" value={discoveryForm.discovery_financial_reality}
-                onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_financial_reality: e.target.value })} style={{ minHeight: 44 }} />
-              <textarea placeholder="Decision factors — must-haves, deal-breakers, biggest concerns" value={discoveryForm.discovery_decision_factors}
-                onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_decision_factors: e.target.value })} style={{ minHeight: 44 }} />
-              <div><Button size="sm" onClick={handleSaveDiscovery}>Save</Button></div>
-            </div>
-          ) : (
-            <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
-              {contact.discovery_situation && <div><strong>Situation:</strong> {contact.discovery_situation}</div>}
-              {contact.discovery_lifestyle_priorities && <div><strong>Lifestyle:</strong> {contact.discovery_lifestyle_priorities}</div>}
-              {contact.discovery_financial_reality && <div><strong>Financial reality:</strong> {contact.discovery_financial_reality}</div>}
-              {contact.discovery_decision_factors && <div><strong>Decision factors:</strong> {contact.discovery_decision_factors}</div>}
-              {!contact.discovery_situation && !contact.discovery_lifestyle_priorities && !contact.discovery_financial_reality && !contact.discovery_decision_factors && (
-                <span className="muted">Nothing recorded yet.</span>
+          <div className="row-between" style={{ cursor: 'pointer' }} onClick={() => setShowDiscovery(!showDiscovery)}>
+            <div className="section-label" style={{ fontSize: 'var(--text-caption)' }}>
+              Discovery
+              {!showDiscovery && (contact.discovery_situation || contact.discovery_lifestyle_priorities || contact.discovery_financial_reality || contact.discovery_decision_factors) && (
+                <span className="muted" style={{ fontWeight: 400 }}> · has content</span>
               )}
             </div>
+            <span className="muted" style={{ fontSize: 'var(--text-micro)' }}>{showDiscovery ? 'Hide' : 'Show'}</span>
+          </div>
+          {showDiscovery && (
+            <>
+              <div className="row-between">
+                <span />
+                <Button size="sm" variant="text" onClick={() => setEditingDiscovery(!editingDiscovery)}>{editingDiscovery ? 'Cancel' : 'Edit'}</Button>
+              </div>
+              {editingDiscovery ? (
+                <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+                  <textarea placeholder="Situation — where are they now, moving from, why, timeline?" value={discoveryForm.discovery_situation}
+                    onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_situation: e.target.value })} style={{ minHeight: 44 }} />
+                  <textarea placeholder="Lifestyle priorities — work location, schools, family, commute" value={discoveryForm.discovery_lifestyle_priorities}
+                    onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_lifestyle_priorities: e.target.value })} style={{ minHeight: 44 }} />
+                  <textarea placeholder="Financial reality — comfortable monthly payment, not just price range" value={discoveryForm.discovery_financial_reality}
+                    onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_financial_reality: e.target.value })} style={{ minHeight: 44 }} />
+                  <textarea placeholder="Decision factors — must-haves, deal-breakers, biggest concerns" value={discoveryForm.discovery_decision_factors}
+                    onChange={e => setDiscoveryForm({ ...discoveryForm, discovery_decision_factors: e.target.value })} style={{ minHeight: 44 }} />
+                  <div><Button size="sm" onClick={handleSaveDiscovery}>Save</Button></div>
+                </div>
+              ) : (
+                <div className="stack" style={{ marginTop: 4, fontSize: 'var(--text-small)', gap: 4 }}>
+                  {contact.discovery_situation && <div><strong>Situation:</strong> {contact.discovery_situation}</div>}
+                  {contact.discovery_lifestyle_priorities && <div><strong>Lifestyle:</strong> {contact.discovery_lifestyle_priorities}</div>}
+                  {contact.discovery_financial_reality && <div><strong>Financial reality:</strong> {contact.discovery_financial_reality}</div>}
+                  {contact.discovery_decision_factors && <div><strong>Decision factors:</strong> {contact.discovery_decision_factors}</div>}
+                  {!contact.discovery_situation && !contact.discovery_lifestyle_priorities && !contact.discovery_financial_reality && !contact.discovery_decision_factors && (
+                    <span className="muted">Nothing recorded yet.</span>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
 

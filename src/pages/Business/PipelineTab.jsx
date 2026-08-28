@@ -28,6 +28,7 @@ function PipelineTab() {
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('All');
   const [dncFilter, setDncFilter] = useState('All');
+  const [groupBy, setGroupBy] = useState('category');
   const [saveError, setSaveError] = useState(null);
 
   async function refresh() {
@@ -93,6 +94,10 @@ function PipelineTab() {
     .filter(c => dncFilter === 'All' || (c.dnc_status || 'not_checked') === dncFilter);
   const byCategory = {};
   filtered.forEach(c => { (byCategory[c.category] ||= []).push(c); });
+
+  const METHOD_LABELS = { call: 'Call', email: 'Email', mail: 'Mail', none: 'Not set' };
+  const byMethod = { call: [], email: [], mail: [], none: [] };
+  filtered.forEach(c => { (byMethod[c.next_contact_method || 'none']).push(c); });
 
   return (
     <div className="stack" style={{ gap: 'var(--space-4)' }}>
@@ -174,33 +179,59 @@ function PipelineTab() {
         )}
       </Card>
 
-      {Object.keys(byCategory).length === 0 ? <EmptyState icon="coffee" title="Nothing here yet" /> : (
-        Object.entries(byCategory).map(([cat, list]) => (
-          <Card key={cat}>
-            <div className="section-label">{cat} · {list.length}</div>
-            <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
-              {list.map(c => (
-                <div key={c.id} className="row-between" style={{ borderBottom: '1px solid var(--sand)', padding: '8px 0', cursor: 'pointer' }} onClick={() => setSelectedId(c.id)}>
-                  <div>
-                    <div style={{ fontWeight: 700 }}>
-                      {c.name}{c.organization && <span className="muted" style={{ fontWeight: 400 }}> · {c.organization}</span>}
-                      {c.lead_stage && <span className="muted" style={{ fontWeight: 400 }}> · {c.lead_stage}</span>}
-                    </div>
-                    {c.listing_status && <div className="muted" style={{ fontSize: 'var(--text-micro)', fontWeight: 700 }}>{c.listing_status}</div>}
-                    {c.dnc_status === 'on_dnc_list' && (
-                      <div style={{ fontSize: 'var(--text-micro)', fontWeight: 700, color: 'var(--danger)' }}>On DNC list — don’t call</div>
-                    )}
-                    <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.next_action || 'No next action set'}</div>
-                  </div>
-                  <Badge tone={contactStatusTone(c.status)}>{c.status}</Badge>
-                </div>
-              ))}
-            </div>
-          </Card>
-        ))
+      <div className="row" style={{ gap: 4 }}>
+        <button className={`sub-tab ${groupBy === 'category' ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => setGroupBy('category')}>By category</button>
+        <button className={`sub-tab ${groupBy === 'method' ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => setGroupBy('method')}>Batch by contact method</button>
+      </div>
+
+      {groupBy === 'category' ? (
+        Object.keys(byCategory).length === 0 ? <EmptyState icon="coffee" title="Nothing here yet" /> : (
+          Object.entries(byCategory).map(([cat, list]) => (
+            <Card key={cat}>
+              <div className="section-label">{cat} · {list.length}</div>
+              <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+                {list.map(c => <ContactRow key={c.id} c={c} onSelect={setSelectedId} />)}
+              </div>
+            </Card>
+          ))
+        )
+      ) : (
+        Object.keys(byMethod).filter(k => byMethod[k].length > 0).length === 0 ? <EmptyState icon="coffee" title="Nothing here yet" /> : (
+          ['call', 'email', 'mail', 'none'].filter(k => byMethod[k].length > 0).map(method => (
+            <Card key={method}>
+              <div className="section-label">{METHOD_LABELS[method]} · {byMethod[method].length}</div>
+              <div className="stack" style={{ marginTop: 'var(--space-2)' }}>
+                {byMethod[method].map(c => <ContactRow key={c.id} c={c} onSelect={setSelectedId} />)}
+              </div>
+            </Card>
+          ))
+        )
       )}
 
       <ContactProfilePanel contactId={selectedId} onClose={() => setSelectedId(null)} onUpdated={refresh} />
+    </div>
+  );
+}
+
+// ============================================================
+// One row-rendering path shared by both the category view and the
+// batch-by-method view, so they can't silently drift apart.
+// ============================================================
+function ContactRow({ c, onSelect }) {
+  return (
+    <div className="row-between" style={{ borderBottom: '1px solid var(--sand)', padding: '8px 0', cursor: 'pointer' }} onClick={() => onSelect(c.id)}>
+      <div>
+        <div style={{ fontWeight: 700 }}>
+          {c.name}{c.organization && <span className="muted" style={{ fontWeight: 400 }}> · {c.organization}</span>}
+          {c.lead_stage && <span className="muted" style={{ fontWeight: 400 }}> · {c.lead_stage}</span>}
+        </div>
+        {c.listing_status && <div className="muted" style={{ fontSize: 'var(--text-micro)', fontWeight: 700 }}>{c.listing_status}</div>}
+        {c.dnc_status === 'on_dnc_list' && (
+          <div style={{ fontSize: 'var(--text-micro)', fontWeight: 700, color: 'var(--danger)' }}>On DNC list — don’t call</div>
+        )}
+        <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.next_action || 'No next action set'}</div>
+      </div>
+      <Badge tone={contactStatusTone(c.status)}>{c.status}</Badge>
     </div>
   );
 }
