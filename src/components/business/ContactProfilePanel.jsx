@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import SidePanel from '../ui/SidePanel.jsx';
 import { Sparkles } from 'lucide-react';
 import Button from '../ui/Button.jsx';
+import Checkbox from '../ui/Checkbox.jsx';
 import Badge, { contactStatusTone } from '../ui/Badge.jsx';
 import AiSuggestionBox from '../ui/AiSuggestionBox.jsx';
 import InteractionTimeline from './InteractionTimeline.jsx';
@@ -263,6 +264,13 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               )}
             </div>
           )}
+          {/* Always visible regardless of edit/display mode — this is
+              an immediate one-click toggle, not part of the buffered
+              edit form, so it shouldn't disappear just because the
+              rest of Contact info is mid-edit. */}
+          <div style={{ marginTop: 8 }}>
+            <Checkbox checked={!!contact.dnc_checked} onChange={v => applyField({ dnc_checked: v })} label="Checked against DNC list" />
+          </div>
         </div>
 
         {isPipelineCategory && (
