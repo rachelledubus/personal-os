@@ -27,6 +27,7 @@ function PipelineTab() {
   const [form, setForm] = useState({ name: '', category: 'Lead', organization: '', preferred_contact_method: 'text', lead_stage: '', source: '', timeline: '' });
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('All');
+  const [dncFilter, setDncFilter] = useState('All');
   const [saveError, setSaveError] = useState(null);
 
   async function refresh() {
@@ -88,7 +89,8 @@ function PipelineTab() {
     refresh();
   }
 
-  const filtered = filter === 'All' ? contacts : contacts.filter(c => c.category === filter);
+  const filtered = (filter === 'All' ? contacts : contacts.filter(c => c.category === filter))
+    .filter(c => dncFilter === 'All' || (dncFilter === 'Checked' ? !!c.dnc_checked : !c.dnc_checked));
   const byCategory = {};
   filtered.forEach(c => { (byCategory[c.category] ||= []).push(c); });
 
@@ -153,9 +155,18 @@ function PipelineTab() {
 
         <div className="row" style={{ marginTop: 'var(--space-3)', flexWrap: 'wrap', gap: 4 }}>
           {['All', ...categories].map(c => (
-            <button key={c} className={`sub-tab ${filter === c ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => setFilter(c)}>{c}</button>
+            <button key={c} className={`sub-tab ${filter === c ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => { setFilter(c); if (c !== 'Lead') setDncFilter('All'); }}>{c}</button>
           ))}
         </div>
+
+        {filter === 'Lead' && (
+          <div className="row" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap', gap: 4 }}>
+            <span className="muted" style={{ fontSize: 'var(--text-micro)', alignSelf: 'center' }}>DNC:</span>
+            {['All', 'Checked', 'Not checked'].map(d => (
+              <button key={d} className={`sub-tab ${dncFilter === d ? 'active' : ''}`} style={{ fontSize: 'var(--text-micro)' }} onClick={() => setDncFilter(d)}>{d}</button>
+            ))}
+          </div>
+        )}
       </Card>
 
       {Object.keys(byCategory).length === 0 ? <EmptyState icon="coffee" title="Nothing here yet" /> : (
