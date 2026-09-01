@@ -408,3 +408,55 @@ export async function repairExpiredWithdrawnLeadImport() {
 
   return { duplicatesRemoved, backfilled };
 }
+
+// ============================================================
+// COMPLIANCE — federal/Florida DNC scrubbing and the permanent
+// internal DNC list, per the Expired Listing Runbook (System 04A.6).
+// Not legal advice. addToDncInternal() is permanent by design: no
+// corresponding remove/delete function exists in this file, matching
+// the runbook's own rule that internal DNC entries are never removed.
+// ============================================================
+
+export async function logComplianceCheck(fields) {
+  const userId = await getUserId();
+  const { error } = await supabase.from('compliance_log').insert({ ...fields, user_id: userId });
+  if (error) throw error;
+}
+
+export async function listComplianceLog(contactId) {
+  const userId = await getUserId();
+  let q = supabase.from('compliance_log').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  if (contactId) q = q.eq('contact_id', contactId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addToDncInternal({ name, phone, address, howRequested }) {
+  const userId = await getUserId();
+  const { error } = await supabase.from('dnc_internal').insert({
+    user_id: userId, name, phone, address, how_requested: howRequested,
+  });
+  if (error) throw error;
+}
+
+export async function checkDncInternal(phone) {
+  if (!phone) return false;
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('dnc_internal').select('id').eq('user_id', userId).eq('phone', phone).limit(1);
+  if (error) throw error;
+  return (data || []).length > 0;
+}
+
+/** Records a stop request the way the runbook requires: permanent
+ *  internal DNC (all channels, no recovery attempt), a compliance
+ *  log row, and the contact's own status set to on_dnc_list on both
+ *  registries so nothing in the app can suggest calling them again. */
+export async function recordStopRequest(contact) {
+  await addToDncInternal({ name: contact.name, phone: contact.phone, address: contact.address, howRequested: 'Verbal stop request during call' });
+  await logComplianceCheck({
+    contact_id: contact.id, phone: contact.phone, call_date: new Date().toISOString().slice(0, 10),
+    outcome: 'Stop request', stop_request: true, date_added_to_dnc: new Date().toISOString().slice(0, 10),
+  });
+  await updateContact(contact.id, { federal_dnc_status: 'on_dnc_list', florida_dnc_status: 'on_dnc_list' });
+}

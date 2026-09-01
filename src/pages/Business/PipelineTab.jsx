@@ -91,7 +91,14 @@ function PipelineTab() {
   }
 
   const filtered = (filter === 'All' ? contacts : contacts.filter(c => c.category === filter))
-    .filter(c => dncFilter === 'All' || (c.dnc_status || 'not_checked') === dncFilter);
+    .filter(c => {
+      if (dncFilter === 'All') return true;
+      const fed = c.federal_dnc_status || 'not_checked';
+      const fl = c.florida_dnc_status || 'not_checked';
+      if (dncFilter === 'on_dnc_list') return fed === 'on_dnc_list' || fl === 'on_dnc_list';
+      if (dncFilter === 'clear') return fed === 'clear' && fl === 'clear';
+      return fed === 'not_checked' || fl === 'not_checked'; // not_checked
+    });
   const byCategory = {};
   filtered.forEach(c => { (byCategory[c.category] ||= []).push(c); });
 
@@ -226,7 +233,7 @@ function ContactRow({ c, onSelect }) {
           {c.lead_stage && <span className="muted" style={{ fontWeight: 400 }}> · {c.lead_stage}</span>}
         </div>
         {c.listing_status && <div className="muted" style={{ fontSize: 'var(--text-micro)', fontWeight: 700 }}>{c.listing_status}</div>}
-        {c.dnc_status === 'on_dnc_list' && (
+        {(c.federal_dnc_status === 'on_dnc_list' || c.florida_dnc_status === 'on_dnc_list') && (
           <div style={{ fontSize: 'var(--text-micro)', fontWeight: 700, color: 'var(--danger)' }}>On DNC list — don’t call</div>
         )}
         <div className="muted" style={{ fontSize: 'var(--text-caption)' }}>{c.next_action || 'No next action set'}</div>

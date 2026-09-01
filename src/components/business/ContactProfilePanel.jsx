@@ -280,19 +280,33 @@ export default function ContactProfilePanel({ contactId, onClose, onUpdated }) {
               rest of Contact info is mid-edit. */}
           <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap', marginTop: 8, alignItems: 'center' }}>
             <select
-              value={contact.dnc_status || 'not_checked'}
-              onChange={e => applyField({ dnc_status: e.target.value })}
-              style={contact.dnc_status === 'on_dnc_list' ? { color: 'var(--danger)', fontWeight: 700 } : undefined}
+              value={contact.federal_dnc_status || 'not_checked'}
+              onChange={e => applyField({ federal_dnc_status: e.target.value, federal_dnc_scrub_date: e.target.value !== 'not_checked' ? new Date().toISOString().slice(0, 10) : contact.federal_dnc_scrub_date })}
+              style={contact.federal_dnc_status === 'on_dnc_list' ? { color: 'var(--danger)', fontWeight: 700 } : undefined}
             >
-              <option value="not_checked">DNC: Not checked</option>
-              <option value="clear">DNC: Clear to call</option>
-              <option value="on_dnc_list">DNC: On list — don’t call</option>
+              <option value="not_checked">Federal DNC: Not checked</option>
+              <option value="clear">Federal DNC: Clear</option>
+              <option value="on_dnc_list">Federal DNC: On list</option>
+            </select>
+            <select
+              value={contact.florida_dnc_status || 'not_checked'}
+              onChange={e => applyField({ florida_dnc_status: e.target.value, florida_dnc_scrub_date: e.target.value !== 'not_checked' ? new Date().toISOString().slice(0, 10) : contact.florida_dnc_scrub_date })}
+              style={contact.florida_dnc_status === 'on_dnc_list' ? { color: 'var(--danger)', fontWeight: 700 } : undefined}
+            >
+              <option value="not_checked">Florida DNC: Not checked</option>
+              <option value="clear">Florida DNC: Clear</option>
+              <option value="on_dnc_list">Florida DNC: On list</option>
             </select>
             <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-caption)', cursor: 'pointer' }}>
               <input type="checkbox" checked={!!contact.opted_out_of_emails} onChange={e => applyField({ opted_out_of_emails: e.target.checked })} />
               Opted out of emails
             </label>
           </div>
+          {(contact.federal_dnc_status === 'on_dnc_list' || contact.florida_dnc_status === 'on_dnc_list') && (
+            <div style={{ fontSize: 'var(--text-micro)', fontWeight: 700, color: 'var(--danger)', marginTop: 4 }}>
+              On a DNC list — don’t call. Federal scrubbing alone isn’t sufficient in Florida; both matter independently.
+            </div>
+          )}
           {fieldError && (
             <div className="muted" style={{ fontSize: 'var(--text-micro)', color: 'var(--danger)', marginTop: 4 }}>
               Couldn't save: {fieldError}

@@ -6,6 +6,7 @@ import { listFutureIdeas, addFutureIdea, deleteFutureIdea, promoteToRoadmap, sco
 import { getWebsiteBuildProgress, markSiteBuildComplete, buildNewRoadmap, importMilestoneSteps, PHASE1_DIAGNOSIS, PHASE1_EXIT_CRITERIA } from '../../services/websiteBuildImport.js';
 import MilestoneWithSteps from './MilestoneWithSteps.jsx';
 import { toggleMilestone, deleteMilestone } from '../../services/goals.js';
+import { importExpiredListingRunbookSetup } from '../../services/expiredListingRunbook.js';
 import { getPreference, setPreference } from '../../services/settings.js';
 
 // ============================================================
@@ -100,6 +101,20 @@ export default function RoadmapTab() {
     try {
       const result = await importMilestoneSteps();
       setRoadmapStatus(result.added === 0 ? (result.reason || 'Nothing new to add \u2014 steps already exist for everything covered.') : `Added ${result.added} sub-steps across ${result.milestonesCovered} milestone${result.milestonesCovered === 1 ? '' : 's'}.`);
+      load();
+    } catch (err) {
+      setRoadmapStatus(`Couldn't import: ${err.message || err}`);
+    }
+    setBuildingRoadmap(false);
+  }
+
+  async function handleImportRunbookSetup() {
+    setBuildingRoadmap(true);
+    try {
+      const result = await importExpiredListingRunbookSetup();
+      setRoadmapStatus(result.milestonesAdded === 0 && result.stepsAdded === 0
+        ? 'Already imported \u2014 nothing new to add.'
+        : `Added ${result.milestonesAdded} of ${result.totalTasks} setup tasks, ${result.stepsAdded} checklist items. Find it under Plan \u2192 Goals & Projects.`);
       load();
     } catch (err) {
       setRoadmapStatus(`Couldn't import: ${err.message || err}`);
@@ -220,6 +235,9 @@ export default function RoadmapTab() {
                 </Button>
                 <Button size="sm" variant="ghost" onClick={handleImportMilestoneSteps} disabled={buildingRoadmap}>
                   Add sub-steps
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleImportRunbookSetup} disabled={buildingRoadmap}>
+                  Import Expired Listing Runbook setup
                 </Button>
                 <Button size="sm" variant="text" onClick={() => { const next = !hideCompleted; setHideCompleted(next); setPreference('roadmap', 'hide_completed', next); }}>{hideCompleted ? 'Show' : 'Hide'} completed</Button>
               </div>
