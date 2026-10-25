@@ -21,8 +21,9 @@ import {
 } from '../../services/finance.js';
 import { getCategoryList } from '../../services/settings.js';
 import Banner from '../../components/ui/Banner.jsx';
+import CareerReadiness from './CareerReadiness.jsx';
 
-const TABS = ['habits', 'workouts', 'chores', 'maintenance', 'finance'];
+const TABS = ['habits', 'workouts', 'chores', 'maintenance', 'finance', 'career'];
 
 const LIFTING_DAYS = [
   { key: 'A', label: 'Upper Body', weekday: 'Tue' },
@@ -51,6 +52,7 @@ export default function GrowPage() {
       {tab === 'chores' && <ChoresTab />}
       {tab === 'maintenance' && <MaintenanceTab />}
       {tab === 'finance' && <FinanceTab />}
+      {tab === 'career' && <CareerReadiness />}
     </div>
   );
 }
